@@ -1,0 +1,10 @@
+tests
+modules
+.babelrc
+.gitignore
+circle.yml
+coverage
+migrations
+.env
+.git
+!/dist/cli/migrations
