@@ -13,7 +13,7 @@ Node Eloquent is a fork of another project by [Zach Silveira](https://github.com
 Read [this wiki page](https://github.com/navjobs/relation/wiki/Comparison-with-other-ORMs---Query-Builders) for why this is better than knex and sequelize. The gist is this: syntax, and lazy loading relationships.
 
 ```
-npm install @phpixel/node-eloquent --save
+npm install @moccacoders/node-eloquent --save
 
 //if using mysql driver this is peer dependency anyway
 npm install mysql --save
@@ -70,6 +70,8 @@ async function getChats {
 - `.all()` returns everything in the table
 - `.where({ fieldName: 'value' })` returns any matching results
 - `.create({ field: 'value'})` create a new row
+- `.update({ field: 'value' }, where)` update a new row
+- `.delete(where)` delete a new row
 - `.select('column', 'column2')` constraint rows to select
 - `.first()` returns first results
 - `.limit(5)` limits the query
@@ -86,6 +88,10 @@ Chat.where({ messages: 'blah' }).get()
 Chat.select('messages').first()
 
 Chat.where({ messages: 'blah' }).limit(2).get()
+
+Chat.update({ name: 'Raymundo' }, { id : 1 })
+
+Chat.delete(1)
 
 
 ```
@@ -159,7 +165,7 @@ Will go over this very soon...
 
 ### CLI
 
-If you install node-eloquent globally (`npm install @phpixel/node-eloquent -g`) you can access the CLI methods to help create migrations, models, etc.
+If you install node-eloquent globally (`npm install @moccacoders/node-eloquent -g`) you can access the CLI methods to help create migrations, models, etc.
 
 #### Migrations
 
