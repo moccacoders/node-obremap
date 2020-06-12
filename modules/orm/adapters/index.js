@@ -1,7 +1,10 @@
+if(!process.env.DB_DRIVER)
+	require("dotenv").config();
+
 try {
-  var adapter = require(`./${process.env.DB_DRIVER}`).default
+	var adapter = require(`./${process.env.DB_DRIVER}`).default
+} catch(e) {
+	throw new Error('You must specify process.env.DB_DRIVER before creating a model.')
 }
-catch(e) {
-  throw new Error('You must specify process.env.DB_DRIVER before creating a model.')
-}
-export default adapter
+
+export default adapter;
