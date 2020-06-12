@@ -8,9 +8,7 @@
 Node Eloquent is a fork of another project by [Zach Silveira](https://github.com/zackify) Done under [Construction Jobs
 ](https://github.com/ConstructionJobs). [Relation](https://github.com/ConstructionJobs/relation) is the original package which takes inspiration from knex and sequelize, but the end goal is to completely mimic Laravel's Eloquent package. In order to achieve the best syntax possible, we are using ES6 Proxies, which is now supported in the latest version of node. Currently, only mysql is supported, but adding a new driver is trivial.
 
-## Why this over xyz?
-
-Read [this wiki page](https://github.com/navjobs/relation/wiki/Comparison-with-other-ORMs---Query-Builders) for why this is better than knex and sequelize. The gist is this: syntax, and lazy loading relationships.
+## How to install?
 
 ```
 npm install @moccacoders/node-eloquent --save
