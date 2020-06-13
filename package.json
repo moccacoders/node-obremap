@@ -12,7 +12,7 @@
     "local-test": "mocha --exit --require babel-register --require tests/setup/local-setup tests/unit --recursive",
     "build": "babel modules --out-dir dist --no-comments",
     "local-cover": "nyc --reporter=html --reporter=text --show-process-tree ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/local-setup tests/unit --recursive --exit",
-    "test": "istanbul cover --include-all-sources ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/setup tests/unit --recursive --exit && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage"
+    "test": "istanbul cover --include-all-sources ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/setup tests/unit --recursive --exit"
   },
   "repository": {
     "type": "git",
