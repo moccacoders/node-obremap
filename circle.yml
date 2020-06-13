@@ -1,7 +1,0 @@
-machine:
-  node:
-    version: 7.0.0
-
-database:
-  override:
-    - mysql -u ubuntu circle_test < ./tests/setup/setup.sql

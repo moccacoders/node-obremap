@@ -1,5 +1,4 @@
-if(!process.env.DB_DRIVER)
-	require("dotenv").config();
+require("dotenv").config();
 
 try {
 	var adapter = require(`./${process.env.DB_DRIVER}`).default
