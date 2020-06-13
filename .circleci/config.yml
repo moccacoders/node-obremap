@@ -15,6 +15,3 @@ workflows:
     build-and-test:
       jobs:
         - build-and-test
-database:
-  override:
-    - mysql -u ubuntu circle_test < ./tests/setup/setup.sql

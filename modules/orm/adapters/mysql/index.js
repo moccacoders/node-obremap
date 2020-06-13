@@ -49,8 +49,9 @@ class MysqlAdapter {
   */
   update({ model, data, id }) {
     let where = "";
-    if(data.id){
-      if(!id) id = data.id;
+    if(data.id != undefined){
+      if(!id)
+        id = data.id;
       delete data.id;
     }
 
