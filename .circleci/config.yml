@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@1.1.6
-  coveralls: coveralls/coveralls@x.y.z
+  coveralls: coveralls/coveralls@1.0.5
 jobs:
   build-and-test:
     executor:
@@ -19,7 +19,7 @@ jobs:
       - checkout
       - run:
           name: Install and Make
-          command: npm install && make test-coverage
+          command: npm install && npm run test
       - coveralls/upload
 workflows:
     build-and-test:
