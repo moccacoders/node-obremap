@@ -1,33 +1,93 @@
-### Node Eloquent
+# OBREMAP - Node ORM
 
-### Todo
-- more drivers
-- migrations support
-- more cli tools
+**OBREMAP Node ORM** es una herramienta de Mapeo Objeto-Relacional para Node JS. OBREMAP proporciona una implementación de ActiveRecord hermosa y simple para trabajar con su base de datos. Cada tabla de base de datos tiene un "Modelo" correspondiente que se utiliza para interactuar con esa tabla. Los modelos le permiten consultar datos en sus tablas, así como insertar nuevos registros en la tabla.
 
-Node Eloquent is a fork of another project by [Zach Silveira](https://github.com/zackify) Done under [Construction Jobs
-](https://github.com/ConstructionJobs). [Relation](https://github.com/ConstructionJobs/relation) is the original package which takes inspiration from knex and sequelize, but the end goal is to completely mimic Laravel's Eloquent package. In order to achieve the best syntax possible, we are using ES6 Proxies, which is now supported in the latest version of node. Currently, only mysql is supported, but adding a new driver is trivial.
+Antes de comenzar, asegurate de configurar tus bases de datos correctamente. para más información sobre la configuración de la base de datos, consulta la [configuración de base de datos](#database-configuration).
 
-## How to install?
+## ¿CÓMO INSTALAR?
 
 ```
-npm install @moccacoders/node-eloquent --save
+$ npm install @moccacoders/node-eloquent --save
+or
+$ yarn add @moccacoders/node-eloquent
 
 //if using mysql driver this is peer dependency anyway
 npm install mysql --save
 ```
 
-### Setup
+## <a name="database-configuration">CONFIGURACIÓN DE BASE DE DATOS</a>
 
-You must set the following environment variables in your app. We recommend creating a `.env` file and using [dotenv](https://github.com/motdotla/dotenv) (this is a peer dependency)
+Con **OBREMAP Node ORM** tienes dos formas con las que puedes configurar tus bases de datos. La primera es agregando tus bases de datos a las variables de entorno de tu app y la segunda (más recomendable) utilizando el archivo de configuración `obremap.config.js`.
 
+#### -> Variables de Entorno
+
+Para configurar tus bases de datos deberás definir las siguientes variables:
 ```
 DB_DRIVER=mysql
 DB_HOST=localhost
-DB_USERNAME=test
-DB_PASSWORD=secret
-DB_NAME=blah
+DB_USERNAME=user
+DB_PASSWORD=pass
+DB_NAME=database_name
 ```
+
+#### -> Archivo de Configuración OBREMAP
+
+Si bien es muy sencillo configurar tus bases de datos solo agregando las variables de entorno necesarias, te recomendamos que utilices el **archivo de configuración OBREMAP**, este te permitirá configurar tus bases de datos de manera independiente.
+Lo que deberás hacer es crear un archivo con el nombre `obremap.config.js` en la carpeta raiz de tu aplicación y agregar la siguiente configuración básica.
+
+* Es importante agregar la llave `default` a la configuración de bases de datos, ya que esta será la información principal que se utilizará para la conexión
+
+```js
+module.exports = {
+  databases : {
+    default : { // IMPORTANTE AGREGAR "DEFAULT". ESTA SERÁ LA INFORMACIÓN DE CONEXIÓN PRINCIPAL
+      host: "localhost",
+      user: "user",
+      password: "pass",
+      database: "database_name",
+      port: 3306,
+      driver: "mysql"
+    }
+  }
+}
+```
+
+### Configuración usando URL's
+Comunmente, la configuración de las bases de datos utilizan multiples valores de configuración como `host`, `database`, `username`, `password`, etc. Cada uno de ellos corresponde a una variable de entorno. Esto quiere decir que cuando configuras tus bases de datos en tu servidor de producción, deberás manejar muchas variables de entorno.
+
+Muchos de los proveedores de bases de datos proveen una única "URL" de conexión a base de datos, la cual contiene toda la información necesaria para la conexión en una simple cadena. Un ejemplo de URL de dase de datos se ve muy similiar a esto:
+
+```php
+mysql://root:password@127.0.0.1/forge?charset=UTF-8
+```
+
+Estas URLs suelen seguir una convención de esquema estándar:
+
+```php
+driver://username:password@host:port/database?options
+```
+
+Para tu conveniencia, **OBREMAP Node ORM** admite estas URLs como una alternativa a la configuración de sus bases de datos con múltiples opciones de configuración. Es decir, si se encuentra presenta una URL de configuración de base de datos (o su correspondiente variable de entorno `DATABASE_URL`) se utilizará para extraer la conexión de la base de datos y la información de credenciales.
+
+##### -> VARIABLES DE ENTORNO
+```
+DATABASE_URL=mysql://root:password@127.0.0.1/database_name
+```
+
+##### -> ARCHIVO DE CONFIGURACIÓN OBREMAP
+La configuración es similar a la anterior. Solo que en lugar de guardar un objeto dentro de la configuración default, deberás agregar la URL como cadena.
+```js
+module.exports = {
+  databases : {
+    default : "mysql://root:password@127.0.0.1/database_name"
+  }
+}
+````
+
+### Configuración de multiples bases de datos
+
+**OBREMAP Node ORM** provee la posibilidad de realizar multiples conexiones a multiples bases de datos. No tienes límite en cuanto a conexiones, puedes configurar todas las conexiones que necesites, todas las bases de datos que requieras.
+
 
 ### Create a Model
 
@@ -176,3 +236,12 @@ This will create a migration file that will allow you to build out tables.
 `eloquent make:model User`
 
 Creates a file in your current directory `/models/user.js` with a default model
+
+
+### Todo
+- more drivers
+- migrations support
+- more cli tools
+
+Node Eloquent is a fork of another project by [Zach Silveira](https://github.com/zackify) Done under [Construction Jobs
+](https://github.com/ConstructionJobs). [Relation](https://github.com/ConstructionJobs/relation) is the original package which takes inspiration from knex and sequelize, but the end goal is to completely mimic Laravel's Eloquent package. In order to achieve the best syntax possible, we are using ES6 Proxies, which is now supported in the latest version of node. Currently, only mysql is supported, but adding a new driver is trivial.

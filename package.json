@@ -1,5 +1,5 @@
 {
-  "name": "@moccacoders/node-eloquent",
+  "name": "@moccacoders/node-obremap",
   "version": "0.1.0",
   "description": "",
   "bin": {
@@ -8,14 +8,14 @@
   "homepage": "https://github.com/moccacoders/node-eloquent#readme",
   "main": "dist/index.js",
   "scripts": {
-    "local-test": "mocha --require babel-register --require tests/setup/local-setup tests/unit --recursive",
-    "build": "babel modules --out-dir dist --no-comments",
-    "local-cover": "istanbul cover ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/local-setup tests/unit --recursive",
-    "test": "istanbul cover --include-all-sources ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/setup tests/unit --recursive && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage"
+    "local-test": "NODE_ENV=test mocha --exit --require babel-register --require tests/setup/local-setup tests/unit --recursive",
+    "build": "NODE_ENV=test babel modules --out-dir dist --no-comments",
+    "local-cover": "NODE_ENV=test nyc --reporter=html --reporter=text --show-process-tree ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/local-setup tests/unit --recursive --exit",
+    "test": "NODE_ENV=test istanbul cover --include-all-sources ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/setup tests/unit --recursive --exit"
   },
   "repository": {
     "type": "git",
-    "url": "https://www.npmjs.com/package/moccacoders/node-eloquent"
+    "url": "https://github.com/moccacoders/node-eloquent"
   },
   "keywords": [
     "orm",
@@ -28,27 +28,30 @@
   "author": "moccacoders",
   "license": "ISC",
   "dependencies": {
+    "app-root-path": "3.0.0",
     "babel-cli": "^6.26.0",
     "dotenv": "8.2.0",
-    "pluralize": "^3.0.0"
+    "moment": "2.26.0",
+    "pluralize": "^8.0.0"
   },
   "peerDependencies": {
-    "mysql": "^2.11.1",
-    "dotenv": "^6.2.0"
+    "mysql": "^2.18.1",
+    "dotenv": "^8.2.0"
   },
   "devDependencies": {
-    "babel-plugin-transform-async-functions": "^6.8.0",
-    "babel-plugin-transform-class-properties": "^6.18.0",
-    "babel-plugin-transform-object-rest-spread": "^6.16.0",
-    "babel-plugin-transform-regenerator": "^6.16.1",
-    "babel-polyfill": "^6.16.0",
-    "babel-preset-es2015": "^6.16.0",
-    "babel-register": "^6.18.0",
-    "chai": "^3.5.0",
-    "coveralls": "^3.0.2",
+    "babel-plugin-transform-async-functions": "^6.22.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-regenerator": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "chai": "^4.2.0",
+    "coveralls": "^3.1.0",
     "istanbul": "^1.1.0-alpha.1",
-    "mocha": "^5.2.0",
+    "mocha": "^8.0.1",
     "mysql": "2.18.1",
-    "sinon": "^1.17.6"
+    "nyc": "15.1.0",
+    "sinon": "^9.0.2"
   }
 }

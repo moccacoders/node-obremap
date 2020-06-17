@@ -13,16 +13,26 @@ class MysqlAdapter {
 
     Builds the mysql query, used query builder and root model class
   */
-  select({ model, select, where, limit, joins = [] }) {
+  select({ model, select, where, limit, joins = [], orderBy, offset }) {
+    if(typeof orderBy == "object"){
+      orderBy = Object.entries(orderBy).map((elem, ind) => {
+        const [key, val] = elem;
+        if(!isNumeric(key)) return `\`${key}\` ${val.toUpperCase()}`
+        else return val
+      });
+    }
+    if(typeof orderBy == "string") orderBy = [orderBy];
     return new Promise((resolve, reject) => {
       const options = {
-        sql: `SELECT ${select ? select : '*'} FROM ${model.tableName()}${where ? ` WHERE ${connection.escape(where)}` : ''}${this.getJoins(joins)}${limit ? ` LIMIT ${connection.escape(limit)}` : ''}`,
+        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins).join(" ")}${where ? ` WHERE ${connection.escape(where)}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
         nestTables: joins.length > 0 ? true : false
       }
+
 
       connection.query(options,  (error, results) => {
         if(error) return reject(error)
 
+        if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
         if(joins.length > 0) results = this.mergeInJoins(results)
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
@@ -32,9 +42,15 @@ class MysqlAdapter {
   /*
     create a row in the database
   */
+
   create({ model, data }) {
+    if(model.timestamps === true){
+      if(model.createdAt && !data[model.createdAt]) data[model.createdAt] = model.currentDate;
+      if(model.updatedAt && !data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
+    }
+
     return new Promise((resolve, reject) => {
-      connection.query(`INSERT INTO ${model.tableName()} SET ?`, data,  (error, result) => {
+      connection.query(`INSERT INTO ${model.getTableName} SET ?`, data,  (error, result) => {
         if(error) return reject(error)
         resolve(this.makeRelatable({
           id: result.insertId,
@@ -47,9 +63,10 @@ class MysqlAdapter {
   /*
     update a row in the database
   */
-  update({ model, data, id }) {
-    let where = "";
-    if(data.id){
+  update({ model, data, id, where }) {
+    if(where) id = where;
+    where = "";
+    if(data.id != undefined){
       if(!id) id = data.id;
       delete data.id;
     }
@@ -64,11 +81,9 @@ class MysqlAdapter {
 
     return new Promise((resolve, reject) => {
       if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
-      connection.query(`UPDATE ${model.tableName()} SET ? WHERE ${where}`, data, (error, result) => {
+      connection.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
         if(error) return reject(error);
-
-        connection.query(`SELECT * FROM ${model.tableName()} WHERE ${where}`, (err, res) => {
-          if(err) return reject(err)
+        connection.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
           resolve(this.makeRelatable({
             ...res[0]
           }, model))
@@ -76,6 +91,10 @@ class MysqlAdapter {
       })
     })
   }
+
+  /*
+    count rows
+  */
 
 
   /*
@@ -94,7 +113,7 @@ class MysqlAdapter {
 
     return new Promise((resolve, reject) => {
       if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
-      connection.query(`DELETE FROM ${model.tableName()} WHERE ${where}`, (error, result) => {
+      connection.query(`DELETE FROM ${model.getTableName} WHERE ${where}`, (error, result) => {
         if(error) return reject(error);
         resolve(result, model);
       })
@@ -113,7 +132,10 @@ class MysqlAdapter {
     used on eager loads
   */
   getJoins(joins) {
-    return joins.map(join => ` INNER JOIN \`${join.includeTable}\` ON ${join.localField} = ${join.remoteField}`)
+    return joins.map(join => {
+      let split = join.includeTable.split(" as ");
+      return ` ${join.type || "INNER"} JOIN \`${split[0]}\`${(split[1]) ? ` AS ${split[1]}` : ''} ON ${join.localField} ${join.operator || "="} ${join.remoteField}`
+    })
   }
 
 
@@ -135,7 +157,7 @@ class MysqlAdapter {
     return new Proxy(result, {
       get(target, name) {
         if(name in target) return target[name]
-        if(getTableName(name) in target) return target[getTableName(name)]
+        if(getTableName(name, model.snakeCase) in target) return target[getTableName(name, model.snakeCase)]
 
         let instance = new model(result)
         if(name in instance) return instance[name]().result()
@@ -172,6 +194,10 @@ class MysqlAdapter {
       return newResult
     })
   }
+}
+
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
 export default new MysqlAdapter()
