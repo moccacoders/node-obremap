@@ -1,3 +1,4 @@
+import moment from 'moment';
 import adapter from './adapters'
 import {
 	getTableName,
@@ -5,16 +6,40 @@ import {
 } from '../global/get-name'
 
 export default class Model {
+	static snakeCase = true;
+	static tableName = null;
+
+	// PRIMARY KEYS
+	static primaryKey = "id";
+	static incrementing = true;
+	static keyType = "int";
+
+	//TIMESTAMPS
+	static timestamps = true;
+	static dateFormat = "TIMESTAMP"; // [Use Moment JS Format](https://momentjs.com/docs/#/displaying/format/)
+	static createdAt = "created_at"; // If null not set on query
+	static updatedAt = "updated_at"; // If null not set on query
+
+	// DB CONNECTION
+	static connection = "default";
+
 	constructor(values) {
-		this.values = values
+		this.values = values;
 	}
 
 	/*
 	  database table name,
 	  can be overwritten in the user's model
 	*/
-	static tableName() {
-		return getTableName(this.name)
+
+	static get getTableName() {
+		if(!this.tableName) this.tableName = getTableName(this.name, this.snakeCase);
+		return this.tableName;
+	}
+
+	static get currentDate (){
+		var date = moment().format(this.dateFormat != "TIMESTAMP" ? this.dateFormat : "YYYY-MM-DD HH:mm:ss");
+		return date;
 	}
 
 	/*
@@ -22,7 +47,14 @@ export default class Model {
 	  ex Model.all()
 	*/
 	static all() {
-		return adapter.select({
+		return adapter(this).select({
+			model: this
+		})
+	}
+
+	static count() {
+		return adapter(this).select({
+			select: `COUNT(${this.primaryKey}) as count`,
 			model: this
 		})
 	}
@@ -32,7 +64,7 @@ export default class Model {
 	  ex Model.find(id)
 	*/
 	static find(id) {
-		return adapter.select({
+		return adapter(this).select({
 			limit: 1,
 			where: {id},
 			model: this
@@ -44,7 +76,7 @@ export default class Model {
 	  ex Model.first()
 	*/
 	static first() {
-		return adapter.select({
+		return adapter(this).select({
 			limit: 1,
 			model: this
 		})
@@ -55,7 +87,7 @@ export default class Model {
 	  ex Model.create({ name: 'bob' })
 	*/
 	static create(data) {
-		return adapter.create({
+		return adapter(this).create({
 			data,
 			model: this
 		})
@@ -67,7 +99,7 @@ export default class Model {
 	  ex Model.update({ name: 'raymundo' })
 	*/
 	static update(data, id) {
-		return adapter.update({
+		return adapter(this).update({
 			data,
 			id,
 			model: this
@@ -79,7 +111,7 @@ export default class Model {
 	  ex Model.delete({ id: 1 })
 	*/
 	static delete(id) {
-		return adapter.delete({
+		return adapter(this).delete({
 			id,
 			model: this
 		})
@@ -93,18 +125,30 @@ export default class Model {
 	  ex Model.select('id', 'name').first()
 	*/
 	static select(...select) {
-		return adapter.queryBuilder({
+		return adapter(this).queryBuilder({
 			select,
 			model: this
 		})
 	}
 
 	/*
+	  select certain columns from a table
+	  ex Model.orderBy({id : 'desc'}).first()
+	*/
+	static orderBy(orderBy) {
+		return adapter(this).queryBuilder({
+			orderBy,
+			model: this
+		})
+	}
+
+
+	/*
 	  contrain a query with a where clause
 	  ex Model.where({ id: 1, user_id: 2 }).first()
 	*/
 	static where(where) {
-		return adapter.queryBuilder({
+		return adapter(this).queryBuilder({
 			where,
 			model: this
 		})
@@ -115,10 +159,46 @@ export default class Model {
 	  ex Model.limit(5).get()
 	*/
 	static limit(limit) {
-		return adapter.queryBuilder({
+		return adapter(this).queryBuilder({
 			limit,
 			model: this
 		})
+	}
+
+	static offset(offset) {
+		return adapter(this).queryBuilder({
+			offset,
+			model: this
+		})
+	}
+
+	static join(includeTable, localField, operator, remoteField, type = "INNER"){
+		if(!["=", "<", ">", "!=", "<>", "<=", ">=", "<=>"].includes(operator)){
+			remoteField = operator;
+			operator = "=";
+		}
+		let joins = [{
+			includeTable,
+			localField,
+			operator,
+			remoteField,
+			type : type.toUpperCase()
+		}];
+		return adapter(this).queryBuilder({
+			joins,
+			model: this
+		})
+	}
+
+	/*
+	  update certain columns
+	  ex Model.set({ name : "Raymundo" }).get()
+	*/
+	static set(data){
+		return adapter(this).queryBuilder({
+			data,
+			model: this
+		});
 	}
 
 	//relationships
@@ -129,7 +209,7 @@ export default class Model {
 	*/
 	with(...relationships) {
 		let joins = relationships.map(relationship => this[relationship]())
-		return adapter.queryBuilder({
+		return adapter(this).queryBuilder({
 			joins,
 			model: this.constructor
 		})
@@ -150,9 +230,9 @@ export default class Model {
 			result: () => Model.where({
 				[remoteField]: this.values[localField]
 			}).first(),
-			includeTable: getTableName(Model.name),
-			localField: `${getTableName(this.constructor.name)}.${localField}`,
-			remoteField: `${getTableName(Model.name)}.${remoteField}`,
+			includeTable: getTableName(Model.name, Model.snakeCase),
+			localField: `${getTableName(this.constructor.name, this.constructor.snakeCase)}.${localField}`,
+			remoteField: `${getTableName(Model.name, Model.snakeCase)}.${remoteField}`,
 		}
 	}
 
@@ -171,9 +251,9 @@ export default class Model {
 			result: () => Model.where({
 				[remoteField]: this.values[localField]
 			}),
-			includeTable: getTableName(Model.name),
-			localField: `${getTableName(this.constructor.name)}.${localField}`,
-			remoteField: `${getTableName(Model.name)}.${remoteField}`,
+			includeTable: getTableName(Model.name, Model.snakeCase),
+			localField: `${getTableName(this.constructor.name, this.constructor.snakeCase)}.${localField}`,
+			remoteField: `${getTableName(Model.name, Model.snakeCase)}.${remoteField}`,
 		}
 	}
 }
