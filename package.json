@@ -8,7 +8,6 @@
   "homepage": "https://github.com/moccacoders/node-eloquent#readme",
   "main": "dist/index.js",
   "scripts": {
-    "install": "cp .env.development .env",
     "local-test": "NODE_ENV=test mocha --exit --require babel-register --require tests/setup/local-setup tests/unit --recursive",
     "build": "NODE_ENV=test babel modules --out-dir dist --no-comments",
     "local-cover": "NODE_ENV=test nyc --reporter=html --reporter=text --show-process-tree ./node_modules/.bin/_mocha -- --require babel-register --require tests/setup/local-setup tests/unit --recursive --exit",

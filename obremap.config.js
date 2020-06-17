@@ -1,14 +1,16 @@
+require('dotenv').config();
+
 module.exports = {
 	"config": "test",
 	"databases": {
-		"default": "mysql://root:root@127.0.0.1/node-orm",
+		"default": process.env.DATABASE_URL_OTHER,
 		"test": {
-			"host": "127.0.0.1",
-			"user": "root",
-			"password": "root",
-			"database": "node-orm",
-			"port": "3306",
-			"driver": "mysql"
+			"host" : process.env.DB_HOST,
+			"user" : process.env.DB_USERNAME,
+			"password" : process.env.DB_PASSWORD,
+			"database" : process.env.DB_NAME,
+			"port" : process.env.DB_PORT || 3306,
+			"driver" : process.env.DB_DRIVER
 		}
 	}
 }
