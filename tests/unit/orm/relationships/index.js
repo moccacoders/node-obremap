@@ -4,7 +4,6 @@ import User from '../../../setup/models/relationships/user'
 describe('Chat.user() and User.chats()', () => {
   it('lazy loads user', async function() {
     let chat = await Chat.first()
-
     let user = await chat.user
 
     expect(user.name).to.be.equal('Bob')
@@ -13,7 +12,6 @@ describe('Chat.user() and User.chats()', () => {
 
   it('lazy loads chats', async function() {
     let user = await User.first()
-
     let chat = await user.chats.first()
     expect(chat.user_id).to.be.equal(user.id)
   })
@@ -21,10 +19,10 @@ describe('Chat.user() and User.chats()', () => {
   //these arent as pretty since you have to new up the class :(
   //need to find a way to make it static.
   it('eager loads user', async function() {
-
-    let chat = await new Chat().with('user').first()
-
+    let chat = await new Chat().with('user', 'images').first()
+    
     expect(chat.user.name).to.be.equal('Bob')
+    expect(chat.chat_images.source).to.be.equal('/logo.png')
     expect(chat.user_id).to.be.equal(chat.user.id)
   })
 
