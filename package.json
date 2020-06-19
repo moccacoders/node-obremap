@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "",
   "bin": {
-    "eloquent": "dist/cli/index.js"
+    "obremap": "dist/cli/index.js"
   },
   "homepage": "https://github.com/moccacoders/node-eloquent#readme",
   "main": "dist/index.js",
@@ -29,8 +29,11 @@
   "license": "ISC",
   "dependencies": {
     "app-root-path": "3.0.0",
+    "arg": "4.1.3",
     "babel-cli": "^6.26.0",
+    "chalk": "4.1.0",
     "dotenv": "8.2.0",
+    "inquirer": "7.2.0",
     "moment": "2.26.0",
     "pluralize": "^8.0.0"
   },
