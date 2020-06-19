@@ -87,9 +87,59 @@ module.exports = {
 ### Configuración de multiples bases de datos
 
 **OBREMAP Node ORM** provee la posibilidad de realizar multiples conexiones a multiples bases de datos. No tienes límite en cuanto a conexiones, puedes configurar todas las conexiones que necesites, todas las bases de datos que requieras.
+La configuración es similar a lo visto anteriormente.
 
+#### -> VARIABLES DE ENTORNO
+
+Para configurar multiples conexiones por medio de las variables de entorno **OBREMAP Node ORM** toma todas las varibles que tengan como prefijo `DB_` y asigna el valor siguiente como variable de configuración. Por lo que si colocas `DB_HOST` esta será la variable de configuración principal (`default`) que contiene el hostname de la base de datos. Sin embargo, si colocas un identificador despues del prefijo `DB_`, este será tomado como nombre de conexión, a este debe seguir el nombre de la variable de conexión, ejemplo: `DB_LOCAL_HOST` para este caso el nombre de la conexión será `local` y la variable de conexión será `host`.
+
+```json
+// CONEXIÓN PRINCIPAL
+DB_DRIVER=mysql
+DB_HOST=127.0.0.1
+DB_USERNAME=user
+DB_PASSWORD=pass
+DB_NAME=database_name
+
+// CONEXIÓN SECUNDARIA [LOCAL]
+DB_LOCAL_DRIVER=mysql
+DB_LOCAL_HOST=localhost
+DB_LOCAL_USERNAME=loca_user
+DB_LOCAL_PASSWORD=local_pass
+DB_LOCAL_NAME=other_database
+
+```
+
+#### -> ARCHIVO DE CONFIGURACIÓN OBREMAP
+
+Así como se puede configurar multiples conexión a la base de datos con una pequeña modificación en las varibles de entorno también lo puedes hacer mediante el **archivo de configuración OBREMAP** lo unico que tendrás que hacer es agregar un elemento más a tu objecto `databases`, tomando en consideración que el nombre que le des al objeto nuevo, será el nombre de tu conexión.
+
+```js
+module.exports = {
+  databases : {
+    // CONEXIÓN PRINCIPAL
+    default : "mysql://root:password@127.0.0.1/database_name",
+    // CONEXIÓN SECUNDARIA [LOCAL]
+    local : "mysql://loca_user:local_pass@localhost/other_database"
+  }
+}
+```
+
+#### SELECCIONAR BASE DE DATOS
+
+Una vez que ya haz configurados tus multiples bases de datos lo que deberás hacer es indicar al model que conexión debe utilizar. Y esto se hace solamente agregando un methodo estatico dentro de tu modelo. Recuerda que el nombre que coloques aquí es el nombre que le diste a tu conexión en la configuración de conexión de bases de datos multiples. 
+
+```js
+import { Model } from 'node-eloquent'
+
+export default class Chat extends Model {
+  static conexion = "local";
+}
+```
 
 ### Create a Model
+
+Para crear
 
 `chat.js`
 
@@ -98,13 +148,6 @@ import { Model } from 'node-eloquent'
 
 export default class Chat extends Model {
 
-  /*
-  overwrite table name, this function is optional
-
-  static tableName() {
-    return 'dashboard_chats'
-  }
-  */
 }
 
 
