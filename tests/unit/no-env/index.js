@@ -4,6 +4,23 @@ const fs = require("fs");
 const configFilePath = path.join(root.path, "/obremap.config.js");
 const configFilePathTest = path.join(root.path, "/obremap.config.test");
 let databases;
+let configFile = `require('dotenv').config();
+
+module.exports = {
+	"config": "test",
+	"databases": {
+		"default": process.env.DATABASE_URL_OTHER,
+		"test": {
+			"host" : process.env.DB_HOST,
+			"user" : process.env.DB_USERNAME,
+			"password" : process.env.DB_PASSWORD,
+			"database" : process.env.DB_NAME,
+			"port" : process.env.DB_PORT || 3306,
+			"driver" : process.env.DB_DRIVER
+		}
+	}
+}
+`;
 /* tests run without env variables, to test error messages */
 
 const modifyDriverFile = (action = "remove", key = "databases") => {
@@ -29,7 +46,7 @@ const modifyDriverFile = (action = "remove", key = "databases") => {
 				}
 			}
 		})
-		fs.writeFileSync(configFilePath, `module.exports = ${JSON.stringify(content, null, "\t")}`, "utf8", err => {
+		fs.writeFileSync(configFilePath, action != "add" ? `module.exports = ${JSON.stringify(content, null, "\t")}` : configFile, "utf8", err => {
 			if(err) console.log(err);
 		});
 	}catch(e){ console.log(e) }

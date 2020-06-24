@@ -23,10 +23,8 @@ const toCase = (str, toSnakeCase = true, cap = false) => {
 	return str;
 }
 
-exports.regex = {
+const regex = {
 	url : /^([a-z\+]+):\/\/([\w\d]+):([\w\d\.\?\!\#\/\\\*\-\%]+)@(((\d{1,3}):(\d{1,3}):(\d{1,3}))|([\w\d\.]+))(:([\d]{2,}))?(\/([\w\d\-\.]+))(\?(.+))?$/
 }
 
-exports.uncapitalize = uncapitalize;
-exports.capitalize = capitalize;
-exports.toCase = toCase;
+export default { uncapitalize, capitalize, toCase, regex }
