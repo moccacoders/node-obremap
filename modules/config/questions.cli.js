@@ -1,10 +1,10 @@
-const pluralize = require("pluralize");
+import pluralize from "pluralize";
 
-let config = require('./index.js');
-let lang = require('./languages');
-let utils = require('./utils');
+import config from './index.js';
+import lang from './languages/index.js';
+import utils from './utils.js';
 
-module.exports = answers => {
+export default answers => {
 	if(!answers["_lang"]) answers["_lang"] = "english";
 	return {
 		general : [

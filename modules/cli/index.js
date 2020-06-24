@@ -1,10 +1,11 @@
-#! /usr/bin/env node
+// #! /usr/bin/env node
 import fs from 'fs'
-const arg = require("arg");
+import arg from 'arg';
+import model from './models/make.js';
 
 let commands = {
   // 'make:migration': require('./migrations/make').default,
-  'make:model': require('./models/make').default,
+  'make:model': model,
 }
 
 if(!commands[process.argv[2]])

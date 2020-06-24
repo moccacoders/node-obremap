@@ -1,9 +1,10 @@
-const fs = require("fs");
-const inquirer = require("inquirer");
-const lang = require('../../config/languages');
-const path = require("path");
-const questions = require("../../config/questions.cli");
-const root = require("app-root-path");
+import fs from "fs";
+import inquirer from "inquirer";
+import path from "path";
+import root from "app-root-path";
+
+import lang from '../../config/languages/index.js';
+import questions from "../../config/questions.cli.js";
 
 export default ({ args, cwd, fs }) => {
 	let answers;

@@ -1,27 +1,38 @@
-import Make from '../../../../modules/cli/models/make'
+const expect = require('chai').expect;
+const path = require('path');
+const { EOL } = require('os');
 
-// describe('Models', () => {
-// 	it('makes a model', () => {
+const cmd = require('../../../setup/cmd');
+const { ENTER } = cmd;
+const cliPath = path.join(__dirname, "/../../../../", "modules/cli");
 
-// 		let fs = {
-// 			mkdirSync: sinon.spy(),
-// 			writeFile: sinon.spy(),
-// 		}
+describe('Obremap CLI', () => {
+	it('create model with defaults', async () => {
+		const response = await cmd.execute(
+			cliPath,
+			"make:model",
+			[
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER
+			]
+		);
 
-// 		Make({ args: ['Test'], cwd: 'blah', fs })
-
-// 		expect(fs.mkdirSync.calledOnce).to.equal(true)
-// 		expect(fs.writeFile.calledOnce).to.equal(true)
-// 		expect(fs.mkdirSync.args[0][0]).to.equal('blah/models')
-// 		expect(fs.writeFile.args[0][0]).to.equal('blah/models/test.js')
-
-// 		let error = new Error('failed creating file')
-// 		try {
-// 			fs.writeFile.args[0][2](error)
-// 		}
-// 		catch(e) {
-// 			fs.writeFile.args[0][2]()
-// 			expect(e.message).to.equal('failed creating file')
-// 		}
-// 	})
-// })
+		expect(
+			response
+				.trim()
+				.split(EOL)
+				.pop()
+		).to.match(/The OBREMAP model file was (CREATED|UPDATED)/); // Using chai-match plugin
+	});
+});
