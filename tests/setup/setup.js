@@ -1,4 +1,4 @@
-require('babel-polyfill')
+require('@babel/polyfill')
 import { expect } from 'chai'
 import sinon from 'sinon'
 
