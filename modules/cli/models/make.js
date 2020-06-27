@@ -1,27 +1,26 @@
-import config from "../../config/index.js";
-import inquirer from "inquirer";
-import path from "path";
-import pluralize from "pluralize";
-import questions from "../../config/questions.cli.js";
-import root from "app-root-path";
-import utils from "../../config/utils.js";
-import lang from '../../config/languages/index.js';
-import connection from '../connection/make.js';
+const config = require("../../config");
+const inquirer = require("inquirer");
+const path = require("path");
+const pluralize = require("pluralize");
+const questions = require("../../config/questions.cli");
+const root = require("app-root-path");
+const utils = require("../../config/utils");
+const lang = require('../../config/languages');
+const connection = require('../connection/make').default;
 
-export default ({ args, cwd, fs }) => {
+module.exports = ({ args, cwd, fs }) => {
 	configuration(args).then(answers => {
 		args = answers
 
 		let modelName = utils.toCase(args["--name"], false, true);
 		let filePath = `${cwd}/models/${utils.toCase(args["--name"])}.model.js`;
-		let file = null;
 
 		let options = "";
 		Object.entries(args).map((arg, ind) => {
 			let [key, val] = arg;
-			if(/^_(.+)?/.test(key) || key == "--name" || key == "--driver") return true;
+			if(/^_(.+)?/.test(key) || key == "--name" || key == "--driver") return true;
 			key = utils.toCase(key.replace("--", "").replace("-", "_"), false);
-			if(val == config.default[args["--driver"]][key] || val == utils.toCase(pluralize(args["--name"] || "default"), args["--snake-case"])) return true;
+			if(val == config.default[args["--driver"]][key] || val == utils.toCase(pluralize(args["--name"] || "default"), args["--snake-case"])) return true;
 			options += `static ${key} = ${typeof val == "string" ? `'${val}'` : val};
 	`;
 		});
@@ -47,12 +46,9 @@ export default class ${modelName} extends Model {
 			fs.mkdirSync(`${cwd}/models`)
 		}
 
-		try{
-			file = fs.readFileSync(filePath);
-		}catch(err){ }
 		fs.writeFile(filePath, template, err => {
 			if (err) throw err;
-			console.log(`\n  >    `, lang[answers["_lang"]].model[!file ? "created" : "updated"], filePath, "\n")
+			console.log(`\n  >    `, lang[answers["_lang"]].model.created, filePath, "\n")
 		})
 
 	});

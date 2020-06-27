@@ -21,8 +21,6 @@ module.exports = {
 	}
 }
 `;
-/* tests run without env variables, to test error messages */
-
 const modifyDriverFile = (action = "remove", key = "databases") => {
 	try{
 		let content = require(configFilePath);
@@ -46,7 +44,8 @@ const modifyDriverFile = (action = "remove", key = "databases") => {
 				}
 			}
 		})
-		fs.writeFileSync(configFilePath, action != "add" ? `module.exports = ${JSON.stringify(content, null, "\t")}` : configFile, "utf8", err => {
+		
+		fs.writeFileSync(configFilePath, action != "add" && key == "databases" ? `module.exports = ${JSON.stringify(content, null, "\t")}` : configFile, "utf8", err => {
 			if(err) console.log(err);
 		});
 	}catch(e){ console.log(e) }

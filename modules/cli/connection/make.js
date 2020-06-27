@@ -1,12 +1,11 @@
-import fs from "fs";
-import inquirer from "inquirer";
-import path from "path";
-import root from "app-root-path";
+const fs = require("fs");
+const inquirer = require("inquirer");
+const lang = require('../../config/languages');
+const path = require("path");
+const questions = require("../../config/questions.cli");
+const root = require("app-root-path");
 
-import lang from '../../config/languages/index.js';
-import questions from "../../config/questions.cli.js";
-
-export default ({ args, cwd, fs }) => {
+module.exports = ({ args, cwd, fs }) => {
 	let answers;
 	return new Promise(done => {
 		connectionConfig(args)
@@ -76,7 +75,7 @@ DB${dbName}_PORT="${args["___port"]}"`
 	catch(err){ }
 
 
-	let databases = config && config.databases ? config.databases : {};
+	let databases = config && config.databases ? config.databases : {};
 	if(args["__url-config"] && !args["__url"])
 		args["___connection-url"] = `${args["--driver"]}://${args["___username"]}:${args["___password"]}@${args["___hostname"]}${args["___port"] ? `:${args["___port"]}` : ``}/${args["___database"]}`;
 

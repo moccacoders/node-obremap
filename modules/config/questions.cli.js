@@ -1,10 +1,10 @@
-import pluralize from "pluralize";
+const pluralize = require("pluralize");
 
-import config from './index.js';
-import lang from './languages/index.js';
-import utils from './utils.js';
+let config = require('./index.js');
+let lang = require('./languages');
+let utils = require('./utils');
 
-export default answers => {
+module.exports = answers => {
 	if(!answers["_lang"]) answers["_lang"] = "english";
 	return {
 		general : [
@@ -40,7 +40,7 @@ export default answers => {
 				name : "--name",
 				message: (ans) => { return lang[ans["_lang"]].questions.name },
 				type : "input",
-				default: utils.toCase(answers["--name"] || "default", false, true),
+				default: utils.toCase(answers["--name"] || "default", false, true),
 				filter: (input) => { return utils.toCase(input || "", false, true) }
 			},
 			{
@@ -48,7 +48,7 @@ export default answers => {
 				message: (ans) => { return lang[ans["_lang"]].questions.tableName },
 				type : "input",
 				default: (ans) => {
-					return utils.toCase(pluralize(ans["--name"] || "default"), true)
+					return utils.toCase(pluralize(ans["--name"] || "default"), true)
 				}
 			},
 			{
@@ -172,7 +172,7 @@ export default answers => {
 				message: lang[answers["_lang"]].questions.connectionUrl,
 				type : "input",
 				validate : (input) => {
-					return utils.regex.url.test(input) || lang[answers["_lang"]].error.url;
+					return utils.regex.url.test(input) || lang[answers["_lang"]].error.url;
 				},
 				when : (ans) => {
 					return answers["__set-connection"] && answers["__url"];
@@ -228,7 +228,7 @@ export default answers => {
 				name : "___port",
 				message: lang[answers["_lang"]].questions.port,
 				type : "input",
-				default: ans => { return config.default[ans["--driver"] || answers["--driver"]].port },
+				default: ans => { return config.default[ans["--driver"] || answers["--driver"]].port },
 				when : (ans) => {
 					return answers["__set-connection"] && !answers["__url"];
 				}

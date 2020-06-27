@@ -1,11 +1,11 @@
-// #! /usr/bin/env node
+#! /usr/bin/env node
 import fs from 'fs'
-import arg from 'arg';
-import model from './models/make.js';
+import arg from "arg";
+import model from "./models/make.js"
 
 let commands = {
-  // 'make:migration': require('./migrations/make').default,
-  'make:model': model,
+	// 'make:migration': require('./migrations/make').default,
+	'make:model': model,
 }
 
 if(!commands[process.argv[2]])
@@ -50,8 +50,8 @@ else{
 	}
 
 	commands[process.argv[2]]({
-	  args: argsToOptions(),
-	  cwd: process.cwd(),
-	  fs
+		args: argsToOptions(),
+		cwd: process.cwd(),
+		fs
 	})
 }

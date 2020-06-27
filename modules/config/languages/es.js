@@ -1,5 +1,5 @@
-import chalk from "chalk";
-export default {
+const chalk = require("chalk");
+module.exports = {
 	questions : {
 		name : "¿Qué nombre tendrá el modelo?",
 		snakeCase : `¿Los nombres de tus tablas y columnas estan en 'snake case' ${chalk.bold.underline("(snake_case)")} o en 'camel case' ${chalk.bold.underline("(camelCase)")}?`,
