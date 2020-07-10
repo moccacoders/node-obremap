@@ -15,6 +15,7 @@ jobs:
       run: npm install
 
     - name: Run tests and coveralls
+      run: npm run local-test
       env:
         DATABASE_URL=${{ secrets.DATABASE_URL }}
         DATABASE_URL_OTHER=${{ secrets.DATABASE_URL_OTHER }}
@@ -29,8 +30,6 @@ jobs:
         DB_TEST_USERNAME=${{ secrets.DB_TEST_USERNAME }}
         DB_TEST_PASSWORD=${{ secrets.DB_TEST_PASSWORD }}
         DB_TEST_NAME=${{ secrets.DB_TEST_NAME }}
-
-      run: npm run local-test
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
