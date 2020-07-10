@@ -14,6 +14,7 @@ module.exports = {
 		connection : "¿Cuál es el nombre de la conexión a base de datos que deseas utilizar?",
 		// CREATE CONNECTION
 		setConnection : `No se encontro la conexión mencionada ${chalk.bold.underline("(#_CONNECTION_#)")} o no se encontro configuración de base de datos. ¿Desea configurarla ahora?`,
+		setDefaultConnection : `¿Desea configurar la conexión a base de datos ahora?`,
 		configFile : "¿Deseas utilizar el archivo de Configuración OBREMAP? [RECOMENDADO]",
 		multiConnections : "¿Configurarás multiples conexiones de base de datos?",
 		urlConfig : "¿Deseas configurar tus conexiones mediante una URL de conexión? Nota. Puedes utilizar el asistente de creación de URL de conexión para crear tus URLs.",
@@ -41,6 +42,7 @@ module.exports = {
 		updated : `El ${chalk.bold("archivo de Modelo OBREMAP")} ha sido ${chalk.keyword("orange")("ACTUALIZADO")}:`,
 	},
 	error : {
+		connectionName : `Ya existe una configuración de conexión con el nombre ${chalk.bold.underline.keyword("orange")("(#_CONNECTION_NAME_#)")}. Por favor, utiliza otro nombre.`,
 		url : `Tus URLs deben coincidir con el siguiente formato. ${chalk.bold.underline("(driver://username:password@host:port/database?options)")}`
 	}
 }

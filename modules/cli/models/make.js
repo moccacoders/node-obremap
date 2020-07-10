@@ -2,11 +2,11 @@ const config = require("../../config");
 const inquirer = require("inquirer");
 const path = require("path");
 const pluralize = require("pluralize");
-const questions = require("../../config/questions.cli");
+const questions = require("../../config/cli/questions.cli");
 const root = require("app-root-path");
 const utils = require("../../config/utils");
 const lang = require('../../config/languages');
-const connection = require('../connection/make').default;
+const connection = require('../connection/make');
 
 module.exports = ({ args, cwd, fs }) => {
 	configuration(args).then(answers => {

@@ -6,5 +6,8 @@ circle.yml
 coverage
 migrations
 .env
+.nyc_output
 .git
 !/dist/cli/migrations
+_*
+models
