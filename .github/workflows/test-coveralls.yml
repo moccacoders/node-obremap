@@ -1,0 +1,38 @@
+name: Run Tests and Coveralls
+on:
+  push:
+  pull_request:
+    branches: [ master, dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install all dependencies
+      run: npm install
+
+    - name: Run tests and coveralls
+      run: npm run test
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DATABASE_URL_OTHER: ${{ secrets.DATABASE_URL_OTHER }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_DRIVER: ${{ secrets.DB_DRIVER }}
+        DB_TEST_DRIVER: ${{ secrets.DB_TEST_DRIVER }}
+        DB_TEST_HOST: ${{ secrets.DB_TEST_HOST }}
+        DB_TEST_USERNAME: ${{ secrets.DB_TEST_USERNAME }}
+        DB_TEST_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
+        DB_TEST_NAME: ${{ secrets.DB_TEST_NAME }}
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
