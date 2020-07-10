@@ -6,4 +6,3 @@ node_modules
 .nyc_output
 _*
 models
-coveralls.yml
