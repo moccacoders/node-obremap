@@ -12,7 +12,7 @@
     "local-test": "NODE_ENV=test mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive",
     "build": "NODE_ENV=test babel modules --out-dir dist --no-comments",
     "local-cover": "NODE_ENV=test nyc --reporter=text --show-process-tree ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit",
-    "test": "nyc --reporter=html --reporter=text-lcov ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit  && shx cat ./coverage/lcov.info | node ./bin/coveralls.js --verbose"
+    "test": "nyc --reporter=html --reporter=text-lcov ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit | coveralls"
   },
   "repository": {
     "type": "git",
