@@ -2,29 +2,36 @@ const fs = require("fs");
 const inquirer = require("inquirer");
 const lang = require('../../config/languages');
 const path = require("path");
-const questions = require("../../config/questions.cli");
+const questions = require("../../config/cli/questions.cli");
 const root = require("app-root-path");
 
 module.exports = ({ args, cwd, fs }) => {
 	let answers;
-	return new Promise(done => {
+	if(!args["_createConnection"])
 		connectionConfig(args)
 		.then(ans => {
 			answers = ans;
-			if(args["_createConnection"])
-				if(createConnetion(answers)){
+			setConnetion(answers)
+		});
+
+	else
+		return new Promise(done => {
+			connectionConfig(args)
+			.then(ans => {
+				answers = ans;
+				if(setConnetion(answers)){
 					done(answers);
 				}
-		});
-	})
+			});
+		})
 
 }
 
 const connectionConfig = (args) => {
 	return new Promise((done, error) => {
 		let answers = {...args};
-		console.log(`\n------------------------------------------------------------------------\n${lang[answers["_lang"]].connectionConfig}\n------------------------------------------------------------------------\n`);
-		inquirer.prompt(questions(answers).configConnection)
+		if(args["_createConnection"]) console.log(`\n------------------------------------------------------------------------\n${lang[answers["_lang"]].connectionConfig}\n------------------------------------------------------------------------\n`);
+		inquirer.prompt([...questions(answers).general, ...questions(answers).configConnection])
 		.then(ans => {
 			if(ans["__url-config"] && !ans["__url"]) console.log(`\n------------------------------------------------------------------------\n${lang[answers["_lang"]].wizard}\n------------------------------------------------------------------------\n`);
 			answers = {
@@ -32,39 +39,58 @@ const connectionConfig = (args) => {
 				...ans
 			}
 
-			inquirer.prompt(questions(answers).connection)
-			.then(ans => {
-				answers = {
-					...answers,
-					...ans
-				}
-
-				done(answers);
-			}).catch(err => console.log(err))
-		}).catch(err => console.log(err))
+			createConnection(answers).then((ans) => {
+				done(ans);
+			})
+		})
 	});
 }
 
-const createConnetion = (args) => {
-	if(!args["__set-connection"]) return true;
-	if(!args["__config-file"]){
-		let dbName = args["__connectionName"] != "default" ? `_${args["__connectionName"].toUpperCase()}` : "";
-		console.log(`\n------------------------------------------------------------------------\n\n${lang[args["_lang"]].connectionEnv}\n${lang[args["_lang"]].connectionEnvMsg}\n\n------------------------------------------------------------------------\n`);
-		console.log(`${
-(args["__url-config"]) ?
-`DB${dbName}_URL="${
-	args["__url"] ? `${args["___connection-url"]}` : 
-	`${args["--driver"]}://${args["___username"]}:${args["___password"]}@${args["___hostname"]}${args["___port"] ? `:${args["___port"]}` : ``}/${args["___database"]}`
-}"` : 
-`DB${dbName}_DRIVER="${args["--driver"]}"
-DB${dbName}_HOST="${args["___hostname"]}"
-DB${dbName}_USER="${args["___username"]}"
-DB${dbName}_PASSWORD="${args["___passwor"]}"
-DB${dbName}_DATABSE="${args["___database"]}"
-DB${dbName}_PORT="${args["___port"]}"`
+const createConnection = (answers) => {
+	return new Promise((done, error) => {
+		inquirer.prompt(questions(answers).connection)
+		.then(connection => {
+			answers = {
+				...answers
+			}
+
+			if(!answers["connections"]) answers["connections"] = [];
+			answers["connections"].push(connection);
+
+			if(connection["__moreConnections"] === true){
+				createConnection(answers).then(ans => {
+					done(ans)
+				});
+			} else{
+				done(answers);
+			}
+		})
+	})
 }
 
-------------------------------------------------------------------------\n`);
+const setConnetion = (args) => {
+	if(!args["__set-connection"] || !args["connections"]) return true;
+	if(!args["__config-file"]){
+		console.log(`\n------------------------------------------------------------------------\n\n${lang[args["_lang"]].connectionEnv}\n${lang[args["_lang"]].connectionEnvMsg}\n\n------------------------------------------------------------------------\n`);
+
+		args["connections"].map(connection => {
+			let dbName = connection["__connectionName"] != "default" ? `_${connection["__connectionName"].toUpperCase()}` : "";
+			console.log(`${
+(connection["__url-config"]) ?
+`DB${dbName}_URL="${
+	connection["__url"] ? `${connection["___connection-url"]}` : 
+	`${connection["--driver"]}://${connection["___username"]}:${connection["___password"]}@${connection["___hostname"]}${connection["___port"] ? `:${connection["___port"]}` : ``}/${connection["___database"]}`
+}"` : 
+`DB${dbName}_DRIVER="${connection["--driver"]}"
+DB${dbName}_HOST="${connection["___hostname"]}"
+DB${dbName}_USER="${connection["___username"]}"
+DB${dbName}_PASSWORD="${connection["___passwor"]}"
+DB${dbName}_DATABSE="${connection["___database"]}"
+DB${dbName}_PORT="${connection["___port"]}"`
+}`);
+		});
+
+console.log(`\n------------------------------------------------------------------------\n`);
 		return true;
 	}
 
@@ -74,25 +100,32 @@ DB${dbName}_PORT="${args["___port"]}"`
 	try{ config = require(configPath) }
 	catch(err){ }
 
-
 	let databases = config && config.databases ? config.databases : {};
-	if(args["__url-config"] && !args["__url"])
-		args["___connection-url"] = `${args["--driver"]}://${args["___username"]}:${args["___password"]}@${args["___hostname"]}${args["___port"] ? `:${args["___port"]}` : ``}/${args["___database"]}`;
 
-	databases[args["__connectionName"]] = (args["___connection-url"]) ? args["___connection-url"] : {
-		driver : args["--driver"],
-		host : args["___hostname"],
-		user : args["___username"],
-		password : args["___password"],
-		database : args["___database"],
-		port : args["___port"]
-	}
+	args["connections"].map(connection => {
+		if(connection["__url-config"] && !connection["__url"])
+			connection["___connection-url"] = `${connection["--driver"]}://${connection["___username"]}:${connection["___password"]}@${connection["___hostname"]}${connection["___port"] ? `:${connection["___port"]}` : ``}/${connection["___database"]}`;
+
+		databases[connection["__connectionName"]] = (connection["___connection-url"]) ? connection["___connection-url"] : {
+			driver : connection["--driver"],
+			host : connection["___hostname"],
+			user : connection["___username"],
+			password : connection["___password"],
+			database : connection["___database"],
+			port : connection["___port"]
+		}
+	});
+
+	if(config.empty)
+		config = {
+			databases
+		};
 
 	try { configFile = fs.readFileSync(configPath, "utf8") }
-	catch(err) { console.log(err) }
+	catch(err) { }
 
 	if(configFile){
-		const regex = /^module.exports ?= ?(\s)?{((.|\s)*?)}(\s)?}(?!(\ ))$/gm;
+		const regex = /^module.exports ?= ?(\s)?{((.|\s)*?)?}(\s)?}?(?!(\ ))$/gm;
 		const match = configFile.match(regex);
 		configFile = configFile.replace(match[0], "#_TEMPLATE_#");
 	}
@@ -107,9 +140,6 @@ ${template}
 	try {
 		fs.writeFileSync(configPath, template, "utf8")
 		console.log(`\n  >    `, lang[args["_lang"]].configFile[configFile ? "updated" : "created"], configPath);
-		return true
-	}catch(err) {
-		console.log(err)
-		return true;
-	}
+	}catch(err) { }
+	return true;
 }

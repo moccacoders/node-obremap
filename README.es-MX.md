@@ -1,15 +1,17 @@
 # OBREMAP - Node ORM
 
-**OBREMAP Node ORM** es una herramienta de Mapeo Objeto-Relacional para Node JS. OBREMAP proporciona una implementación de ActiveRecord hermosa y simple para trabajar con su base de datos. Cada tabla de base de datos tiene un "Modelo" correspondiente que se utiliza para interactuar con esa tabla. Los modelos le permiten consultar datos en sus tablas, así como insertar nuevos registros en la tabla.
+**OBREMAP Node ORM** es una herramienta de Mapeo Objeto-Relacional para Node JS basada en el famoso ORM de [Laravel](https://laravel.com/), [**Eloquent**](https://laravel.com/docs/eloquent).
+OBREMAP proporciona una implementación de ActiveRecord hermosa y simple para trabajar con su base de datos. Cada tabla de base de datos tiene un **"Modelo OBREMAP"** correspondiente que se utiliza para interactuar con esa tabla.
+Los modelos le permiten consultar datos en sus tablas, así como insertar nuevos registros en la tabla.
 
 Antes de comenzar, asegurate de configurar tus bases de datos correctamente. para más información sobre la configuración de la base de datos, consulta la [configuración de base de datos](#database-configuration).
 
 ## ¿CÓMO INSTALAR?
 
 ```
-$ npm install @moccacoders/node-eloquent --save
+$ npm install @moccacoders/node-obremap --save
 or
-$ yarn add @moccacoders/node-eloquent
+$ yarn add @moccacoders/node-obremap
 
 //if using mysql driver this is peer dependency anyway
 npm install mysql --save
@@ -130,32 +132,36 @@ module.exports = {
 Una vez que ya haz configurados tus multiples bases de datos lo que deberás hacer es indicar al model que conexión debe utilizar. Y esto se hace solamente agregando un methodo estatico dentro de tu modelo. Recuerda que el nombre que coloques aquí es el nombre que le diste a tu conexión en la configuración de conexión de bases de datos multiples. 
 
 ```js
-import { Model } from 'node-eloquent'
+import { Model } from 'node-obremap'
 
 export default class Chat extends Model {
   static conexion = "local";
 }
 ```
 
-### Create a Model
+### DEFINIR UN MODELO
 
-Para crear
+Para comenzar, crearemos un **Modelo Obremap**. Por lo general los modelos se encuentran en la carpeta raiz dentro de la carpeta **MODELS** sin embargo puedes colocarlos donde prefieras, siempre y cuando puedas acceder a ellos. Todos los **Modelos OBREMAP** deben extender de la clase `Model` dentro de **node-obremap**.
+La forma más sencilla para crear tus modelos es utilizando el **Obremap CLI** con la funcion `obremap make:model`
 
 `chat.js`
 
 ```js
-import { Model } from 'node-eloquent'
+import { Model } from 'node-obremap'
 
 export default class Chat extends Model {
-
+  /*
+    overwrite table name, this is optional
+    static tableName = 'dashboard_chats';
+  */
 }
-
 
 ```
 
-### Using the Model
+### USANDO EL MODELO
 
-As long as the plural version of the model is available in the database (you can overwrite this), you can query the database.
+Una vez creado el **Modelo OBREMAP** (y asociada la tabla de base de datos correctamente), estará listo para obtener datos de sus bases de datos. Piensa en los Modelos OBREMAP como generadores de consultas eficientes que te ayudarán a realizar tus consultas con rápidez a la base de datos asociada a tus Modelos.
+Ejemplo:
 
 ```js
 import Chat from './chat'
@@ -166,21 +172,35 @@ async function getChats {
 }
 ```
 
-#### Supported methods
+#### Metodos Soportados
 
-- `.all()` returns everything in the table
-- `.where({ fieldName: 'value' })` returns any matching results
-- `.create({ field: 'value'})` create a new row
-- `.update({ field: 'value' }, where)` update a new row
-- `.delete(where)` delete a new row
-- `.select('column', 'column2')` constraint rows to select
-- `.first()` returns first results
-- `.limit(5)` limits the query
-- `find(<primary key>)` finds and returns a relation currently only `id` as primary key is supported but dynamic primary key is coming soon
+- `.all()` Regresa todo en la table
+- `.count()` Regresa un valor numerico correspondiente al total de registros extraidos
+- `.create({ field: 'value'})` Crear un nuevo registro
+- `.delete(where||<primary key>)` Elimina el registro
+- `.find(<primary key>)` Encuentra y devuelve una relación actualmente solo `id` ya que la clave primaria es compatible pero la clave primaria dinámica llegará pronto
+- `.first()` Regresa el primer registro
+- `.join(tableName, <local key>, <remote key>)` Crear uniones entre tablas
+- `.limit(5)` Limita el total de resultados
+- `.offset(10)` Define el inicio de la búsqueda
+- `.orderBy('fieldName' || {fieldName : "asc"})` Regresa los resulstados ordenados
+- `.select('column', 'column2')` Define las columnas de la base de datos a extraer
+- `.update({ field: 'value' }, where)` Actualiza un registro
+- `.where({ fieldName: 'value' })` Regresa los resultados que coincidan con la expresión
 
 ### Query Building
 
 ```js
+
+Chat.all()
+
+Chunk.count();
+
+Chat.where({ messages : "blah" }).count();
+
+Chat.create({ user_id: 23 })
+
+User.find(1)
 
 Chat.select('messages', 'id').where({ messages: 'blah' }).get()
 
@@ -194,27 +214,26 @@ Chat.update({ name: 'Raymundo' }, { id : 1 })
 
 Chat.delete(1)
 
-
 ```
 
-### Relationships
+### RELACIONES
 
-This is a huge WIP, feel free to contribute :)
+Esta es una gran WIP, no dude en contribuir
 
-Supported:
-- One To One
-- One To Many
+Soporta:
+- Uno to Uno
+- Uno a muchos
 
-Todo:
-- Many To Many
-- Has Many Through
-- Polymorphic Relations
-- Many To Many Polymorphic Relations
+Por Hacer:
+- Muchos a Muchos
+- Tiene muchos a través
+- Relaciones polimórficas
+- Relaciones polimórficas de muchos a muchos
 
-#### One to One Example
+#### Uno to Uno - Ejemplo
 
 ```js
-import { Model } from 'node-eloquent'
+import { Model } from 'node-obremap'
 
 
 export default class User extends Model {
@@ -236,10 +255,10 @@ expect(user.name).to.be.equal('Bob')
 
 ```
 
-#### One to Many Example
+#### Uno a muchos - Ejemplo
 
 ```js
-import { Model } from 'node-eloquent'
+import { Model } from 'node-obremap'
 
 
 export default class User extends Model {
@@ -260,31 +279,28 @@ let chats = await user.chats.first()
 
 ```
 
-### Migrations
-
-Will go over this very soon...
-
 ### CLI
 
-If you install node-eloquent globally (`npm install @moccacoders/node-eloquent -g`) you can access the CLI methods to help create migrations, models, etc.
-
-#### Migrations
-
-`eloquent make:migration User -m` -m will create a model as well
-
-This will create a migration file that will allow you to build out tables.
+Si instala **node-obremap globalmente** (`npm install @moccacoders/node-obremap -g`) puede acceder a los métodos CLI para ayudar a crear modelos, conexiones, etc. y utilizar los diferentes asistentes de creación.
+Actualmente se encuentran en **español** e **ingles**.
 
 #### Models
 
-`eloquent make:model User`
+`obremap make:model`
 
+Inicializará el asistente de creación de **Modelos** el cual te guiará en la creación de tu modelo solicitandote información necesaria para ello. Adicionalemnte, y solo si es necesario, te desplegará el asistente de creación de conexiones.
 Creates a file in your current directory `/models/user.js` with a default model
+
+#### Conexiones
+
+`obremap make:connection`
+
+Inicializará le asistente de creación de **Conexiones** el cual te solicitará la información necesaria para le creación de conexiones; así mismo te permitirá seleccionar entre utilizar el archivo de configuración OBREMAP o bien tus Variables de Entorno.
 
 
 ### Todo
-- more drivers
-- migrations support
-- more cli tools
-
-Node Eloquent is a fork of another project by [Zach Silveira](https://github.com/zackify) Done under [Construction Jobs
-](https://github.com/ConstructionJobs). [Relation](https://github.com/ConstructionJobs/relation) is the original package which takes inspiration from knex and sequelize, but the end goal is to completely mimic Laravel's Eloquent package. In order to achieve the best syntax possible, we are using ES6 Proxies, which is now supported in the latest version of node. Currently, only mysql is supported, but adding a new driver is trivial.
+- Agregar más controladores de Bases de Datos
+- CLI
+  - Agregar más funciones
+  - Agregar más lenguajes
+- Migraciones

@@ -14,6 +14,7 @@ module.exports = {
 		connection : "What is the name of the database connection you want to use?",
 		// CREATE CONNECTION
 		setConnection : `The mentioned connection ${chalk.bold.underline("(#_CONNECTION_#)")} was not found or no database configuration was found. Do you want to configure it now? `,
+		setDefaultConnection : `Do you want to configure database connection now?`,
 		driver : "What driver do you want to work with? ",
 		configFile : "Do you want to use the OBREMAP Configuration file? [RECOMMENDED]",
 		multiConnections : "Will you configure multiple database connections? ",
@@ -41,6 +42,7 @@ module.exports = {
 		updated : `The ${chalk.bold("OBREMAP model file")} was ${chalk.keyword("orange")("UPDATED")}:`
 	},
 	error : {
-		url : `Your URLs must match the following format.${chalk.bold.underline("(driver://username:password@host:port/database?options)")}`
+		url : `Your URLs must match the following format.${chalk.bold.underline("(driver://username:password@host:port/database?options)")}`,
+		connectionName : `A connection configuration with the name ${chalk.bold.underline.keyword("orange")("(#_CONNECTION_NAME_#)")} already exists. Please use a different name.`,
 	}
 }

@@ -1,22 +1,22 @@
 {
   "name": "@moccacoders/node-obremap",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.1.1",
+  "description": "OBREMAP Node ORM is an Object-Relational Mapping tool for Node JS. OBREMAP provides a beautiful and simple ActiveRecord implementation to work with your database.",
+  "homepage": "https://github.com/moccacoders/node-obremap#readme",
   "bin": {
     "obremap": "dist/cli/index.js"
   },
-  "homepage": "https://github.com/moccacoders/node-eloquent#readme",
   "main": "dist/index.js",
   "scripts": {
     "start": "NODE_ENV=test babel modules --watch --out-dir dist --no-comments",
-    "local-test": "NODE_ENV=test mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup tests/unit --recursive",
+    "local-test": "NODE_ENV=test mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive",
     "build": "NODE_ENV=test babel modules --out-dir dist --no-comments",
-    "local-cover": "NODE_ENV=test nyc --reporter=html --reporter=text --show-process-tree ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit --recursive --exit",
-    "test": "NODE_ENV=test nyc --reporter=text ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/setup tests/unit --recursive --exit"
+    "local-cover": "NODE_ENV=test nyc --reporter=text --show-process-tree ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit",
+    "test": "nyc --reporter=html --reporter=text-lcov ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit | coveralls"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/moccacoders/node-eloquent"
+    "url": "git+https://github.com/moccacoders/node-obremap.git"
   },
   "keywords": [
     "orm",
@@ -26,7 +26,7 @@
     "database",
     "mysql"
   ],
-  "author": "moccacoders",
+  "author": "Raymundo Salazar <raymundo.salazar@moccacoders.com>",
   "license": "ISC",
   "dependencies": {
     "@babel/cli": "7.10.3",
@@ -58,5 +58,12 @@
     "mysql": "2.18.1",
     "nyc": "15.1.0",
     "sinon": "^9.0.2"
+  },
+  "bugs": {
+    "url": "https://github.com/moccacoders/node-obremap/issues",
+    "email" : "obremap@moccacoders.com"
+  },
+  "directories": {
+    "test": "tests"
   }
 }

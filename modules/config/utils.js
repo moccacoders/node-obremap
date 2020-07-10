@@ -1,12 +1,18 @@
 const uncapitalize = (str) => {
-	return str.charAt(0).toLowerCase() + str.slice(1);
+	let string = str.split(" ").map(s => {
+		return s.charAt(0).toLowerCase() + s.slice(1);
+	});
+	return string.join(" ");
 }
 
 const capitalize = (str) => {
-	return str.charAt(0).toUpperCase() + str.slice(1);
+	let string = str.split(" ").map(s => {
+		return s.charAt(0).toUpperCase() + s.slice(1);
+	});
+	return string.join(" ");
 }
 
-const toCase = (str, toSnakeCase = true, cap = false) => {
+const toCase = (str, toSnakeCase, cap) => {
 	switch(toSnakeCase){
 		case false:
 			str = str.toLowerCase().replace(/(_|\ )(\w)/g, function(m){

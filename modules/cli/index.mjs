@@ -2,10 +2,12 @@
 import fs from 'fs'
 import arg from "arg";
 import model from "./models/make.js"
+import connection from "./connection/make.js"
 
 let commands = {
 	// 'make:migration': require('./migrations/make').default,
 	'make:model': model,
+	'make:connection': connection,
 }
 
 if(!commands[process.argv[2]])
