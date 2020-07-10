@@ -17,6 +17,7 @@ jobs:
     - name: Run tests and coveralls
       run: npm run test
       env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         DATABASE_URL_OTHER: ${{ secrets.DATABASE_URL_OTHER }}
         DB_HOST: ${{ secrets.DB_HOST }}
