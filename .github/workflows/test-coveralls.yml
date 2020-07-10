@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install all dependencies
-      run: yarn install
+      run: npm install
 
     - name: Run tests and coveralls
       run: npm run test
