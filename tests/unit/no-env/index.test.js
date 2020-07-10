@@ -4,8 +4,22 @@ const fs = require("fs");
 const configFilePath = path.join(root.path, "/obremap.config.js");
 const configFilePathTest = path.join(root.path, "/obremap.config.test");
 let databases;
-/* tests run without env variables, to test error messages */
+let configFile = `require('dotenv').config();
 
+module.exports = {
+	"config": "test",
+	"databases": {
+		"default": process.env.DATABASE_URL_OTHER,
+		"test": {
+			"host" : process.env.DB_HOST,
+			"user" : process.env.DB_USERNAME,
+			"password" : process.env.DB_PASSWORD,
+			"database" : process.env.DB_NAME,
+			"driver" : process.env.DB_DRIVER
+		}
+	}
+}
+`;
 const modifyDriverFile = (action = "remove", key = "databases") => {
 	try{
 		let content = require(configFilePath);
@@ -29,10 +43,11 @@ const modifyDriverFile = (action = "remove", key = "databases") => {
 				}
 			}
 		})
-		fs.writeFileSync(configFilePath, `module.exports = ${JSON.stringify(content, null, "\t")}`, "utf8", err => {
+		
+		fs.writeFileSync(configFilePath, action != "add" && key == "databases" ? `module.exports = ${JSON.stringify(content, null, "\t")}` : configFile, "utf8", err => {
 			if(err) console.log(err);
 		});
-	}catch(e){ console.log(e) }
+	}catch(e){ }
 }
 
 describe('Model Errors with config file', () => {

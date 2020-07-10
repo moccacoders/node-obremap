@@ -1,27 +1,87 @@
-import Make from '../../../../modules/cli/models/make'
+// ########################################
+//   REVISAR POR QUE SE DETIENE TERMINANDO
+//   "Create Connection with Config File"
+// ########################################
 
-describe('Models', () => {
-	it('makes a model', () => {
+const EOL = require('os').EOL;
+const expect = require('chai').expect;
+const fs = require("fs");
+const moment = require("moment");
+const path = require('path');
+const root = require("app-root-path");
 
-		let fs = {
-			mkdirSync: sinon.spy(),
-			writeFile: sinon.spy(),
-		}
+const configFilePath = path.join(root.path, "/obremap.config.js");
+const configFilePathTest = path.join(root.path, "/obremap.config.test");
+const cmd = require('../../../setup/cli/cmd');
+const { ENTER, DOWN } = cmd;
+const cliPath = path.join(__dirname, "/../../../../", "modules/cli/index.mjs");
 
-		Make({ args: ['Test'], cwd: 'blah', fs })
-
-		expect(fs.mkdirSync.calledOnce).to.equal(true)
-		expect(fs.writeFile.calledOnce).to.equal(true)
-		expect(fs.mkdirSync.args[0][0]).to.equal('blah/models')
-		expect(fs.writeFile.args[0][0]).to.equal('blah/models/test.js')
-
-		let error = new Error('failed creating file')
-		try {
-			fs.writeFile.args[0][2](error)
-		}
-		catch(e) {
-			fs.writeFile.args[0][2]()
-			expect(e.message).to.equal('failed creating file')
-		}
+describe('Obremap CLI - Models', () => {
+	before(() => {
+		fs.rmdirSync(path.join(root.path, "/models"), { recursive : true });
 	})
-})
+
+	after(() => {
+		fs.rmdirSync(path.join(root.path, "/models"), { recursive : true });
+	})
+
+	it('create model with defaults', async () => {
+		const response = await cmd.execute(
+			cliPath,
+			"make:model",
+			[
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				ENTER,
+				"n",
+				ENTER,
+				`default_${moment().unix()}`,
+				ENTER,
+				"n",
+					ENTER,
+			],
+			{
+				timeout : 800
+			}
+		);
+
+		let resp = response.trim().split(EOL);
+		expect(resp.pop()).to.match(/The OBREMAP model file was CREATED/);
+	});
+
+	describe("Test languages", () => {
+		it('english', async () => {
+			const response = await cmd.execute(
+				cliPath,
+				"make:model",
+				[
+					ENTER
+				]
+			);
+
+			let resp = response.trim().split(EOL);
+			expect(resp[resp.length - 2])
+			.to.match(/What driver do you want to work with/);
+		});
+
+		it('spanish', async () => {
+			const response = await cmd.execute(
+				cliPath,
+				"make:model",
+				[
+					DOWN,
+					ENTER
+				]
+			);
+
+			let resp = response.trim().split(EOL);
+			expect(resp[resp.length - 2])
+			.to.match(/Con qué driver deseas trabajar/);
+		});
+	})
+});
