@@ -1,11 +1,13 @@
 name: Run Tests and Coveralls
 on:
   push:
+    branches-ignore: 
+      master
   pull_request:
     branches: [ master, dev ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
