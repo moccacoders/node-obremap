@@ -10,9 +10,11 @@ migrations
 .env*
 .nyc_output
 .git
-!/dist/cli/migrations
 _*
 models
 obremap.config.js
 .github
-!dist/*
+
+## EXCEPTS
+!/dist/cli/migrations
+!dist/cli/models
