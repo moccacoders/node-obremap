@@ -1,6 +1,6 @@
 {
   "name": "@moccacoders/node-obremap",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "OBREMAP Node ORM is an Object-Relational Mapping tool for Node JS. OBREMAP provides a beautiful and simple ActiveRecord implementation to work with your database.",
   "homepage": "https://github.com/moccacoders/node-obremap#readme",
   "bin": {
@@ -21,10 +21,17 @@
   "keywords": [
     "orm",
     "node-eloquent",
+    "node-orm",
     "eloquent",
+    "node",
     "laravel",
     "database",
-    "mysql"
+    "mysql",
+    "cli",
+    "database-models",
+    "models",
+    "query-builder",
+    "relationship"
   ],
   "author": "Raymundo Salazar <raymundo.salazar@moccacoders.com>",
   "license": "ISC",
