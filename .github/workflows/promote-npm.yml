@@ -1,0 +1,22 @@
+name: Promote into npm package
+on:
+	push:
+		branches:
+			master
+
+jobs:
+	promote-npm:
+		runs-on: ubuntu-latest
+
+		steps:
+			- uses: actions/checkout@v2
+			
+			- name: Install Dependencies
+				run: npm install
+
+			- name: Build package
+				run: npn run build
+
+			- name: Publish npm package
+				run: npm publish
+			
