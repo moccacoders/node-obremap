@@ -24,16 +24,15 @@ class MysqlAdapter {
     if(typeof orderBy == "string") orderBy = [orderBy];
     return new Promise((resolve, reject) => {
       const options = {
-        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins).join(" ")}${where ? ` WHERE ${connection.escape(where)}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
-        nestTables: joins.length > 0 ? true : false
+        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins).join(" ")}${where ? ` WHERE ${connection.escape(where).replace(/, /, " AND ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
+        nestTables: true
       }
-
 
       connection.query(options,  (error, results) => {
         if(error) return reject(error)
 
         if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
-        if(joins.length > 0) results = this.mergeInJoins(results)
+        if(joins.length > 0 || typeof joins == "object") results = this.mergeInJoins(results, joins)
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
     })
@@ -132,6 +131,7 @@ class MysqlAdapter {
     used on eager loads
   */
   getJoins(joins) {
+    if(typeof joins == "object") return [];
     return joins.map(join => {
       let split = join.includeTable.split(" as ");
       return ` ${join.type || "INNER"} JOIN \`${split[0]}\`${(split[1]) ? ` AS ${split[1]}` : ''} ON ${join.localField} ${join.operator || "="} ${join.remoteField}`
@@ -154,6 +154,7 @@ class MysqlAdapter {
   */
 
   makeRelatable(result, model) {
+    if(!result) return true;
     return new Proxy(result, {
       get(target, name) {
         if(name in target) return target[name]
@@ -184,15 +185,25 @@ class MysqlAdapter {
       chats: {...}
     }
   */
-  mergeInJoins(results) {
-    return results.map(result => {
+  mergeInJoins(results, joins) {
+    let response = [];
+    results.map((result, ind) => {
       let newResult = {}
       Object.keys(result).forEach((item, index) => {
-        if(index === 0) newResult = result[item]
-        else newResult[item] = result[item]
+        newResult = result[item]
+
+        if(typeof joins == "object"){
+          Object.entries(joins).map(obj => {
+            let [key, val] = obj;
+            let localFieldSplit = val.localField.split(".");
+            let localField = localFieldSplit[localFieldSplit.length - 1];
+            newResult[key] = val.result({[val.localField] : newResult[localField]});
+          });
+        }
       })
-      return newResult
+      response[ind] = newResult
     })
+    return response;
   }
 }
 

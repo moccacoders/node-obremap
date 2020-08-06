@@ -16,6 +16,7 @@ describe('Model.hasMany()', () => {
 
 	it('returns join statement', async function() {
 		let rawQuery = await new User({ id: 1 }).hasMany(Chat, 'id', 'user_id')
+		console.log(await rawQuery.result().get());
 
 		expect(rawQuery.includeTable).to.be.equal('chats')
 		expect(rawQuery.localField).to.be.equal('users.id')
