@@ -1,6 +1,6 @@
 {
   "name": "@moccacoders/node-obremap",
-  "version": "1.0.5",
+  "version": "1.1.1",
   "description": "OBREMAP Node ORM is an Object-Relational Mapping tool for Node JS. OBREMAP provides a beautiful and simple ActiveRecord implementation to work with your database.",
   "homepage": "https://github.com/moccacoders/node-obremap#readme",
   "bin": {
@@ -8,10 +8,10 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "start": "NODE_ENV=test babel modules --watch --out-dir dist --no-comments",
-    "local-test": "NODE_ENV=test mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive",
-    "build": "NODE_ENV=test babel modules --out-dir dist --no-comments",
-    "local-cover": "NODE_ENV=test nyc --reporter=text --show-process-tree ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit",
+    "start": "babel modules --watch --out-dir dist --no-comments",
+    "local-test": "mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive",
+    "build": "babel modules --out-dir dist --no-comments",
+    "local-cover": "nyc --reporter=text --show-process-tree ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit",
     "test": "nyc --reporter=html  --reporter=lcov --reporter=text-lcov ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit | coveralls"
   },
   "repository": {
@@ -34,7 +34,7 @@
     "relationship"
   ],
   "author": "Raymundo Salazar <raymundo.salazar@moccacoders.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@babel/cli": "7.10.4",
     "@babel/core": "7.10.4",

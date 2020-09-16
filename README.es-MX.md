@@ -1,5 +1,11 @@
 # OBREMAP - Node ORM
 
+<a href="https://opensource.org/licenses/MIT" target="_blank">![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)</a>
+[![made-with-Go](https://img.shields.io/badge/Made%20with-NPM-6cc24a.svg)](https://nodejs.org)
+<a href="https://www.npmjs.com/package/@moccacoders/node-obremap" target="_blank">![NPM Version](https://badge.fury.io/js/%40moccacoders%2Fnode-obremap.svg)</a>
+![Testing Status](https://github.com/moccacoders/node-obremap/workflows/Run%20Tests%20and%20Coveralls/badge.svg?branch=master)
+![Coverage Status](https://coveralls.io/repos/github/moccacoders/node-obremap/badge.svg?branch=dev)
+
 **OBREMAP Node ORM** es una herramienta de Mapeo Objeto-Relacional para Node JS basada en el famoso ORM de [Laravel](https://laravel.com/), [**Eloquent**](https://laravel.com/docs/eloquent).
 OBREMAP proporciona una implementación de ActiveRecord hermosa y simple para trabajar con su base de datos. Cada tabla de base de datos tiene un **"Modelo OBREMAP"** correspondiente que se utiliza para interactuar con esa tabla.
 Los modelos le permiten consultar datos en sus tablas, así como insertar nuevos registros en la tabla.
@@ -41,16 +47,16 @@ Lo que deberás hacer es crear un archivo con el nombre `obremap.config.js` en l
 
 ```js
 module.exports = {
-  databases : {
-    default : { // IMPORTANTE AGREGAR "DEFAULT". ESTA SERÁ LA INFORMACIÓN DE CONEXIÓN PRINCIPAL
-      host: "localhost",
-      user: "user",
-      password: "pass",
-      database: "database_name",
-      port: 3306,
-      driver: "mysql"
-    }
-  }
+	databases : {
+		default : { // IMPORTANTE AGREGAR "DEFAULT". ESTA SERÁ LA INFORMACIÓN DE CONEXIÓN PRINCIPAL
+			host: "localhost",
+			user: "user",
+			password: "pass",
+			database: "database_name",
+			port: 3306,
+			driver: "mysql"
+		}
+	}
 }
 ```
 
@@ -59,13 +65,13 @@ Comunmente, la configuración de las bases de datos utilizan multiples valores d
 
 Muchos de los proveedores de bases de datos proveen una única "URL" de conexión a base de datos, la cual contiene toda la información necesaria para la conexión en una simple cadena. Un ejemplo de URL de dase de datos se ve muy similiar a esto:
 
-```php
+```
 mysql://root:password@127.0.0.1/forge?charset=UTF-8
 ```
 
 Estas URLs suelen seguir una convención de esquema estándar:
 
-```php
+```
 driver://username:password@host:port/database?options
 ```
 
@@ -80,9 +86,9 @@ DATABASE_URL=mysql://root:password@127.0.0.1/database_name
 La configuración es similar a la anterior. Solo que en lugar de guardar un objeto dentro de la configuración default, deberás agregar la URL como cadena.
 ```js
 module.exports = {
-  databases : {
-    default : "mysql://root:password@127.0.0.1/database_name"
-  }
+	databases : {
+		default : "mysql://root:password@127.0.0.1/database_name"
+	}
 }
 ````
 
@@ -118,12 +124,12 @@ Así como se puede configurar multiples conexión a la base de datos con una peq
 
 ```js
 module.exports = {
-  databases : {
-    // CONEXIÓN PRINCIPAL
-    default : "mysql://root:password@127.0.0.1/database_name",
-    // CONEXIÓN SECUNDARIA [LOCAL]
-    local : "mysql://loca_user:local_pass@localhost/other_database"
-  }
+	databases : {
+		// CONEXIÓN PRINCIPAL
+		default : "mysql://root:password@127.0.0.1/database_name",
+		// CONEXIÓN SECUNDARIA [LOCAL]
+		local : "mysql://loca_user:local_pass@localhost/other_database"
+	}
 }
 ```
 
@@ -135,7 +141,7 @@ Una vez que ya haz configurados tus multiples bases de datos lo que deberás hac
 import { Model } from 'node-obremap'
 
 export default class Chat extends Model {
-  static conexion = "local";
+	static conexion = "local";
 }
 ```
 
@@ -150,10 +156,10 @@ La forma más sencilla para crear tus modelos es utilizando el **Obremap CLI** c
 import { Model } from 'node-obremap'
 
 export default class Chat extends Model {
-  /*
-    overwrite table name, this is optional
-    static tableName = 'dashboard_chats';
-  */
+	/*
+		overwrite table name, this is optional
+		static tableName = 'dashboard_chats';
+	*/
 }
 
 ```
@@ -167,8 +173,8 @@ Ejemplo:
 import Chat from './chat'
 
 async function getChats {
-  let chats = await Chat.all()
-  console.log(chats)
+	let chats = await Chat.all()
+	console.log(chats)
 }
 ```
 
@@ -260,19 +266,17 @@ expect(user.name).to.be.equal('Bob')
 ```js
 import { Model } from 'node-obremap'
 
-
 export default class User extends Model {
-  chats() {
-    return this.hasMany(Chat)
-  }
+	chats() {
+		return this.hasMany(Chat)
+	}
 }
 
-export default class Chat extends Model {
+/* ============================================= */
 
-}
+export default class Chat extends Model { }
 
 let user = await User.first()
-
 //has many results return a query builder instance
 let chats = await user.chats.first()
 
