@@ -46,6 +46,11 @@ export default class Builder {
 	}
 
 	where(where) {
+		Object.entries(where).map(obj => {
+			let [key, val] = obj;
+			delete where[key];
+			where[`${this.options.model.getTableName}.${key}`] = val;
+		})
 		this.options.where = where
 		return this
 	}
@@ -76,5 +81,11 @@ export default class Builder {
 		this.options.select = `COUNT(${this.options.model.primaryKey}) as count`
 		let result = adapter.select(this.options, this.model);
 		return result;
+	}
+
+	with(...relationships) {
+		let joins = relationships.map(relationship => this.options.model[relationship]())
+		this.options.joins = joins;
+		return this;
 	}
 }
