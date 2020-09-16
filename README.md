@@ -1,5 +1,9 @@
 # OBREMAP - Node ORM
 
+![example workflow name](https://github.com/moccacoders/node-obremap/workflows/Run%20Tests%20and%20Coveralls/badge.svg?branch=master)
+![Coverage Status](https://coveralls.io/repos/github/moccacoders/node-obremap/badge.svg?branch=master)
+[![npm version](https://badge.fury.io/js/%40moccacoders%2Fnode-obremap.svg)](https://badge.fury.io/js/%40moccacoders%2Fnode-obremap)
+
 **OBREMAP Node ORM** is an Object-Relational Mapping tool for Node JS based on the famous ORM of [Laravel](https://laravel.com/), [**Eloquent ORM**](https://laravel.com/docs/eloquent).
 OBREMAP provides a beautiful and simple ActiveRecord implementation to work with your database. Each database table has a corresponding **"OBREMAP Model"** that is used to interact with that table.
 Models allow you to query data in your tables, as well as insert new records into the table.
