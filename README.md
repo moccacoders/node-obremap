@@ -1,8 +1,10 @@
 # OBREMAP - Node ORM
 
-![example workflow name](https://github.com/moccacoders/node-obremap/workflows/Run%20Tests%20and%20Coveralls/badge.svg?branch=master)
-![Coverage Status](https://coveralls.io/repos/github/moccacoders/node-obremap/badge.svg?branch=master)
-[![npm version](https://badge.fury.io/js/%40moccacoders%2Fnode-obremap.svg)](https://badge.fury.io/js/%40moccacoders%2Fnode-obremap)
+<a href="https://opensource.org/licenses/MIT" target="_blank">![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)</a>
+[![made-with-Go](https://img.shields.io/badge/Made%20with-NPM-6cc24a.svg)](https://nodejs.org)
+<a href="https://www.npmjs.com/package/@moccacoders/node-obremap" target="_blank">![NPM Version](https://badge.fury.io/js/%40moccacoders%2Fnode-obremap.svg)</a>
+![Testing Status](https://github.com/moccacoders/node-obremap/workflows/Run%20Tests%20and%20Coveralls/badge.svg?branch=master)
+![Coverage Status](https://coveralls.io/repos/github/moccacoders/node-obremap/badge.svg?branch=dev)
 
 **OBREMAP Node ORM** is an Object-Relational Mapping tool for Node JS based on the famous ORM of [Laravel](https://laravel.com/), [**Eloquent ORM**](https://laravel.com/docs/eloquent).
 OBREMAP provides a beautiful and simple ActiveRecord implementation to work with your database. Each database table has a corresponding **"OBREMAP Model"** that is used to interact with that table.
@@ -64,20 +66,20 @@ Commonly, database settings use multiple settings such as `host`,` database`, `u
 Many of the database providers provide a single database connection "URL", which contains all the necessary information for the connection in a single string. An example of data-giving URLs looks very similar to this:
 
 ``` php
-mysql: // root: password@127.0.0.1/forge? charset = UTF-8
+mysql://root:password@127.0.0.1/forge?charset=UTF-8
 ```
 
 These URLs usually follow a standard schema convention:
 
 ``` php
-driver: // username: password @ host: port / database? options
+driver://username:password@host:port/database?options
 ```
 
 For your convenience, **OBREMAP Node ORM** supports these URLs as an alternative to configuring their databases with multiple configuration options. That is, if a database configuration URL is found (or its corresponding `DATABASE_URL` environment variable) it will be used to extract the database connection and credential information.
 
 ##### -> ENVIRONMENT VARIABLES
 ```
-DATABASE_URL = mysql: // root: password@127.0.0.1/database_name
+DATABASE_URL = mysql://root:password@127.0.0.1/database_name
 ```
 
 ##### -> OBREMAP CONFIGURATION FILE
@@ -85,7 +87,7 @@ The configuration is similar to the previous one. Only instead of saving an obje
 ``` js
 module.exports = {
   databases: {
-    default: "mysql: // root: password@127.0.0.1/database_name"
+    default: "mysql://root:password@127.0.0.1/database_name"
   }
 }
 ```
@@ -124,9 +126,9 @@ Just as you can configure multiple connections to the database with a small modi
 module.exports = {
   databases: {
     // MAIN CONNECTION
-    default: "mysql: // root: password@127.0.0.1/database_name",
+    default: "mysql://root:password@127.0.0.1/database_name",
     // SECONDARY CONNECTION [LOCAL]
-    local: "mysql: // loca_user: local_pass @ localhost / other_database"
+    local: "mysql://loca_user:local_pass@localhost/other_database"
   }
 }
 ```
@@ -154,10 +156,10 @@ The easiest way to create your models is using the **Obremap CLI** with the `obr
 import {Model} from 'node-obremap'
 
 export default class Chat extends Model {
-  / *
+  /*
     overwrite table name, this is optional
     static tableName = 'dashboard_chats';
-  * /
+  */
 }
 
 ```
@@ -290,14 +292,14 @@ They are currently in **Spanish** and **English**.
 
 #### Models
 
-`obremap make: model`
+`obremap make:model`
 
 It will initialize the **Models** creation wizard which will guide you in creating your model, requesting the necessary information for it. Additionally, and only if necessary, it will display the connection creation wizard.
 Creates a file in your current directory `/models/user.js` with a default model
 
 #### Connections
 
-`obremap make: connection`
+`obremap make:connection`
 
 It will initialize the **Connections** creation wizard which will ask you for the necessary information to create connections; It will also allow you to select between using the OBREMAP configuration file or your Environment Variables.
 
