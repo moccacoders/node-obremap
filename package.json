@@ -34,7 +34,7 @@
     "relationship"
   ],
   "author": "Raymundo Salazar <raymundo.salazar@moccacoders.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@babel/cli": "7.10.4",
     "@babel/core": "7.10.4",
