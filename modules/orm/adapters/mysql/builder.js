@@ -22,6 +22,7 @@ export default class Builder {
 		if(this.options.joins)
 			this.options.joins.push(join)
 		else this.options.joins = [join]
+		if(this.options.joins[0] !== true) this.options.joins.splice(0,0,true);
 		return this;
 	}
 
@@ -84,7 +85,13 @@ export default class Builder {
 	}
 
 	with(...relationships) {
-		let joins = relationships.map(relationship => this.options.model[relationship]())
+		let joins = {};
+		relationships.map(rel => {
+			let relationship = this.options.model;
+			relationship = new relationship();
+			return joins[rel] = relationship[rel](this);
+		})
+
 		this.options.joins = joins;
 		return this;
 	}
