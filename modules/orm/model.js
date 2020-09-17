@@ -64,11 +64,13 @@ export default class Model {
 	  ex Model.find(id)
 	*/
 	static find(id) {
-		return adapter(this).select({
+		let test = adapter(this).select({
 			limit: 1,
 			where: {id},
 			model: this
 		})
+		// test.then((res) => console.log(res))
+		return test;
 	}
 
 	/*
@@ -184,13 +186,15 @@ export default class Model {
 			remoteField = operator;
 			operator = "=";
 		}
-		let joins = [{
+
+		let joins = [true, {
 			includeTable,
 			localField,
 			operator,
 			remoteField,
 			type : type.toUpperCase()
 		}];
+
 		return adapter(this).queryBuilder({
 			joins,
 			model: this
@@ -218,9 +222,10 @@ export default class Model {
 		let joins = {};
 		relationships.map(rel => {
 			let relationship = this;
-			if(!relationship[rel]){
+			// console.log(relationship);
+			// if(!relationship[rel]){
 				relationship = new relationship();
-			}
+			// }
 			return joins[rel] = relationship[rel](this);
 		})
 		return adapter(this).queryBuilder({
@@ -243,16 +248,17 @@ export default class Model {
 	hasOne(Model, localField = getFieldName(Model.name), remoteField = 'id') {
 		let name = this.name || this.constructor.name;
 		let snakeCase = this.snakeCase || this.constructor.snakeCase;
+		let completeLocalField = `${getTableName(name, snakeCase)}.${localField}`;
 
 		return {
-			result: (val = this.values) => {
-				let completeLocalField = `${getTableName(name, snakeCase)}.${localField}`;
+			result: () => {
+				let val = this.values;
 				return Model.where({
-					[remoteField]: val[localField] || val[completeLocalField]
+					[remoteField]: val[localField]
 				}).first();
 			},
 			includeTable: getTableName(Model.name, Model.snakeCase),
-			localField,
+			localField : completeLocalField,
 			remoteField: `${getTableName(Model.name, Model.snakeCase)}.${remoteField}`,
 		}
 	}
@@ -271,17 +277,18 @@ export default class Model {
 	hasMany(Model, localField = 'id', remoteField = null) {
 		let name = this.name || this.constructor.name;
 		let snakeCase = this.snakeCase || this.constructor.snakeCase;
+		let completeLocalField = `${getTableName(name, snakeCase)}.${localField}`;
 
 		remoteField = remoteField || getFieldName(name);
 		return {
-			result: (val = this.values) => {
-				let completeLocalField = `${getTableName(name, snakeCase)}.${localField}`;
+			result: () => {
+				let val = this.values;
 				return Model.where({
 					[remoteField]: val[localField] || val[completeLocalField]
-				}).get();
+				});
 			},
 			includeTable: getTableName(Model.name, Model.snakeCase),
-			localField,
+			localField : completeLocalField,
 			remoteField: `${getTableName(Model.name, Model.snakeCase)}.${remoteField}`,
 		}
 	}

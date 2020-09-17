@@ -14,6 +14,12 @@ class MysqlAdapter {
     Builds the mysql query, used query builder and root model class
   */
   select({ model, select, where, limit, joins = [], orderBy, offset }) {
+    let joinsSQL = false;
+    if(joins[0] === true){
+      joinsSQL = true;
+      joins.splice(0,1);
+    }
+
     if(typeof orderBy == "object"){
       orderBy = Object.entries(orderBy).map((elem, ind) => {
         const [key, val] = elem;
@@ -24,15 +30,15 @@ class MysqlAdapter {
     if(typeof orderBy == "string") orderBy = [orderBy];
     return new Promise((resolve, reject) => {
       const options = {
-        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins).join(" ")}${where ? ` WHERE ${connection.escape(where).replace(/, /, " AND ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
-        nestTables: true
+        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${connection.escape(where).replace(/, /, " AND ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
+        nestTables: joins.length > 0 && joinsSQL
       }
 
       connection.query(options,  (error, results) => {
         if(error) return reject(error)
 
         if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
-        if(joins.length > 0 || typeof joins == "object") results = this.mergeInJoins(results, joins)
+        if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
     })
@@ -130,8 +136,8 @@ class MysqlAdapter {
     creates join query from any model realtionships
     used on eager loads
   */
-  getJoins(joins) {
-    if(typeof joins == "object") return [];
+  getJoins(joins, joinsSQL) {
+    if(typeof joins == "object" && !joinsSQL) return [];
     return joins.map(join => {
       let split = join.includeTable.split(" as ");
       return ` ${join.type || "INNER"} JOIN \`${split[0]}\`${(split[1]) ? ` AS ${split[1]}` : ''} ON ${join.localField} ${join.operator || "="} ${join.remoteField}`
@@ -185,21 +191,23 @@ class MysqlAdapter {
       chats: {...}
     }
   */
-  mergeInJoins(results, joins) {
+  mergeInJoins(results, joins, joinsSQL = false) {
     let response = [];
     results.map((result, ind) => {
-      let newResult = {}
+      let newResult = {};
       Object.keys(result).forEach((item, index) => {
-        newResult = result[item]
+        if(index==0) return newResult = result[item]
 
-        if(typeof joins == "object"){
-          Object.entries(joins).map(obj => {
-            let [key, val] = obj;
-            let localFieldSplit = val.localField.split(".");
-            let localField = localFieldSplit[localFieldSplit.length - 1];
-            newResult[key] = val.result({[val.localField] : newResult[localField]});
-          });
-        }
+        // if(typeof joins == "object" && !joinsSQL){
+        //   Object.entries(joins).map(obj => {
+        //     let [key, val] = obj;
+        //     let localFieldSplit = val.localField.split(".");
+        //     let localField = localFieldSplit[localFieldSplit.length - 1];
+        //     newResult[key] = val.result({[val.localField] : newResult[localField]});
+        //   });
+        // }
+        
+        if(joinsSQL) newResult[item] = result[item]
       })
       response[ind] = newResult
     })

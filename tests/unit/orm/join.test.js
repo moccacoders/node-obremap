@@ -6,7 +6,7 @@ describe('Model.join()', () => {
 		expect(chat.u.name).to.be.equal("Bob")
 	})
 
-	it('Left Join complete without AS', async function() {
+	it(' ´´ ', async function() {
 		let chat = await Chat.join("users", "user_id", "=", "users.id").first()
 		expect(chat.user.name).to.be.equal("Bob")
 	})
@@ -21,7 +21,7 @@ describe('Model.join()', () => {
 		expect(chat.user_id).to.be.equal(23)
 	})
 
-	it('Inner Join without type and operator', async function() {
+	it('Inner Join without type and operat', async function() {
 		let chat = await Chat.where({ 'chats.user_id': 23 }).join("users", "user_id", "=", "users.id", "left").first()
 		expect(chat.user_id).to.be.equal(23)
 	})

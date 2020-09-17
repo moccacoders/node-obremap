@@ -4,19 +4,23 @@ import ChatImages from '../../../setup/models/relationships/chat-images.js'
 
 describe('Model.hasMany()', () => {
 	it('tests hasMany directly', async function() {
-		let chat = await new User({ id: 1 }).hasMany(Chat).result().first()
-		expect(chat.user_id).to.be.equal(1)
+		let chat = await new User({ id: 23 }).hasMany(Chat).result().get()
+
+		expect(chat.length).to.be.greaterThan(1)
+		expect(chat[0].user_id).to.be.equal(23)
+		expect(chat[200].user_id).to.be.equal(23)
 	})
 
 	it('tests hasMany with set values', async function() {
-		let chat = await new User({ id: 1 }).hasMany(Chat, 'id', 'user_id').result().first()
+		let chat = await new User({ id: 23 }).hasMany(Chat, 'id', 'user_id').result().get()
 
-		expect(chat.user_id).to.be.equal(1)
+		expect(chat.length).to.be.greaterThan(1)
+		expect(chat[0].user_id).to.be.equal(23)
+		expect(chat[200].user_id).to.be.equal(23)
 	})
 
 	it('returns join statement', async function() {
 		let rawQuery = await new User({ id: 1 }).hasMany(Chat, 'id', 'user_id')
-		console.log(await rawQuery.result().get());
 
 		expect(rawQuery.includeTable).to.be.equal('chats')
 		expect(rawQuery.localField).to.be.equal('users.id')
