@@ -37,7 +37,7 @@ class MysqlAdapter {
       connection.query(options,  (error, results) => {
         if(error) return reject(error)
 
-        if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
+        if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0] ? results[0].count : results.count ? results.count : null);
         if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
