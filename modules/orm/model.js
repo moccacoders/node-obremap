@@ -163,6 +163,19 @@ export default class Model {
 		})
 	}
 
+	static orWhere (orWhere) {
+		Object.entries(orWhere).map(obj => {
+			let [key, val] = obj;
+			if(/\./.test(key)) return true;
+			delete orWhere[key];
+			orWhere[`${this.getTableName}.${key}`] = val;
+		})
+		return adapter(this).queryBuilder({
+			orWhere,
+			model: this
+		})
+	}
+
 	/*
 	  contrain amount returned
 	  ex Model.limit(5).get()
