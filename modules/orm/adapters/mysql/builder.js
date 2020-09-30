@@ -56,6 +56,21 @@ export default class Builder {
 		return this
 	}
 
+	orWhere(orWhere) {
+		Object.entries(orWhere).map(obj => {
+			let [key, val] = obj;
+			delete orWhere[key];
+			orWhere[`${this.options.model.getTableName}.${key}`] = val;
+		})
+		if(this.options.orWhere){
+			if(!this.options.orWhere[0])
+				this.options.orWhere = [this.options.orWhere];
+			this.options.orWhere.push(orWhere);
+		}else
+			this.options.orWhere = orWhere;
+		return this
+	}
+
 	set(data) {
 		this.options.data = data
 		return this;
