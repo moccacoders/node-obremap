@@ -47,8 +47,6 @@ class MysqlAdapter {
         nestTables: joins.length > 0 && joinsSQL
       }
 
-      console.log(options.sql);
-
       connection.query(options,  (error, results) => {
         if(error) return reject(error)
 
