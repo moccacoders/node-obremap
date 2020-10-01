@@ -1,6 +1,6 @@
 import Chat from '../../setup/models/chat'
 
-describe('Model.where()', () => {
+describe('Model.orWhere()', () => {
   it('grabs two by id', async function() {
     let chat = await Chat.where({ id: 1 }).orWhere({ id : 2 }).get();
     expect(chat.length).to.be.equal(2);
