@@ -13,6 +13,12 @@ describe('Model.where()', () => {
     expect(chat[0].id).to.be.ok
   })
 
+  it('grabs by user_id null', async function() {
+    let chat = await Chat.where({ user_id: null }).get();
+    expect(chat[0].messages).to.be.equal('bleh')
+    expect(chat[0].id).to.be.equal(3);
+  })
+
   it('grabs by messages - is not', async function() {
     let chat = await Chat.where({ messages: '!= blah' }).get()
     expect(chat.length).to.be.greaterThan(2)
