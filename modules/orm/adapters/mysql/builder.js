@@ -52,7 +52,12 @@ export default class Builder {
 			delete where[key];
 			where[`${this.options.model.getTableName}.${key}`] = val;
 		})
-		this.options.where = where
+		if(this.options.where){
+			if(!this.options.where[0])
+				this.options.where = [this.options.where];
+			this.options.where.push(where);
+		}else
+			this.options.where = where;
 		return this
 	}
 
@@ -62,6 +67,7 @@ export default class Builder {
 			delete orWhere[key];
 			orWhere[`${this.options.model.getTableName}.${key}`] = val;
 		})
+
 		if(this.options.orWhere){
 			if(!this.options.orWhere[0])
 				this.options.orWhere = [this.options.orWhere];
@@ -87,6 +93,11 @@ export default class Builder {
 
 	get() {
 		return adapter.select(this.options, this.model)
+	}
+
+	toSql() {
+		this.options.toSql = true;
+		return this.get();
 	}
 
 	update() {

@@ -225,6 +225,13 @@ export default class Model {
 		});
 	}
 
+	static toSql(){
+		return adapter(this).queryBuilder({
+			toSql : true,
+			model: this
+		}).get();
+	}
+
 	//relationships
 
 	/*

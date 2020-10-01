@@ -13,7 +13,7 @@ class MysqlAdapter {
 
     Builds the mysql query, used query builder and root model class
   */
-  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere }) {
+  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql }) {
     let joinsSQL = false;
     if(joins[0] === true){
       joinsSQL = true;
@@ -30,22 +30,47 @@ class MysqlAdapter {
     if(typeof orderBy == "string") orderBy = [orderBy];
     
     if(orWhere){
-      let newOrWhere = orWhere;
-      orWhere = " ";
-      if(newOrWhere[0]){
-        newOrWhere.map(key => {
-          orWhere += ` OR ${connection.escape(key).replace(/, /, " OR ")}`;
-        });
-      }else{
-        orWhere += ` OR ${connection.escape(newOrWhere).replace(/, /, " OR ")}`;
-      }
+      let newOrWhere = (orWhere[0]) ? orWhere : [orWhere];
+      orWhere = [];
+
+      newOrWhere.map(object => {
+        Object.entries(object).map(obj => {
+          let [key, val] = obj;
+          let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
+          if(!operator) operator = ["="];
+          val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+          orWhere.push(`${connection.escapeId(key)} ${operator[0]} ${connection.escape(val)}`);
+        })
+      })
+
+      orWhere = orWhere.join(" OR ");
+    }
+
+    if(where){
+      let newWhere = (where[0]) ? where : [where];
+      where = [];
+
+      newWhere.map(object => {
+        Object.entries(object).map(obj => {
+          let [key, val] = obj;
+          // console.log(obj);
+          let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
+          if(!operator) operator = ["="];
+          val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+          where.push(`${connection.escapeId(key)} ${operator[0]} ${connection.escape(val)}`);
+        })
+      })
+
+      where = where.join(" AND ")
     }
 
     return new Promise((resolve, reject) => {
       const options = {
-        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${connection.escape(where).replace(/, /, " AND ")}` : ''}${orWhere ? `${!where ? " WHERE" : ""}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
+        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE" : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
         nestTables: joins.length > 0 && joinsSQL
       }
+
+      if(toSql) resolve(options.sql);
 
       connection.query(options,  (error, results) => {
         if(error) return reject(error)
