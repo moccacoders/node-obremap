@@ -39,7 +39,13 @@ class MysqlAdapter {
           let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
           if(!operator) operator = ["="];
           val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-          orWhere.push(`${connection.escapeId(key)} ${operator[0]} ${connection.escape(val)}`);
+          if(val === "null" || val === null){
+            val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+            operator[0] = "";
+          }else{
+            val = connection.escape(val);
+          }
+          orWhere.push(`${connection.escapeId(key)} ${operator[0]} ${val}`);
         })
       })
 
@@ -53,11 +59,16 @@ class MysqlAdapter {
       newWhere.map(object => {
         Object.entries(object).map(obj => {
           let [key, val] = obj;
-          // console.log(obj);
           let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
           if(!operator) operator = ["="];
           val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-          where.push(`${connection.escapeId(key)} ${operator[0]} ${connection.escape(val)}`);
+          if(val === "null" || val === null){
+            val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+            operator[0] = "";
+          }else{
+            val = connection.escape(val);
+          }
+          where.push(`${connection.escapeId(key)} ${operator[0]} ${val}`);
         })
       })
 
