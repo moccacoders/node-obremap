@@ -1,6 +1,6 @@
 {
   "name": "@moccacoders/node-obremap",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "OBREMAP Node ORM is an Object-Relational Mapping tool for Node JS. OBREMAP provides a beautiful and simple ActiveRecord implementation to work with your database.",
   "homepage": "https://github.com/moccacoders/node-obremap#readme",
   "bin": {
@@ -15,7 +15,7 @@
     "build": "babel modules --out-dir dist --no-comments",
     "local-cover": "nyc --reporter=text --show-process-tree ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit",
     "test": "nyc --reporter=html  --reporter=lcov --reporter=text-lcov ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit | coveralls",
-    "test-file" : "mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup "
+    "test-file": "mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup "
   },
   "repository": {
     "type": "git",
