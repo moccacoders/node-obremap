@@ -34,6 +34,7 @@ class MysqlAdapter {
       orWhere = [];
 
       newOrWhere.map(object => {
+        if(typeof object == "object")
         Object.entries(object).map(obj => {
           let [key, val] = obj;
           let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
@@ -57,6 +58,7 @@ class MysqlAdapter {
       where = [];
 
       newWhere.map(object => {
+        if(typeof object == "object")
         Object.entries(object).map(obj => {
           let [key, val] = obj;
           let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
@@ -74,6 +76,7 @@ class MysqlAdapter {
 
       where = where.join(" AND ")
     }
+
 
     return new Promise((resolve, reject) => {
       const options = {

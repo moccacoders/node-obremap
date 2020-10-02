@@ -34,7 +34,7 @@ describe('Model.where()', () => {
   })
 
   it('grabs by messages - nested is not', async function() {
-    let chat = await Chat.where("messages != 'blah' AND messages != 'bleh'").get()
+    let chat = await Chat.where({ messages: '!= blah' }).where("messages != 'bleh'").toSql()
     console.log(chat);
     // expect(chat.length).to.be.greaterThan(2)
     // expect(chat[0].messages).to.be.equal('blih')
