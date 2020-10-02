@@ -150,6 +150,7 @@ export default class Model {
 	  ex Model.where({ id: 1, user_id: 2 }).first()
 	*/
 	static where(where) {
+		if(typeof where == "object")
 		Object.entries(where).map(obj => {
 			let [key, val] = obj;
 			if(/\./.test(key)) return true;
@@ -164,6 +165,7 @@ export default class Model {
 	}
 
 	static orWhere (orWhere) {
+		if(typeof orWhere == "object")
 		Object.entries(orWhere).map(obj => {
 			let [key, val] = obj;
 			if(/\./.test(key)) return true;
