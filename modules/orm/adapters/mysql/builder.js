@@ -47,11 +47,13 @@ export default class Builder {
 	}
 
 	where(where) {
-		Object.entries(where).map(obj => {
-			let [key, val] = obj;
-			delete where[key];
-			where[`${this.options.model.getTableName}.${key}`] = val;
-		})
+		if(typeof where == "object")
+			Object.entries(where).map(obj => {
+				let [key, val] = obj;
+				delete where[key];
+				where[`${this.options.model.getTableName}.${key}`] = val;
+			});
+
 		if(this.options.where){
 			if(!this.options.where[0])
 				this.options.where = [this.options.where];
@@ -62,11 +64,12 @@ export default class Builder {
 	}
 
 	orWhere(orWhere) {
-		Object.entries(orWhere).map(obj => {
-			let [key, val] = obj;
-			delete orWhere[key];
-			orWhere[`${this.options.model.getTableName}.${key}`] = val;
-		})
+		if(typeof orWhere == "object")
+			Object.entries(orWhere).map(obj => {
+				let [key, val] = obj;
+				delete orWhere[key];
+				orWhere[`${this.options.model.getTableName}.${key}`] = val;
+			})
 
 		if(this.options.orWhere){
 			if(!this.options.orWhere[0])

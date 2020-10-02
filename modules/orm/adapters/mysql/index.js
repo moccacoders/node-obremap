@@ -29,7 +29,7 @@ class MysqlAdapter {
     }
     if(typeof orderBy == "string") orderBy = [orderBy];
     
-    if(orWhere){
+    if(orWhere && typeof orWhere == "object"){
       let newOrWhere = (orWhere[0]) ? orWhere : [orWhere];
       orWhere = [];
 
@@ -52,7 +52,7 @@ class MysqlAdapter {
       orWhere = orWhere.join(" OR ");
     }
 
-    if(where){
+    if(where && typeof where == "object"){
       let newWhere = (where[0]) ? where : [where];
       where = [];
 
@@ -140,7 +140,7 @@ class MysqlAdapter {
         connection.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
           resolve(this.makeRelatable({
             ...res[0]
-          }, model))
+          }, model).get())
         });
       })
     })
