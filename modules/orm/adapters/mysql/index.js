@@ -143,7 +143,7 @@ class MysqlAdapter {
         connection.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
           resolve(this.makeRelatable({
             ...res[0]
-          }, model).get())
+          }, model))
         });
       })
     })
