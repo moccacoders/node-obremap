@@ -17,7 +17,6 @@ describe('Model.count()', () => {
 
 	it('Get zero rows', async function() {
 		let count = await Count.where({ id : 1 }).count();
-		console.log(count);
 		expect(typeof count).to.be.equal("number")
 		expect(count).to.be.equal(0)
 	})
