@@ -66,6 +66,14 @@ export default class Model {
 		})
 	}
 
+	static countSync() {
+		return adapter(this).select({
+			sync : true,
+			select: `COUNT(${this.primaryKey}) as count`,
+			model: this
+		})
+	}
+
 	/*
 	  grab the item with matching primary key
 	  ex Model.find(id)
@@ -86,6 +94,15 @@ export default class Model {
 	*/
 	static first() {
 		return adapter(this).select({
+			limit: 1,
+			first: true,
+			model: this
+		})
+	}
+
+	static firstSync() {
+		return adapter(this).select({
+			sync: true,
 			limit: 1,
 			first: true,
 			model: this
@@ -237,6 +254,14 @@ export default class Model {
 
 	static toSql(){
 		return adapter(this).queryBuilder({
+			toSql : true,
+			model: this
+		}).get();
+	}
+
+	static toSqlSync(){
+		return adapter(this).queryBuilder({
+			sync : true,
 			toSql : true,
 			model: this
 		}).get();
