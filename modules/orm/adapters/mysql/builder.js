@@ -120,6 +120,12 @@ export default class Builder {
 		return this.get();
 	}
 
+	toSqlSync() {
+		this.options.sync = true;
+		this.options.toSql = true;
+		return this.get();
+	}
+
 	update() {
 		return adapter.update(this.options, this.model)
 	}

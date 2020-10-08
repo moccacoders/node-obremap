@@ -78,7 +78,7 @@ class MysqlAdapter {
     }
 
     const options = {
-      sql: `SELECT ${select ? select : joins ? this.joinsSelect(joins, model.getTableName) : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE" : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
+      sql: `SELECT ${select ? (sync ? this.selectSync(select, model.getTableName) : select) : (joins && sync ? this.joinsSelect(joins, model.getTableName) : '*')} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE" : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
       nestTables: joins.length > 0 && joinsSQL
     }
 
@@ -107,6 +107,22 @@ class MysqlAdapter {
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
     })
+  }
+
+  selectSync (select, originalTable) {
+    let newSelect = [];
+    select.map(s => {
+      s.split(/, ?/i).map(col => {
+        let table = originalTable;
+        let alias = null;
+
+        if(col.search(/ as /i) >= 0) [col, alias] = col.split(/ as /i);
+        if(col.search(/\./i) >= 0) [table, col] = col.split(".")
+
+        newSelect.push(`\`${table}\`.\`${col}\` AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
+      })
+    })
+    return newSelect.join(", ");
   }
 
   joinsSelect(joins, originalTable) {
