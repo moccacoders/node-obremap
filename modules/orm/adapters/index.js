@@ -8,6 +8,7 @@ export default (model) => {
 		global.dbConn = dbConfig(model.connection || "default");
 		return require(`./${global.dbConn.driver}`).default
 	} catch(e) {
+		console.log(e)
 		throw new Error('You must specify process.env.DB_DRIVER before creating a model.')
 	}
 }
