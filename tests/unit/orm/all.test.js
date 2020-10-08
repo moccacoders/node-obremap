@@ -43,4 +43,14 @@ describe('Model.all()', () => {
 		let chats = await Chat.orderBy(["created_at asc"]).all()
 		expect(true).to.be.equal(true)
 	})
+
+	it('test sync get all', () => {
+		let chats = Chat.where({ user_id : 1 })
+		.join("users", "chats.user_id", "users.id")
+		.join("users as u", "chats.user_id", "u.id")
+		.getSync();
+
+		expect(chats[0].users.id).to.be.equal(1);
+		expect(chats.length).to.be.equal(1);
+	})
 })

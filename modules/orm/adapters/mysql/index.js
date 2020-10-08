@@ -13,7 +13,7 @@ class MysqlAdapter {
 
     Builds the mysql query, used query builder and root model class
   */
-  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql }) {
+  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql, sync, first }) {
     let joinsSQL = false;
     if(joins[0] === true){
       joinsSQL = true;
@@ -44,9 +44,9 @@ class MysqlAdapter {
             val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
             operator[0] = "";
           }else{
-            val = connection.escape(val);
+            val = connection.async.escape(val);
           }
-          orWhere.push(`${connection.escapeId(key)} ${operator[0]} ${val}`);
+          orWhere.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
         })
       })
 
@@ -68,25 +68,38 @@ class MysqlAdapter {
             val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
             operator[0] = "";
           }else{
-            val = connection.escape(val);
+            val = connection.async.escape(val);
           }
-          where.push(`${connection.escapeId(key)} ${operator[0]} ${val}`);
+          where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
         })
       })
 
       where = where.join(" AND ")
     }
 
+    const options = {
+      sql: `SELECT ${select ? select : joins ? this.joinsSelect(joins, model.getTableName) : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE" : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
+      nestTables: joins.length > 0 && joinsSQL
+    }
+
+    if(toSql) return options.sql;
+
+    if(sync){
+      let results = connection.sync.query(options.sql)
+      if(joins.length > 0 && typeof joins == "object")
+        results = this.mergeSyncJoins(results, joins, joinsSQL);
+      if(/COUNT\(([\w]+)\)/.test(select))
+        results = (results[0] ? results[0].count : results.count ? results.count : null);
+      if(first == 1)
+        results = results[0]
+
+      return results;
+    }
 
     return new Promise((resolve, reject) => {
-      const options = {
-        sql: `SELECT ${select ? select : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE" : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.escape(limit)}` : ''}`,
-        nestTables: joins.length > 0 && joinsSQL
-      }
 
-      if(toSql) resolve(options.sql);
 
-      connection.query(options,  (error, results) => {
+      connection.async.query(options,  (error, results) => {
         if(error) return reject(error)
 
         if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0] ? results[0].count : results.count ? results.count : null);
@@ -94,6 +107,25 @@ class MysqlAdapter {
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
     })
+  }
+
+  joinsSelect(joins, originalTable) {
+    let select = [];
+    [{ includeTable:originalTable }, ...joins].map((join, ind) => {
+      let table = join.includeTable;
+      let tableName = null;
+      if(join.includeTable.search(/ as /i) >= 0){
+        table = join.includeTable.split(/ as /i)[1]
+        tableName = join.includeTable.split(/ as /i)[0];
+      }
+
+      let columns = [];
+      connection.sync.query(`SHOW COLUMNS FROM ${tableName || table}`).filter(column => {
+        columns.push(`\`${table}\`.\`${column.Field}\` AS \`${ind != 0 ? `${table}_table_` : ""}${column.Field}\``);
+      })
+      select.push(columns);
+    })
+    return select.join(", ");
   }
 
   /*
@@ -107,7 +139,7 @@ class MysqlAdapter {
     }
 
     return new Promise((resolve, reject) => {
-      connection.query(`INSERT INTO ${model.getTableName} SET ?`, data,  (error, result) => {
+      connection.async.query(`INSERT INTO ${model.getTableName} SET ?`, data,  (error, result) => {
         if(error) return reject(error)
         resolve(this.makeRelatable({
           id: result.insertId,
@@ -138,9 +170,9 @@ class MysqlAdapter {
 
     return new Promise((resolve, reject) => {
       if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
-      connection.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
+      connection.async.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
         if(error) return reject(error);
-        connection.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
+        connection.async.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
           resolve(this.makeRelatable({
             ...res[0]
           }, model))
@@ -170,7 +202,7 @@ class MysqlAdapter {
 
     return new Promise((resolve, reject) => {
       if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
-      connection.query(`DELETE FROM ${model.getTableName} WHERE ${where}`, (error, result) => {
+      connection.async.query(`DELETE FROM ${model.getTableName} WHERE ${where}`, (error, result) => {
         if(error) return reject(error);
         resolve(result, model);
       })
@@ -263,6 +295,26 @@ class MysqlAdapter {
       })
       response[ind] = newResult
     })
+    return response;
+  }
+
+  mergeSyncJoins (results, joins, joinsSQL = false) {
+    let response = [];
+    results.map(result => {
+      let obj = {};
+      Object.entries(result).map(object => {
+        let [key, value] = object;
+        if(key.search(/_table_/i) >= 0){
+          let match = key.split(/_table_/i);
+          if(!obj[match[0]]) obj[match[0]] = {};
+          obj[match[0]][match[1]] = value;
+        }
+        else
+          obj[key] = value;
+      })
+      response.push(obj);
+    })
+    
     return response;
   }
 }
