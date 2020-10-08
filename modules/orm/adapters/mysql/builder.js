@@ -90,11 +90,28 @@ export default class Builder {
 		return this.get()
 	}
 
+	firstSync() {
+		this.options.sync = true;
+		this.options.limit = 1
+		this.options.first = true
+		return this.get()
+	}
+
 	all() {
 		return adapter.select(this.options, this.model)
 	}
 
+	allSync() {
+		this.options.sync = true;
+		return adapter.select(this.options, this.model)
+	}
+
 	get() {
+		return adapter.select(this.options, this.model)
+	}
+
+	getSync() {
+		this.options.sync = true;
 		return adapter.select(this.options, this.model)
 	}
 
@@ -108,6 +125,13 @@ export default class Builder {
 	}
 
 	count() {
+		this.options.select = `COUNT(${this.options.model.primaryKey}) as count`
+		let result = adapter.select(this.options, this.model);
+		return result;
+	}
+
+	countSync() {
+		this.options.sync = true;
 		this.options.select = `COUNT(${this.options.model.primaryKey}) as count`
 		let result = adapter.select(this.options, this.model);
 		return result;

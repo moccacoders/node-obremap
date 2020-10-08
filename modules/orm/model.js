@@ -52,6 +52,13 @@ export default class Model {
 		})
 	}
 
+	static allSync() {
+		return adapter(this).select({
+			sync: true,
+			model: this
+		})
+	}
+
 	static count() {
 		return adapter(this).select({
 			select: `COUNT(${this.primaryKey}) as count`,
@@ -80,6 +87,7 @@ export default class Model {
 	static first() {
 		return adapter(this).select({
 			limit: 1,
+			first: true,
 			model: this
 		})
 	}
