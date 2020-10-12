@@ -111,6 +111,8 @@ class MysqlAdapter {
 
   selectSync (select, originalTable) {
     let newSelect = [];
+    let funct = null;
+    if(typeof select == "string") select = [select];
     select.map(s => {
       s.split(/, ?/i).map(col => {
         let table = originalTable;
@@ -118,8 +120,12 @@ class MysqlAdapter {
 
         if(col.search(/ as /i) >= 0) [col, alias] = col.split(/ as /i);
         if(col.search(/\./i) >= 0) [table, col] = col.split(".")
+        if(col.search(/count\(([a-z0-9]+)\)/i) >= 0){
+          col = col.replace(/count\(([a-z0-9]+)\)/i, `COUNT(\`${table}\`.\`$1\`)`);
+          funct = true;
+        }
 
-        newSelect.push(`\`${table}\`.\`${col}\` AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
+        newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
       })
     })
     return newSelect.join(", ");
