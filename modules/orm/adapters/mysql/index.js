@@ -35,19 +35,20 @@ class MysqlAdapter {
 
       newOrWhere.map(object => {
         if(typeof object == "object")
-        Object.entries(object).map(obj => {
-          let [key, val] = obj;
-          let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
-          if(!operator) operator = ["="];
-          val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-          if(val === "null" || val === null){
-            val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-            operator[0] = "";
-          }else{
-            val = connection.async.escape(val);
-          }
-          orWhere.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-        })
+          Object.entries(object).map(obj => {
+            let [key, val] = obj;
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            if(!operator) operator = ["="];
+            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+            if(val === "null" || val === null){
+              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+              operator[0] = "";
+            }else{
+              val = connection.async.escape(val);
+            }
+            orWhere.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
+          })
+        else orWhere.push(object)
       })
 
       orWhere = orWhere.join(" OR ");
@@ -59,26 +60,27 @@ class MysqlAdapter {
 
       newWhere.map(object => {
         if(typeof object == "object")
-        Object.entries(object).map(obj => {
-          let [key, val] = obj;
-          let operator = `${val}`.match(/(=|!=|<=>|>=|>|<=|<|<>)/i);
-          if(!operator) operator = ["="];
-          val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-          if(val === "null" || val === null){
-            val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-            operator[0] = "";
-          }else{
-            val = connection.async.escape(val);
-          }
-          where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-        })
+          Object.entries(object).map(obj => {
+            let [key, val] = obj;
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            if(!operator) operator = ["="];
+            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+            if(val === "null" || val === null){
+              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+              operator[0] = "";
+            }else{
+              val = connection.async.escape(val);
+            }
+            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
+          })
+        else where.push(object)
       })
 
       where = where.join(" AND ")
     }
 
     const options = {
-      sql: `SELECT ${select ? (sync ? this.selectSync(select, model.getTableName) : select) : (joins && sync ? this.joinsSelect(joins, model.getTableName) : '*')} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE" : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
+      sql: `SELECT ${select ? (sync ? this.selectSync(select, model.getTableName) : select) : (joins && sync ? this.joinsSelect(joins, model.getTableName) : '*')} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
       nestTables: joins.length > 0 && joinsSQL
     }
 
@@ -89,7 +91,7 @@ class MysqlAdapter {
       if(joins.length > 0 && typeof joins == "object")
         results = this.mergeSyncJoins(results, joins, joinsSQL);
       if(/COUNT\(([\w]+)\)/.test(select))
-        results = (results[0] ? results[0].count : results.count ? results.count : null);
+        results = results[0].count;
       if(first == 1)
         results = results[0]
 
@@ -102,7 +104,7 @@ class MysqlAdapter {
       connection.async.query(options,  (error, results) => {
         if(error) return reject(error)
 
-        if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0] ? results[0].count : results.count ? results.count : null);
+        if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
         if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
@@ -246,7 +248,7 @@ class MysqlAdapter {
     if(typeof joins == "object" && !joinsSQL) return [];
     return joins.map(join => {
       let split = join.includeTable.split(" as ");
-      return ` ${join.type || "INNER"} JOIN \`${split[0]}\`${(split[1]) ? ` AS ${split[1]}` : ''} ON ${join.localField} ${join.operator || "="} ${join.remoteField}`
+      return ` ${join.type} JOIN \`${split[0]}\`${(split[1]) ? ` AS ${split[1]}` : ''} ON ${join.localField} ${join.operator} ${join.remoteField}`;
     })
   }
 
@@ -266,7 +268,6 @@ class MysqlAdapter {
   */
 
   makeRelatable(result, model) {
-    if(!result) return true;
     return new Proxy(result, {
       get(target, name) {
         if(name in target) return target[name]
@@ -297,7 +298,7 @@ class MysqlAdapter {
       chats: {...}
     }
   */
-  mergeInJoins(results, joins, joinsSQL = false) {
+  mergeInJoins(results, joins, joinsSQL) {
     let response = [];
     results.map((result, ind) => {
       let newResult = {};
@@ -313,14 +314,14 @@ class MysqlAdapter {
         //   });
         // }
         
-        if(joinsSQL) newResult[item] = result[item]
+        newResult[item] = result[item]
       })
       response[ind] = newResult
     })
     return response;
   }
 
-  mergeSyncJoins (results, joins, joinsSQL = false) {
+  mergeSyncJoins (results, joins, joinsSQL) {
     let response = [];
     results.map(result => {
       let obj = {};

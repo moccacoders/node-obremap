@@ -259,14 +259,6 @@ export default class Model {
 		}).get();
 	}
 
-	static toSqlSync(){
-		return adapter(this).queryBuilder({
-			sync : true,
-			toSql : true,
-			model: this
-		}).get();
-	}
-
 	//relationships
 
 	/*
