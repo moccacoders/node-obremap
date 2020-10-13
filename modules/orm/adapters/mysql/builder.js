@@ -51,7 +51,7 @@ export default class Builder {
 			Object.entries(where).map(obj => {
 				let [key, val] = obj;
 				delete where[key];
-				where[`${this.options.model.getTableName}.${key}`] = val;
+				where[`${key.search(/\./i) < 0 ? `${this.options.model.getTableName}.` : ""}${key}`] = val;
 			});
 
 		if(this.options.where){
@@ -68,7 +68,7 @@ export default class Builder {
 			Object.entries(orWhere).map(obj => {
 				let [key, val] = obj;
 				delete orWhere[key];
-				orWhere[`${this.options.model.getTableName}.${key}`] = val;
+				orWhere[`${key.search(/\./i) < 0 ? `${this.options.model.getTableName}.` : ""}${key}`] = val;
 			})
 
 		if(this.options.orWhere){
@@ -116,12 +116,6 @@ export default class Builder {
 	}
 
 	toSql() {
-		this.options.toSql = true;
-		return this.get();
-	}
-
-	toSqlSync() {
-		this.options.sync = true;
 		this.options.toSql = true;
 		return this.get();
 	}
