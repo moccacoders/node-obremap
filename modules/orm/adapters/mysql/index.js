@@ -329,7 +329,7 @@ class MysqlAdapter {
         let [key, value] = object;
         if(key.search(/_table_/i) >= 0){
           let match = key.split(/_table_/i);
-          if(!obj[match[0]]) obj[match[0]] = {};
+          if(!obj[match[0]] || typeof obj[match[0]] != "object") obj[match[0]] = {};
           obj[match[0]][match[1]] = value;
         }
         else
