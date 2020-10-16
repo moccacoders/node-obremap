@@ -42,6 +42,10 @@ export default class Model {
 		return date;
 	}
 
+	static getDateFormat () {
+		return this.dateFormat != "TIMESTAMP" ? this.dateFormat : "YYYY-MM-DD HH:mm:ss";
+	}
+
 	/*
 	  retrieve all results in a table
 	  ex Model.all()
@@ -115,6 +119,13 @@ export default class Model {
 	*/
 	static create(data) {
 		return adapter(this).create({
+			data,
+			model: this
+		})
+	}
+
+	static createSync(data) {
+		return adapter(this).createSync({
 			data,
 			model: this
 		})

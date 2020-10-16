@@ -1,7 +1,7 @@
 import connection from './connection'
 import Builder from './builder'
 import { getTableName } from '../../../global/get-name'
-
+import moment from 'moment';
 
 class MysqlAdapter {
 
@@ -171,6 +171,28 @@ class MysqlAdapter {
         }, model))
       })
     })
+  }
+
+  createSync({ model, data }) {
+    if(model.timestamps === true){
+      if(model.createdAt && !data[model.createdAt]) data[model.createdAt] = model.currentDate;
+      if(model.updatedAt && !data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
+    }
+
+    let queryValues = [];
+    Object.entries(data).map(obj => {
+      let [key, value] = obj;
+      if(value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
+      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = '${value}'`);
+    });
+
+    let query = `INSERT INTO ${model.getTableName} SET ${queryValues.join(", ")}`;
+    let results = connection.sync.query(query)
+    let result = this.makeRelatable({
+      id: results.insertId,
+      ...data
+    }, model)
+    return result;
   }
 
   /*
