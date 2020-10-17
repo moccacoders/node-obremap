@@ -124,6 +124,10 @@ export default class Builder {
 		return adapter.update(this.options, this.model)
 	}
 
+	updateSync() {
+		return adapter.updateSync(this.options, this.model)
+	}
+
 	count() {
 		this.options.select = `COUNT(${this.options.model.primaryKey}) as count`
 		let result = adapter.select(this.options, this.model);
