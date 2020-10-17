@@ -2,14 +2,14 @@ import Chat from '../../setup/models/chat'
 import User from '../../setup/models/user'
 import UserProfile from '../../setup/models/user-profile'
 
-describe('Model.create()', () => {
+describe('Model.createSync()', () => {
 	it('creates a row with automatic created and updated at field', () => {
 		let chat = Chat.createSync({ user_id: 23 })
 		expect(chat.user_id).to.be.equal(23)
 	})
 
-	it('creates a row with created and update at field', () => {
-		let chat = Chat.createSync({ user_id: 23, created_at : new Date(), updated: new Date() })
+	it('creates a row with created and update at field on builder mode', () => {
+		let chat = Chat.set({ user_id: 23, created_at : new Date(), updated: new Date() }).createSync()
 		expect(chat.user_id).to.be.equal(23)
 	})
 

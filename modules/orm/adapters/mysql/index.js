@@ -166,8 +166,8 @@ class MysqlAdapter {
       connection.async.query(`INSERT INTO ${model.getTableName} SET ?`, data,  (error, result) => {
         if(error) return reject(error)
         resolve(this.makeRelatable({
-          id: result.insertId,
-          ...data
+          ...data,
+          ...{id: result.insertId}
         }, model))
       })
     })
@@ -182,15 +182,15 @@ class MysqlAdapter {
     let queryValues = [];
     Object.entries(data).map(obj => {
       let [key, value] = obj;
-      if(value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
-      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = '${value}'`);
+      if(value && value.constructor && value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
+      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${value === null ? null : `'${value}'`}`);
     });
 
     let query = `INSERT INTO ${model.getTableName} SET ${queryValues.join(", ")}`;
     let results = connection.sync.query(query)
     let result = this.makeRelatable({
-      id: results.insertId,
-      ...data
+      ...data,
+      ...{id: results.insertId}
     }, model)
     return result;
   }
@@ -319,25 +319,76 @@ class MysqlAdapter {
   /*
     delete a row in the database
   */
-  delete({ model, id }) {
-    let where = "";
+  delete({ model, id, where }) {
+    if(typeof id != "object" && id != undefined)
+      where = { id };
 
-    if(typeof id != "object" && id != undefined) id = { id };
-    if(id != undefined){
-      where = Object.entries(id).map((data,i) => {
-        const [key, value] = data;
-        return `${key} = '${value}'`
-      }).join(" AND ");
+    if(where && typeof where == "object"){
+      let newWhere = (where[0]) ? where : [where];
+      where = [];
+
+      newWhere.map(object => {
+        if(typeof object == "object")
+          Object.entries(object).map(obj => {
+            let [key, val] = obj;
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            if(!operator) operator = ["="];
+            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+            if(val === "null" || val === null){
+              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+              operator[0] = "";
+            }else{
+              val = connection.async.escape(val);
+            }
+            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
+          })
+        else where.push(object)
+      })
+      where = where.join(" AND ")
     }
 
     return new Promise((resolve, reject) => {
-      if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
+      if(!where) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
       connection.async.query(`DELETE FROM ${model.getTableName} WHERE ${where}`, (error, result) => {
         if(error) return reject(error);
         resolve(result, model);
       })
     })
   }
+
+  deleteSync({ model, id, where }) {
+    if(typeof id != "object" && id != undefined)
+      where = { id };
+
+    if(where && typeof where == "object"){
+      let newWhere = (where[0]) ? where : [where];
+      where = [];
+
+      newWhere.map(object => {
+        if(typeof object == "object")
+          Object.entries(object).map(obj => {
+            let [key, val] = obj;
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            if(!operator) operator = ["="];
+            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+            if(val === "null" || val === null){
+              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+              operator[0] = "";
+            }else{
+              val = connection.async.escape(val);
+            }
+            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
+          })
+        else where.push(object)
+      })
+      where = where.join(" AND ")
+    }
+
+    if(!where) throw new Error("Missing 'id' value or where object. [integer, object]");
+    let result = connection.sync.query(`DELETE FROM ${model.getTableName} WHERE ${where}`);
+    return result;
+  }
+
 
   /*
     returns a new query builder instance
@@ -376,7 +427,7 @@ class MysqlAdapter {
   makeRelatable(result, model) {
     return new Proxy(result, {
       get(target, name) {
-        if(name in target) return target[name]
+        if(name in target && target[name] != null) return target[name]
         if(getTableName(name, model.snakeCase) in target) return target[getTableName(name, model.snakeCase)]
 
         let instance = new model(result)
