@@ -183,11 +183,10 @@ class MysqlAdapter {
     Object.entries(data).map(obj => {
       let [key, value] = obj;
       if(value && value.constructor && value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
-      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${value === null ? null : `'${value}'`}`);
+      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${connection.async.escape(value)}`);
     });
 
-    let query = `INSERT INTO ${model.getTableName} SET ${queryValues.join(", ")}`;
-    let results = connection.sync.query(query)
+    let results = connection.sync.query(`INSERT INTO ${model.getTableName} SET ${queryValues.join(", ")}`)
     let result = this.makeRelatable({
       ...data,
       ...{id: results.insertId}
@@ -285,7 +284,7 @@ class MysqlAdapter {
     Object.entries(data).map(obj => {
       let [key, value] = obj;
       if(value && value.constructor && value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
-      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${value === null ? null : `'${value}'`}`);
+      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${connection.async.escape(value)}`);
     });
 
     if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
