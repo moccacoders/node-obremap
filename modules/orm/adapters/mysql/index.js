@@ -1,7 +1,7 @@
 import connection from './connection'
 import Builder from './builder'
 import { getTableName } from '../../../global/get-name'
-
+import moment from 'moment';
 
 class MysqlAdapter {
 
@@ -173,27 +173,68 @@ class MysqlAdapter {
     })
   }
 
+  createSync({ model, data }) {
+    if(model.timestamps === true){
+      if(model.createdAt && !data[model.createdAt]) data[model.createdAt] = model.currentDate;
+      if(model.updatedAt && !data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
+    }
+
+    let queryValues = [];
+    Object.entries(data).map(obj => {
+      let [key, value] = obj;
+      if(value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
+      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = '${value}'`);
+    });
+
+    let query = `INSERT INTO ${model.getTableName} SET ${queryValues.join(", ")}`;
+    let results = connection.sync.query(query)
+    let result = this.makeRelatable({
+      id: results.insertId,
+      ...data
+    }, model)
+    return result;
+  }
+
   /*
     update a row in the database
   */
   update({ model, data, id, where }) {
-    if(where) id = where;
-    where = "";
-    if(data.id != undefined){
-      if(!id) id = data.id;
-      delete data.id;
+    if(typeof id != "object" && id != undefined)
+      where = { id };
+
+    let idName = `${data[`${model.getTableName}.id`] ? `${model.getTableName}.` : ""}id`
+    if(data[idName] != undefined){
+      if(!where) where = {};
+      where[idName] = data[idName];
+      delete data[idName];
     }
 
-    if(typeof id != "object" && id != undefined) id = { id };
-    if(id != undefined){
-      where = Object.entries(id).map((data,i) => {
-        const [key, value] = data;
-        return `${key} = '${value}'`
-      }).join(" AND ");
+    if(where && typeof where == "object"){
+      let newWhere = (where[0]) ? where : [where];
+      where = [];
+
+      newWhere.map(object => {
+        if(typeof object == "object")
+          Object.entries(object).map(obj => {
+            let [key, val] = obj;
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            if(!operator) operator = ["="];
+            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+            if(val === "null" || val === null){
+              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+              operator[0] = "";
+            }else{
+              val = connection.async.escape(val);
+            }
+            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
+          })
+        else where.push(object)
+      })
+      where = where.join(" AND ")
     }
 
     return new Promise((resolve, reject) => {
-      if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
+      if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
       connection.async.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
         if(error) return reject(error);
         connection.async.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
@@ -203,6 +244,71 @@ class MysqlAdapter {
         });
       })
     })
+  }
+
+  updateSync({ model, data, id, where }) {
+    if(typeof id != "object" && id != undefined)
+      where = { id };
+
+    let idName = `${data[`${model.getTableName}.id`] ? `${model.getTableName}.` : ""}id`
+    if(data[idName] != undefined){
+      if(!where) where = {};
+      where[idName] = data[idName];
+      delete data[idName];
+    }
+
+    if(where && typeof where == "object"){
+      let newWhere = (where[0]) ? where : [where];
+      where = [];
+
+      newWhere.map(object => {
+        if(typeof object == "object")
+          Object.entries(object).map(obj => {
+            let [key, val] = obj;
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            if(!operator) operator = ["="];
+            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
+            if(val === "null" || val === null){
+              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
+              operator[0] = "";
+            }else{
+              val = connection.async.escape(val);
+            }
+            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
+          })
+        else where.push(object)
+      })
+      where = where.join(" AND ")
+    }
+
+    let queryValues = [];
+    Object.entries(data).map(obj => {
+      let [key, value] = obj;
+      if(value && value.constructor && value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
+      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${value === null ? null : `'${value}'`}`);
+    });
+
+    if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
+    let result = connection.sync.query(`UPDATE ${model.getTableName} SET ${queryValues.join(", ")} WHERE ${where}`);
+    if(result.affectedRows > 0){
+      let res = connection.sync.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`);
+      return this.makeRelatable({
+        ...res[0]
+      }, model)
+    }
+
+
+    // return new Promise((resolve, reject) => {
+    //   if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
+    //   connection.async.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
+    //     if(error) return reject(error);
+    //     connection.async.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
+    //       resolve(this.makeRelatable({
+    //         ...res[0]
+    //       }, model))
+    //     });
+    //   })
+    // })
   }
 
   /*
