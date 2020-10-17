@@ -136,10 +136,30 @@ export default class Model {
 	  update a row in the database
 	  ex Model.update({ name: 'raymundo' })
 	*/
-	static update(data, id) {
+	static update(data, where) {
+		let id = null;
+		if (typeof where == "number"){
+			id = where;
+			where = null;
+		}
 		return adapter(this).update({
 			data,
 			id,
+			where,
+			model: this
+		})
+	}
+
+	static updateSync(data, where) {
+		let id = null;
+		if (typeof where == "number"){
+			id = where;
+			where = null;
+		}
+		return adapter(this).updateSync({
+			data,
+			id,
+			where,
 			model: this
 		})
 	}
