@@ -55,7 +55,7 @@ export default class Builder {
 			});
 
 		if(this.options.where){
-			if(!this.options.where[0])
+			if(typeof this.options.where != "object" || !this.options.where[0])
 				this.options.where = [this.options.where];
 			this.options.where.push(where);
 		}else
@@ -72,7 +72,7 @@ export default class Builder {
 			})
 
 		if(this.options.orWhere){
-			if(!this.options.orWhere[0])
+			if(typeof this.options.orWhere != "object" || !this.options.orWhere[0])
 				this.options.orWhere = [this.options.orWhere];
 			this.options.orWhere.push(orWhere);
 		}else
@@ -126,6 +126,22 @@ export default class Builder {
 
 	updateSync() {
 		return adapter.updateSync(this.options, this.model)
+	}
+
+	delete(){
+		return adapter.delete(this.options, this.model)
+	}
+
+	deleteSync(){
+		return adapter.deleteSync(this.options, this.model)
+	}
+
+	create(){
+		return adapter.create(this.options, this.model)
+	}
+
+	createSync(){
+		return adapter.createSync(this.options, this.model)
 	}
 
 	count() {

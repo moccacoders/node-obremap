@@ -8,7 +8,7 @@ describe('Model.create()', () => {
 	})
 
 	it('creates a row with created and update at field', async function() {
-		let chat = await Chat.create({ user_id: 23, created_at : new Date(), updated: new Date() })
+		let chat = await Chat.set({ user_id: 23, created_at : new Date(), updated: new Date() }).create()
 		expect(chat.user_id).to.be.equal(23)
 	})
 
