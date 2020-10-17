@@ -168,9 +168,28 @@ export default class Model {
 	  delete a row in the database
 	  ex Model.delete({ id: 1 })
 	*/
-	static delete(id) {
+	static delete(where) {
+		let id = null;
+		if (typeof where == "number"){
+			id = where;
+			where = null;
+		}
 		return adapter(this).delete({
 			id,
+			where,
+			model: this
+		})
+	}
+
+	static deleteSync(where) {
+		let id = null;
+		if (typeof where == "number"){
+			id = where;
+			where = null;
+		}
+		return adapter(this).deleteSync({
+			id,
+			where,
 			model: this
 		})
 	}
@@ -207,12 +226,12 @@ export default class Model {
 	*/
 	static where(where) {
 		if(typeof where == "object")
-		Object.entries(where).map(obj => {
-			let [key, val] = obj;
-			if(/\./.test(key)) return true;
-			delete where[key];
-			where[`${this.getTableName}.${key}`] = val;
-		})
+			Object.entries(where).map(obj => {
+				let [key, val] = obj;
+				if(/\./.test(key)) return true;
+				delete where[key];
+				where[`${this.getTableName}.${key}`] = val;
+			})
 		this.values = where;
 		return adapter(this).queryBuilder({
 			where,
