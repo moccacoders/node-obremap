@@ -23,6 +23,12 @@ export default class Model {
 	// DB CONNECTION
 	static connection = "default";
 
+	// Logical Delete
+	static logicalDelete = false;
+	static deleted = "deleted";
+	static deleted_at = "deleted_at";
+	static deleted_by = "deleted_by";
+
 	constructor(values) {
 		this.values = values;
 	}
@@ -168,28 +174,48 @@ export default class Model {
 	  delete a row in the database
 	  ex Model.delete({ id: 1 })
 	*/
-	static delete(where) {
+	static delete(where, deleted_by = null) {
 		let id = null;
+		let data = null;
 		if (typeof where == "number"){
 			id = where;
 			where = null;
 		}
-		return adapter(this).delete({
+		if(this.logicalDelete === true || deleted_by){
+			data = {
+				[this.deleted] : 1,
+				[this.deleted_at] : this.currentDate,
+				[this.deleted_by] : deleted_by || null
+			}
+		}
+
+		return adapter(this)[(this.logicalDelete === true || deleted_by) && deleted_by !== false ? "update" : "delete"]({
 			id,
 			where,
+			data,
 			model: this
 		})
 	}
 
-	static deleteSync(where) {
+	static deleteSync(where, deleted_by = null) {
 		let id = null;
+		let data = null;
 		if (typeof where == "number"){
 			id = where;
 			where = null;
 		}
-		return adapter(this).deleteSync({
+		if(this.logicalDelete === true || deleted_by){
+			data = {
+				[this.deleted] : 1,
+				[this.deleted_at] : this.currentDate,
+				[this.deleted_by] : deleted_by || null
+			}
+		}
+
+		return adapter(this)[(this.logicalDelete === true || deleted_by) && deleted_by !== false ? "updateSync" : "deleteSync"]({
 			id,
 			where,
+			data,
 			model: this
 		})
 	}
