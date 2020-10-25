@@ -1,4 +1,5 @@
 import User from '../../setup/models/user'
+import OtherUser from '../../setup/models/user-logical'
 
 describe('Model.update()', () => {
 	afterEach(async () => {
@@ -25,12 +26,12 @@ describe('Model.update()', () => {
 	})
 
 	it('update a row with id on data with where id', async function() {
-		let user = await User.update({ name: "Raymundo", id: 1 }, 1)
+		let user = await OtherUser.update({ name: "Raymundo", id: 1 }, 1)
 		expect(user.name).to.be.equal("Raymundo")
 	})
 
 	it('update a row with id on data with where id', async function() {
-		let user = await User.where({ id : 1 }).set({ name : "Raymundo" }).update();
+		let user = await User.where({ id : 1 }).set({ name : "Raymundo", updated_at : new Date() }).update();
 		expect(user.name).to.be.equal("Raymundo")
 	})
 
