@@ -201,6 +201,10 @@ class MysqlAdapter {
     if(typeof id != "object" && id != undefined)
       where = { id };
 
+    if(model.timestamps === true){
+      if(!data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
+    }
+
     let idName = `${data[`${model.getTableName}.id`] ? `${model.getTableName}.` : ""}id`
     if(data[idName] != undefined){
       if(!where) where = {};
@@ -248,6 +252,10 @@ class MysqlAdapter {
   updateSync({ model, data, id, where }) {
     if(typeof id != "object" && id != undefined)
       where = { id };
+
+    if(model.timestamps === true){
+      if(!data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
+    }
 
     let idName = `${data[`${model.getTableName}.id`] ? `${model.getTableName}.` : ""}id`
     if(data[idName] != undefined){

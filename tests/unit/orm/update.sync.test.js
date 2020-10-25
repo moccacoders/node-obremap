@@ -1,4 +1,5 @@
 import User from '../../setup/models/user'
+import OtherUser from '../../setup/models/user-logical'
 
 describe('Model.updateSync()', () => {
 	afterEach(() => {
@@ -25,7 +26,7 @@ describe('Model.updateSync()', () => {
 	})
 
 	it('update a row with id on data with where id', () => {
-		let user = User.updateSync({ name: "Raymundo", id: 1 }, 1)
+		let user = OtherUser.updateSync({ name: "Raymundo", id: 1 }, 1)
 		expect(user.name).to.be.equal("Raymundo")
 	})
 
