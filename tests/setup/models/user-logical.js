@@ -3,6 +3,7 @@ import { Model } from '../../../modules'
 export default class User extends Model {
 	static logicalDelete = true;
 	static timestamps = false;
+	static timezone = "America/Bogota";
 
 	static deleted = "eliminado";
 	static deleted_by = "eliminado_por";
