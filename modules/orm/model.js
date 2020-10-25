@@ -1,4 +1,4 @@
-import moment from 'moment';
+import moment from 'moment-timezone';
 import adapter from './adapters'
 import {
 	getTableName,
@@ -19,6 +19,7 @@ export default class Model {
 	static dateFormat = "TIMESTAMP"; // [Use Moment JS Format](https://momentjs.com/docs/#/displaying/format/)
 	static createdAt = "created_at"; // If null not set on query
 	static updatedAt = "updated_at"; // If null not set on query
+	static timezone = undefined;
 
 	// DB CONNECTION
 	static connection = "default";
@@ -43,8 +44,12 @@ export default class Model {
 		return this.tableName;
 	}
 
+	static get getTimezone() {
+		return this.timezone || global.TZ || process.env.TZ || "America/Los_Angeles"
+	}
+
 	static get currentDate (){
-		var date = moment().format(this.dateFormat != "TIMESTAMP" ? this.dateFormat : "YYYY-MM-DD HH:mm:ss");
+		var date = moment().tz(this.getTimezone).format(this.dateFormat != "TIMESTAMP" ? this.dateFormat : "YYYY-MM-DD HH:mm:ss");
 		return date;
 	}
 

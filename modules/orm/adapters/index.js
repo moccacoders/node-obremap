@@ -22,8 +22,10 @@ const dbConfig = (connection) => {
 		configFile = null;
 	}
 
-	if(configFile && configFile.databases)
+	if(configFile && configFile.databases){
 		databases = configFile.databases;
+		global.TZ = configFile.timezone || null;
+	}
 
 	if(!configFile)
 	Object.entries(process.env).map((elem, ind) => {
