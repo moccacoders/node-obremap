@@ -16,5 +16,5 @@ obremap.config.js
 .github
 
 ## EXCEPTS
-!/dist/cli/migrations
+!dist/cli/migrations
 !dist/cli/models

@@ -7,6 +7,16 @@ const root = require("app-root-path");
 
 module.exports = ({ args, cwd, fs }) => {
 	let answers;
+	if(!args["--wizard"]){
+		delete args["_type"];
+		delete args["--config-file"];
+		args = {
+			"__set-connection" : true,
+			"--config-file" : true,
+			connections : [args]
+		};
+		return setConnetion(args);
+	}
 	if(!args["_createConnection"])
 		connectionConfig(args)
 		.then(ans => {
@@ -24,7 +34,6 @@ module.exports = ({ args, cwd, fs }) => {
 				}
 			});
 		})
-
 }
 
 const connectionConfig = (args) => {
@@ -70,23 +79,23 @@ const createConnection = (answers) => {
 
 const setConnetion = (args) => {
 	if(!args["__set-connection"] || !args["connections"]) return true;
-	if(!args["__config-file"]){
+	if(!args["--config-file"]){
 		console.log(`\n------------------------------------------------------------------------\n\n${lang[args["_lang"]].connectionEnv}\n${lang[args["_lang"]].connectionEnvMsg}\n\n------------------------------------------------------------------------\n`);
 
 		args["connections"].map(connection => {
-			let dbName = connection["__connectionName"] != "default" ? `_${connection["__connectionName"].toUpperCase()}` : "";
+			let dbName = connection["--connection-name"] != "default" ? `_${connection["--connection-name"].toUpperCase()}` : "";
 			console.log(`${
 (connection["__url-config"]) ?
 `DB${dbName}_URL="${
-	connection["__url"] ? `${connection["___connection-url"]}` : 
-	`${connection["--driver"]}://${connection["___username"]}:${connection["___password"]}@${connection["___hostname"]}${connection["___port"] ? `:${connection["___port"]}` : ``}/${connection["___database"]}`
+	connection["__url"] ? `${connection["--connection-url"]}` : 
+	`${connection["--driver"]}://${connection["--username"]}:${connection["--password"]}@${connection["--hostname"]}${connection["--port"] ? `:${connection["--port"]}` : ``}/${connection["--database"]}`
 }"` : 
 `DB${dbName}_DRIVER="${connection["--driver"]}"
-DB${dbName}_HOST="${connection["___hostname"]}"
-DB${dbName}_USER="${connection["___username"]}"
-DB${dbName}_PASSWORD="${connection["___passwor"]}"
-DB${dbName}_DATABSE="${connection["___database"]}"
-DB${dbName}_PORT="${connection["___port"]}"`
+DB${dbName}_HOST="${connection["--hostname"]}"
+DB${dbName}_USER="${connection["--username"]}"
+DB${dbName}_PASSWORD="${connection["--passwor"]}"
+DB${dbName}_DATABSE="${connection["--database"]}"
+DB${dbName}_PORT="${connection["--port"]}"`
 }`);
 		});
 
@@ -104,15 +113,16 @@ console.log(`\n-----------------------------------------------------------------
 
 	args["connections"].map(connection => {
 		if(connection["__url-config"] && !connection["__url"])
-			connection["___connection-url"] = `${connection["--driver"]}://${connection["___username"]}:${connection["___password"]}@${connection["___hostname"]}${connection["___port"] ? `:${connection["___port"]}` : ``}/${connection["___database"]}`;
+			connection["--connection-url"] = `${connection["--driver"]}://${connection["--username"]}:${connection["--password"]}@${connection["--hostname"]}${connection["--port"] ? `:${connection["--port"]}` : ``}/${connection["--database"]}`;
 
-		databases[connection["__connectionName"]] = (connection["___connection-url"]) ? connection["___connection-url"] : {
+		console.log(connection["--connection-name"]);
+		databases[connection["--connection-name"]] = (connection["--connection-url"]) ? connection["--connection-url"] : {
 			driver : connection["--driver"],
-			host : connection["___hostname"],
-			user : connection["___username"],
-			password : connection["___password"],
-			database : connection["___database"],
-			port : connection["___port"]
+			host : connection["--hostname"],
+			user : connection["--username"],
+			password : connection["--password"],
+			database : connection["--database"],
+			port : connection["--port"]
 		}
 	});
 
@@ -125,7 +135,7 @@ console.log(`\n-----------------------------------------------------------------
 	catch(err) { }
 
 	if(configFile){
-		const regex = /^module.exports ?= ?(\s)?{((.|\s)*?)?}(\s)?}?(?!(\ ))$/gm;
+		const regex = /^module.exports ?= ?(\s)?{((.|\s)*?)?}(\s)?}?(\s)?}?(\s)?}?(?!(\ ))$/gm;
 		const match = configFile.match(regex);
 		configFile = configFile.replace(match[0], "#_TEMPLATE_#");
 	}
@@ -139,7 +149,7 @@ ${template}
 
 	try {
 		fs.writeFileSync(configPath, template, "utf8")
-		console.log(`\n  >    `, lang[args["_lang"]].configFile[configFile ? "updated" : "created"], configPath);
-	}catch(err) { }
+		console.log(`\n  >    `, lang[args["_lang"] || "english"].configFile[configFile ? "updated" : "created"], configPath);
+	}catch(err) { console.log(err) }
 	return true;
 }

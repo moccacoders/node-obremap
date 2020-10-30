@@ -6,4 +6,8 @@ node_modules
 .nyc_output
 _*
 models
+app
+
+## EXCEPTS
 !tests/setup/models
+!modules/cli/migrations
