@@ -7,48 +7,49 @@ const root = require("app-root-path");
 const utils = require("../../config/utils");
 const lang = require('../../config/languages');
 const connection = require('../connection/make');
+const obremapConfig = require(path.join(root.path, "/obremap.config.js"));
 
 module.exports = ({ args, cwd, fs }) => {
 	configuration(args).then(answers => {
 		args = answers
 
 		let modelName = utils.toCase(args["--name"], false, true);
-		let filePath = `${cwd}/models/${utils.toCase(args["--name"])}.model.js`;
 
 		let options = "";
 		Object.entries(args).map((arg, ind) => {
 			let [key, val] = arg;
-			if(/^_(.+)?/.test(key) || key == "--name" || key == "--driver") return true;
+			if(/^_(.+)?/.test(key) || ["--name", "--driver", "--how-import", "--wizard", "--folder"].includes(key)) return true;
 			key = utils.toCase(key.replace("--", "").replace("-", "_"), false);
 			if(val == config.default[args["--driver"]][key] || val == utils.toCase(pluralize(args["--name"] || "default"), args["--snake-case"])) return true;
 			options += `static ${key} = ${typeof val == "string" ? `'${val}'` : val};
 	`;
 		});
 
-		const template = `import { Model } from '@moccacoders/obremap';
-
-export default class ${modelName} extends Model {
+		const template = `${args["--how-import"] == "import" ? `import { Model } from '@moccacoders/obremap'` : `const Model = require("@moccacoders/node-obremap").Model`};
+${args["--how-import"] == "import" ? 'export default' : 'module.exports ='} class ${modelName} extends Model {
 	${options}${args["--table-name"] ? "" : `
-		/*
-			overwrite table name, this action is optional
-			static tableName = "other_table";
-		*/
+	/*
+		overwrite table name, this action is optional
+		static tableName = "table_name";
+	*/
 	`}
 }
 `;
-		// console.log(template);
 		/*
 		check if models folder exists
 		*/
+		if(!args["--folder"]) args["--folder"] = obremapConfig.folders ? obremapConfig.folders.models : config.folders.models;
+		if(!/^\//.test(args["--folder"])) args["--folder"] = `/${args["--folder"]}`;
 		try {
-			fs.accessSync(`${cwd}/models`, fs.F_OK)
+			fs.accessSync(`${cwd}${args["--folder"]}`, fs.F_OK)
 		} catch (e) {
-			fs.mkdirSync(`${cwd}/models`)
+			fs.mkdirSync(`${cwd}${args["--folder"]}`, { recursive : true })
 		}
 
+		let filePath = `${cwd}${args["--folder"]}/${utils.toCase(args["--name"])}.model.js`;
 		fs.writeFile(filePath, template, err => {
 			if (err) throw err;
-			console.log(`\n  >    `, lang[answers["_lang"]].model.created, filePath, "\n")
+			console.log(`\n  >    `, lang[answers["_lang"] || "english"].model.created, filePath, "\n")
 		})
 
 	});
@@ -56,6 +57,7 @@ export default class ${modelName} extends Model {
 
 const configuration = (args) => {
 	return new Promise((done, error) => {
+		if(!args["--wizard"]) return done(args);
 		let answers = {...args};
 		let errorConnection = false;
 		inquirer.prompt([...questions(answers).general, ...questions(answers).model])
@@ -69,7 +71,6 @@ const configuration = (args) => {
 				else errorConnection = false
 
 				try{
-					let obremapConfig = require(path.join(root.path, "/obremap.config.js"));
 					if(!obremapConfig.databases[ans["--connection"]])
 						errorConnection = true;
 					else errorConnection = false

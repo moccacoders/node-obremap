@@ -1,6 +1,8 @@
 const chalk = require("chalk");
 module.exports = {
 	questions : {
+		howImport: "¿De que manera quieres importar el módulo 'Node OBREMAP'?",
+		folder : "En que carpeta deseas guardar tus modelos?",
 		name : "¿Qué nombre tendrá el modelo?",
 		snakeCase : `¿Los nombres de tus tablas y columnas estan en 'snake case' ${chalk.bold.underline("(snake_case)")} o en 'camel case' ${chalk.bold.underline("(camelCase)")}?`,
 		tableName : "¿Cuál es el nombre de la tabla?",

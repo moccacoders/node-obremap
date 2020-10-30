@@ -2,6 +2,10 @@ module.exports = {
 	drivers : [
 		"mysql"
 	],
+	folders : {
+		models : "/models",
+		migrations : "/migrations"
+	},
 	default : {
 		driver : "mysql",
 		mysql : {
