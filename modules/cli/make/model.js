@@ -6,8 +6,12 @@ const questions = require("../../config/cli/questions.cli");
 const root = require("app-root-path");
 const utils = require("../../config/utils");
 const lang = require('../../config/languages');
-const connection = require('../connection/make');
-const obremapConfig = require(path.join(root.path, "/obremap.config.js"));
+const connection = require('../make/connection');
+let obremapConfig = {};
+
+try{
+	obremapConfig = require(path.join(root.path, "/obremap.config.js"));
+}catch(err){ console.log(err) }
 
 module.exports = ({ args, cwd, fs }) => {
 	configuration(args).then(answers => {
