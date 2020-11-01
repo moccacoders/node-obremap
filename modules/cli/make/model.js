@@ -11,7 +11,7 @@ let obremapConfig = {};
 
 try{
 	obremapConfig = require(path.join(root.path, "/obremap.config.js"));
-}catch(err){ console.log(err) }
+}catch(err){ }
 
 module.exports = ({ args, cwd, fs }) => {
 	configuration(args).then(answers => {

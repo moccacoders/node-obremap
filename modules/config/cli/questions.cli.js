@@ -7,7 +7,10 @@ const config = require('../index.js');
 const configPath = path.join(root.path, "/obremap.config.js");
 let lang = require('../languages');
 const utils = require('../utils');
-let configFile = require(configPath);
+let configFile = {};
+try{
+	configFile = require(configPath)
+}catch(err){}
 
 module.exports = answers => {
 	return {
