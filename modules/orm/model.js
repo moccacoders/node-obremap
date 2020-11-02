@@ -39,6 +39,13 @@ export default class Model {
 	  can be overwritten in the user's model
 	*/
 
+	static table (tableName) {
+		this.tableName = tableName;
+		return adapter(this).queryBuilder({
+			model: this
+		})
+	}
+
 	static get getTableName() {
 		if(!this.tableName) this.tableName = getTableName(this.name, this.snakeCase);
 		return this.tableName;
