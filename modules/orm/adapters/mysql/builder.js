@@ -6,6 +6,11 @@ export default class Builder {
 		this.model = model
 	}
 
+	table(table){
+		this.options.model.tableName = table;
+		return this;
+	}
+
 	join(includeTable, localField, operator, remoteField, type = "INNER"){
 		if(!["=", "<", ">", "!=", "<>", "<=", ">=", "<=>"].includes(operator)){
 			if(remoteField) type = remoteField;
