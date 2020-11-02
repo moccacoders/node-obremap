@@ -14,7 +14,7 @@ describe('Model.orWhere()', () => {
   })
 
   it('grabs three by id', async function() {
-    let chat = await Chat.orWhere({ id: 1 }).orWhere({ id : 2 }).orWhere("id = 3").get();
+    let chat = await Chat.orWhere({ id: 1 }).orWhere({ id : "like 2" }).orWhere("id = 3").get();
     expect(chat.length).to.be.equal(3);
     expect(typeof chat).to.equal('object');
   })
