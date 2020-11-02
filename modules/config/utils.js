@@ -15,8 +15,8 @@ const capitalize = (str) => {
 const toCase = (str, toSnakeCase, cap) => {
 	switch(toSnakeCase){
 		case false:
-			str = str.toLowerCase().replace(/(_|\ )(\w)/g, function(m){
-				return m[1].toUpperCase();
+			str = str.replace(/[\w]([A-Z])|(_|\ )(\w)/g, function(m){
+				return (`${/(_|\ )/.test(m[0]) ? "" : m[0]}${m[1].toUpperCase()}`);
 			}).trim();
 		break;
 		default:
