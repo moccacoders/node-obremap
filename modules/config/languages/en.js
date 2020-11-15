@@ -29,7 +29,8 @@ module.exports = {
 		database : "Defines the name of the database ",
 		port : "Defines the port.",
 		connectionName : "Define a name for this connection. ",
-		moreConnections : "Do you need one more connection? "
+		moreConnections : "Do you need one more connection? ",
+		forceFresh: "Do you really want to drop all tables?"
 	},
 	wizard : "CONNECTION URL CREATION WIZARD",
 	connectionConfig : "DATABASE CONNECTION CONFIG",

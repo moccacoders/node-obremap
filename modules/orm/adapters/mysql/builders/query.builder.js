@@ -1,4 +1,4 @@
-import adapter from './index'
+import adapter from '../index'
 
 export default class Builder {
 	constructor(options, model) {
@@ -8,6 +8,21 @@ export default class Builder {
 
 	table(table){
 		this.options.model.tableName = table;
+		return this;
+	}
+
+	timestamps (timestamps) {
+		this.options.timestamps = timestamps;
+		return this;
+	}
+
+	createdAt (createdAt) {
+		this.options.createdAt = createdAt;
+		return this;
+	}
+
+	updatedAt (updatedAt) {
+		this.options.updatedAt = updatedAt;
 		return this;
 	}
 
@@ -141,11 +156,14 @@ export default class Builder {
 		return adapter.deleteSync(this.options, this.model)
 	}
 
-	create(){
+	create(data=null){
+		if(this.options.sync == true) return this.createSync(data)
+		if(data) this.options.data = data;
 		return adapter.create(this.options, this.model)
 	}
 
-	createSync(){
+	createSync(data=null){
+		if(data) this.options.data = data;
 		return adapter.createSync(this.options, this.model)
 	}
 
@@ -153,6 +171,16 @@ export default class Builder {
 		this.options.select = `COUNT(${this.options.model.primaryKey}) as count`
 		let result = adapter.select(this.options, this.model);
 		return result;
+	}
+
+	truncate() {
+		return adapter.truncateTable(this.options.model);
+	}
+
+	truncateSync() {
+		this.options.sync = true;
+		let result = adapter.truncateTable({options : this.options, model : this.options.model});
+		return result;	
 	}
 
 	countSync() {

@@ -1,9 +1,6 @@
 import moment from 'moment-timezone';
 import adapter from './adapters'
-import {
-	getTableName,
-	getFieldName
-} from '../global/get-name'
+import { getTableName, getFieldName } from '../global/get-name'
 
 export default class Model {
 	static snakeCase = true;
@@ -39,11 +36,12 @@ export default class Model {
 	  can be overwritten in the user's model
 	*/
 
-	static table (tableName) {
-		this.tableName = tableName;
-		return adapter(this).queryBuilder({
-			model: this
-		})
+	static sql (sql, values = []) {
+		return adapter(this).sql({sql, values});
+	}
+
+	static sqlSync (sql, values = []) {
+		return adapter(this).sql({sql, values, sync : true});
 	}
 
 	static get getTableName() {
@@ -106,7 +104,6 @@ export default class Model {
 			where: {id},
 			model: this
 		})
-		// test.then((res) => console.log(res))
 		return test;
 	}
 
@@ -246,6 +243,21 @@ export default class Model {
 		})
 	}
 
+	static truncate() {
+		return adapter(this).truncateTable({
+			model: this
+		})
+	}
+
+	static truncateSync() {
+		return adapter(this).truncateTable({
+			options: {
+				sync: true,
+			},
+			model: this
+		})
+	}
+
 	/*
 	  select certain columns from a table
 	  ex Model.orderBy({id : 'desc'}).first()
@@ -357,7 +369,6 @@ export default class Model {
 		let joins = {};
 		relationships.map(rel => {
 			let relationship = this;
-			// console.log(relationship);
 			// if(!relationship[rel]){
 				relationship = new relationship();
 			// }
@@ -367,6 +378,12 @@ export default class Model {
 			joins,
 			model: this
 		})
+	}
+
+	static faker(){
+		return adapter(this).fakerBuilder({
+			model: this
+		});
 	}
 
 	/*
