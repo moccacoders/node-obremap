@@ -313,6 +313,14 @@ module.exports = answers => {
 					return answers["__set-connection"] && answers["__multi-connections"];
 				}
 			},
+		],
+		migrations : [
+			{
+				name : "--force",
+				message: (ans) => { return lang[ans["_lang"]??"english"].questions.forceFresh },
+				type : "confirm",
+				default: args => { return args["--force"] }
+			},
 		]
 	}
 }

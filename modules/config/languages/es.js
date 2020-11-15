@@ -29,7 +29,8 @@ module.exports = {
 		database : "Define el nombre de la base de datos",
 		port : "Define el puerto.",
 		connectionName : "Define un nombre para esta conexión.",
-		moreConnections : "¿Necesitas una conexión más?"
+		moreConnections : "¿Necesitas una conexión más?",
+		forceFresh: "Realmente deseas eliminar todas las tablas?"
 	},
 	wizard : "ASISTENTE DE CREACIÓN DE URL DE CONEXIÓN",
 	connectionConfig : "CONFIGURACIÓN DE CONEXIÓN DE BASE DE DATOS",

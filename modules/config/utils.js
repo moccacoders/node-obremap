@@ -29,6 +29,15 @@ const toCase = (str, toSnakeCase, cap) => {
 	return str;
 }
 
+exports.microtime = (getAsFloat) => {
+	var s;
+	var now = (Date.now ? Date.now() : new Date().getTime()) / 1000;
+	if(getAsFloat) return now;
+	s = now | 0;
+	return (Math.round((now - s) * 1000) / 1000) + ' ' + s
+}
+
+
 exports.regex = {
 	url : /^([a-z\+]+):\/\/([\w\d]+):([\w\d\.\?\!\#\/\\\*\-\%]+)@(((\d{1,3}):(\d{1,3}):(\d{1,3}))|([\w\d\.]+))(:([\d]{2,}))?(\/([\w\d\-\.]+))(\?(.+))?$/
 }

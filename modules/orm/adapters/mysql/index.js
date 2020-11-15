@@ -1,5 +1,7 @@
 import connection from './connection'
-import Builder from './builder'
+import QueryBuilder from './builders/query.builder'
+import SchemaBuilder from './builders/schema.builder'
+import FakerBuilder from './builders/faker.builder'
 import { getTableName } from '../../../global/get-name'
 import moment from 'moment';
 
@@ -14,6 +16,7 @@ class MysqlAdapter {
     Builds the mysql query, used query builder and root model class
   */
   select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql, sync, first }) {
+    if(model.sync) sync = true;
     let joinsSQL = false;
     if(joins[0] === true){
       joinsSQL = true;
@@ -37,7 +40,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like)/i);
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like|in)/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
@@ -62,7 +65,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like)/i);
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like|in)/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
@@ -157,13 +160,27 @@ class MysqlAdapter {
   */
 
   create({ model, data }) {
-    if(model.timestamps === true){
-      if(model.createdAt && !data[model.createdAt]) data[model.createdAt] = model.currentDate;
-      if(model.updatedAt && !data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
-    }
+    if(data.length == undefined) data = [data];
+    let d = [];
+    let v = [];
+    data.map(item => {
+      if(model.timestamps === true){
+        if(model.createdAt && !item[model.createdAt]) item[model.createdAt] = model.currentDate;
+        if(model.updatedAt && !item[model.updatedAt]) item[model.updatedAt] = model.currentDate;
+      }
+      let o = [];
+      Object.entries(item).map(obj => {
+        let [key, val] = obj;
+        if(!v.includes(key))
+          v.push(key);
+
+        o.push(val);
+      })
+      d.push(o)
+    })
 
     return new Promise((resolve, reject) => {
-      connection.async.query(`INSERT INTO ${model.getTableName} SET ?`, data,  (error, result) => {
+      connection.async.query(`INSERT INTO ${model.getTableName} (??) VALUES ?`, [v,d],  (error, result) => {
         if(error) return reject(error)
         resolve(this.makeRelatable({
           ...data,
@@ -173,20 +190,32 @@ class MysqlAdapter {
     })
   }
 
-  createSync({ model, data }) {
-    if(model.timestamps === true){
-      if(model.createdAt && !data[model.createdAt]) data[model.createdAt] = model.currentDate;
-      if(model.updatedAt && !data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
-    }
+  createSync({ model, data, timestamps, createdAt, updatedAt }) {
+    if(data.length == undefined) data = [data];
+    let d = [];
+    let v = [];
+    data.map(item => {
+      timestamps = timestamps !== undefined ? timestamps : model.timestamps;
+      createdAt = createdAt !== undefined ? createdAt : model.createdAt;
+      updatedAt = updatedAt !== undefined ? updatedAt : model.updatedAt;
 
-    let queryValues = [];
-    Object.entries(data).map(obj => {
-      let [key, value] = obj;
-      if(value && value.constructor && value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
-      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${connection.async.escape(value)}`);
-    });
+      if(timestamps === true){
+        if(createdAt && !item[createdAt]) item[createdAt] = model.currentDate;
+        if(updatedAt && !item[updatedAt]) item[updatedAt] = model.currentDate;
+      }
 
-    let results = connection.sync.query(`INSERT INTO ${model.getTableName} SET ${queryValues.join(", ")}`)
+      let o = [];
+      Object.entries(item).map(obj => {
+        let [key, val] = obj;
+        if(!v.includes(key))
+          v.push(key);
+
+        o.push(val);
+      })
+      d.push(o)
+    })
+    let sql = connection.async.format(`INSERT INTO ${model.getTableName} (??) VALUES ?`, [v,d]);
+    let results = connection.sync.query(sql)
     let result = this.makeRelatable({
       ...data,
       ...{id: results.insertId}
@@ -220,7 +249,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like|in)/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
@@ -236,6 +265,7 @@ class MysqlAdapter {
       where = where.join(" AND ")
     }
 
+    if(model.sync) return this.updateSync({ model, data, id, where })
     return new Promise((resolve, reject) => {
       if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
       connection.async.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
@@ -272,7 +302,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like|in)/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
@@ -319,8 +349,31 @@ class MysqlAdapter {
   }
 
   /*
-    count rows
+    sql
   */
+
+  sql({ sql, values, sync = false }) {
+    const options = {
+      sql : connection.async.format(sql, values),
+      nestTables: true
+    }
+
+    if(sync){
+      let results = connection.sync.query(options.sql)
+      return results;
+    }
+
+    return new Promise((resolve, reject) => {
+      connection.async.query(options,  (error, results) => {
+        if(error) return reject(error)
+        resolve(results)
+
+        // if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
+        // if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
+        // resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
+      })
+    })
+  }
 
 
   /*
@@ -338,7 +391,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like|in)/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
@@ -354,6 +407,7 @@ class MysqlAdapter {
       where = where.join(" AND ")
     }
 
+    if(model.sync) return this.deleteSync({ model, id, where })
     return new Promise((resolve, reject) => {
       if(!where) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
       connection.async.query(`DELETE FROM ${model.getTableName} WHERE ${where}`, (error, result) => {
@@ -375,7 +429,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<)/i);
+            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like|in)/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
@@ -401,7 +455,21 @@ class MysqlAdapter {
     returns a new query builder instance
   */
   queryBuilder(options) {
-    return new Builder(options)
+    return new QueryBuilder(options)
+  }
+
+  /*
+    returns a new schema builder instance
+  */
+  schemaBuilder(options) {
+    return new SchemaBuilder(options)
+  }
+
+  /*
+    returns a new faker builder instance
+  */
+  fakerBuilder(options) {
+    return new FakerBuilder(options)
   }
 
   /*
@@ -503,6 +571,41 @@ class MysqlAdapter {
     })
     
     return response;
+  }
+
+  createTable ({ options, model, fields, alterTables, engine, charset, collation }) {
+    fields = this.processFields(fields).join(", ");
+    let sql = `create table \`${model.tableName}\` (${fields}) default character set ${charset} collate '${collation}' engine = ${engine}`;
+    sql = connection.async.format(sql);
+    return connection.sync.query(sql);
+  }
+
+  dropTable ({ options, model }) {
+    let sql = `drop table ${options.ifExists === true ? "if exists " : ""}\`${model.tableName}\``;
+    sql = connection.async.format(sql);
+    return connection.sync.query(sql);
+  }
+
+  truncateTable (model) {
+    let sql = `truncate table \`${model.tableName}\``;
+    sql = connection.async.format(sql);
+    return connection.sync.query(sql);
+  }
+
+
+  processFields(fields){
+    return fields.map(field => {
+      return `\`${field.name}\` ${field.type}${field.length && field.length > 0 ? `(${field.length})` : ""} ${field.unsigned ? "unsigned" : ""} ${field.nullable ? "null" : "not null"} ${field.auto_increment ? "auto_increment" : ""} ${field.primary ? "primary key" : ""}`.trim();
+    })
+  }
+
+
+  validateMigrations () {
+    return new Promise((resolve, reject) => {
+      connection.async.query(`SHOW TABLES`,  (error, results) => {
+        if(error) return reject(error)
+      })
+    })
   }
 }
 

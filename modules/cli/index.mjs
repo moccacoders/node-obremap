@@ -2,6 +2,8 @@
 import fs from 'fs'
 import yargs from "yargs";
 import { toCase, regex } from "../config/utils";
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 
 const argsToOptions = yargs
 .scriptName("obremap")
@@ -152,7 +154,6 @@ const argsToOptions = yargs
 	.help("h")
 	.version(false)
 	.check((args, opt) => {
-		console.log(args);
 		if (args["connection-url"] && regex.url.test(args["connection-url"]) || (args["driver"] && args["hostname"] && args["username"] && args["password"] && args["database"]) || args["wizard"])
 			return true
 		throw new Error("A connection url or database info is required.");
@@ -184,6 +185,157 @@ const argsToOptions = yargs
 	.version(false)
 	.help("h")
 })
+.command('make:seeder <name> [options]', 'Create a new migration file', yargs => {
+	yargs
+	.positional("name", {
+		describe: "Defines the name of the Obremap Migration.",
+		type: "string"
+	})
+	.option({
+		"t" : {
+			alias : "table-name",
+			type : "string",
+			describe : "Defines the table name."
+		},
+		"f" : {
+			alias : "folder",
+			type : "string",
+			describe : "Defines the custom folder path."
+		}
+	})
+	.version(false)
+	.help("h")
+})
+.command('migrate', 'Execute all migrations', yargs => {
+	yargs
+	.option({
+		"f" : {
+			alias : "folder",
+			type : "string",
+			describe : "Defines the custom folder path."
+		},
+		"o" : {
+			alias : "how-import",
+			type : "string",
+			describe : "How do you want to import the 'Node OBREMAP' module?",
+			choices: ['import', 'require'],
+			default : "import"
+		}
+	})
+	.version(false)
+	.help("h")
+})
+.command('migrate:reset', 'Rollback all database migrations', yargs => {
+	yargs
+	.option({
+		"f" : {
+			alias : "folder",
+			type : "string",
+			describe : "Defines the custom folder path."
+		},
+		"o" : {
+			alias : "how-import",
+			type : "string",
+			describe : "How do you want to import the 'Node OBREMAP' module?",
+			choices: ['import', 'require'],
+			default : "import"
+		}
+	})
+	.version(false)
+	.help("h")
+})
+.command('migrate:refresh', 'Reset and re-run all migrations', yargs => {
+	yargs
+	.option({
+		"f" : {
+			alias : "folder",
+			type : "string",
+			describe : "Defines the custom folder path."
+		},
+		"o" : {
+			alias : "how-import",
+			type : "string",
+			describe : "How do you want to import the 'Node OBREMAP' module?",
+			choices: ['import', 'require'],
+			default : "import"
+		}
+	})
+	.version(false)
+	.help("h")
+})
+.command('migrate:rollback', 'Rollback the last database migration', yargs => {
+	yargs
+	.option({
+		"s": {
+			alias : "step",
+			type : "number",
+			describe : "The number of migrations to be reverted"
+		},
+		"f" : {
+			alias : "folder",
+			type : "string",
+			describe : "Defines the custom folder path."
+		},
+		"o" : {
+			alias : "how-import",
+			type : "string",
+			describe : "How do you want to import the 'Node OBREMAP' module?",
+			choices: ['import', 'require'],
+			default : "import"
+		}
+	})
+	.version(false)
+	.help("h")
+})
+.command('migrate:fresh', 'Drop all tables and re-run all migrations', yargs => {
+	let demand = (process.env.NODE_ENV == "production") ? ["f", "force"] : []
+	yargs
+	.option({
+		"f" : {
+			alias : "force",
+			type : "boolean",
+			describe: "Force the operation to run when in production"
+		},
+		"p" : {
+			alias : "folder",
+			type : "string",
+			describe : "Defines the custom folder path."
+		},
+		"s" : {
+			alias : "seed",
+			type : "boolean",
+			describe : "Indicates if the seed task should be re-run."
+		},
+		"o" : {
+			alias : "how-import",
+			type : "string",
+			describe : "How do you want to import the 'Node OBREMAP' module?",
+			choices: ['import', 'require'],
+			default : "import"
+		}
+	})
+	.version(false)
+	.help("h")
+})
+.command('seed', 'Execute all migrations', yargs => {
+	yargs
+	.option({
+		"f" : {
+			alias : "folder",
+			type : "string",
+			describe : "Defines the custom folder path."
+		},
+		"o" : {
+			alias : "how-import",
+			type : "string",
+			describe : "How do you want to import the 'Node OBREMAP' module?",
+			choices: ['import', 'require'],
+			default : "import"
+		}
+	})
+	.version(false)
+	.help("h")
+})
 .demandCommand(1, 'You need at least one command before moving on.')
 .wrap(yargs.terminalWidth())
 .alias("v", "version")
@@ -191,7 +343,7 @@ const argsToOptions = yargs
 .example('$0 make:model User', '-  Use custom config')
 .argv
 
-const start = (args) => {
+const start = async (args) => {
 	let newArgs = {};
 	Object.entries(args).map(obj => {
 		if(obj[0].length > 2)
@@ -200,11 +352,17 @@ const start = (args) => {
 
 	const [cmd, type] = args._[0].split(":");
 	newArgs["_type"] = type;
-	require(`./${cmd}/${type}`)({
+	let command = await import(`./${cmd}/${type || "index.js"}`)
+	let options = ({
 		args: newArgs,
 		cwd: process.cwd(),
 		fs
 	})
+	
+	if(command.default) command = command.default
+	if(command.default) command = command.default
+
+	command(options)
 }
 
 start(argsToOptions);

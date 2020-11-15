@@ -4,7 +4,8 @@ module.exports = {
 	],
 	folders : {
 		models : "/models",
-		migrations : "/migrations"
+		migrations : "/migrations",
+		seeders : "/seeds"
 	},
 	default : {
 		driver : "mysql",

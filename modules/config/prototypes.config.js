@@ -14,3 +14,9 @@ Object.defineProperty(Object.prototype, 'empty', {
 		return Object.entries(this).length === 0
 	}
 });
+
+Object.defineProperty(Array.prototype, 'wrap', {
+	value: function(key, val) {
+		return this.filter(arr => arr);
+	}
+});
