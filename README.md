@@ -290,6 +290,18 @@ let chats = await user.chats.first()
 By installing **node-obremap globally** (`npm install @moccacoders/node-obremap -g`) you can access CLI methods to help create models, connections, etc. and use the different creation wizards.
 They are currently in **Spanish** and **English**.
 
+#### Methods
+- `obremap make:model <name> [options]` Create a new Obremap Model Class.
+- `obremap make:connection <name> [options]` Create a new Database Connection
+- `obremap make:migration <name> [options]` Create a new migration file
+  - `obremap migrate [options]` Execute all migrations
+  - `obremap migrate:reset [options]` Rollback all database migrations
+  - `obremap migrate:refresh [options]` Reset and re-run all migrations
+  - `obremap migrate:rollback [options]` Rollback the last database migration
+  - `obremap migrate:refresh [options]` Drop all tables and re-run all migrations
+- `obremap make:seeder <name> [options]` Create a new seeder file
+  - `obremap seed [options]`
+
 #### Models
 
 `obremap make:model`
@@ -302,6 +314,14 @@ Creates a file in your current directory `/models/user.js` with a default model
 `obremap make:connection`
 
 It will initialize the **Connections** creation wizard which will ask you for the necessary information to create connections; It will also allow you to select between using the OBREMAP configuration file or your Environment Variables.
+
+#### Migrations
+
+`obremap make:migration` Create a migration file.
+
+
+#### Seeders
+`obremap make:seeder` Create a Seeder file.
 
 
 ### Everything
