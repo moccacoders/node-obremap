@@ -20,7 +20,6 @@ module.exports = ({ args, cwd, fs }) => {
 	let type = "";
 	let column, from, to, match, tableName = null;
 	if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
-	console.log(args["--folder"])
 	if(!/^\//.test(args["--folder"])) args["--folder"] = `/${args["--folder"]}`;
 	let folderPath = path.join(cwd, args["--folder"]);
 	try {
