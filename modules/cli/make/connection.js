@@ -3,7 +3,7 @@ const inquirer = require("inquirer");
 const lang = require('../../config/languages');
 const path = require("path");
 const questions = require("../../config/cli/questions.cli");
-c 
+
 module.exports = ({ args, cwd, fs }) => {
 	let answers;
 	if(!args["--wizard"]){
