@@ -2,7 +2,7 @@ const chalk = require("chalk");
 const Reset = require("./reset.js")
 const DB = require("../../index").DB;
 
-exports.default = ({ args, cwd, fs }) => {
+exports.default = ({ args, cwd, fs, obremapConfig }) => {
 	args["--rollback"] = true;
 	if(!args["--step"]){
 		let migration = DB.table("migrations").orderBy("id desc").firstSync();
@@ -11,5 +11,5 @@ exports.default = ({ args, cwd, fs }) => {
 		args["--batch"] = migration.batch;		
 	}
 
-	Reset.default({ args, cwd, fs })
+	Reset.default({ args, cwd, fs, obremapConfig })
 }

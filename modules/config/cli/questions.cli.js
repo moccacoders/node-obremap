@@ -1,10 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 const pluralize = require("pluralize");
-const root = require("app-root-path");
-
 const config = require('../index.js');
-const configPath = path.join(root.path, "/obremap.config.js");
+const configPath = path.join(process.cwd(), "/obremap.config.js");
 let lang = require('../languages');
 const utils = require('../utils');
 let configFile = {};

@@ -2,19 +2,13 @@ const chalk = require("chalk");
 const path = require("path");
 const moment = require("moment");
 const inquirer = require("inquirer")
-const root = require("app-root-path");
 const Migrate = require("./index")
 const Seed = require("../seed/index")
 const DB = require("../../index").DB
 const config = require("../../config");
 const questions = require("../../config/cli/questions.cli.js")
-let obremapConfig = {};
 
-try{
-	obremapConfig = require(path.join(root.path, "/obremap.config.js"));
-}catch(err){ }
-
-exports.default = ({ args, cwd, fs }) => {
+exports.default = ({ args, cwd, fs, obremapConfig }) => {
 	if(!args["--force"] && process.env.NODE_ENV == "production")
 		inquirer.prompt(questions(args).migrations)
 		.then(args => {

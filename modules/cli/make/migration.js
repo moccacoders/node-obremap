@@ -1,21 +1,13 @@
 const chalk = require("chalk");
 const moment = require("moment");
 const path = require("path");
-const root = require("app-root-path");
 
 const config = require("../../config");
 const { getTableName } = require('../../global/get-name');
 const model = require('./model');
 const utils = require("../../config/utils");
-let obremapConfig = null;
 
-module.exports = ({ args, cwd, fs }) => {
-	try {
-		obremapConfig = require(path.join(cwd, "/obremap.config.js"));
-	}catch{
-		obremapConfig = null
-	}
-
+module.exports = ({ args, cwd, fs, obremapConfig }) => {
 	let name = args["--name"];
 	let type = "";
 	let column, from, to, match, tableName = null;

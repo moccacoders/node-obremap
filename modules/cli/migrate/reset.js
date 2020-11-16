@@ -2,17 +2,11 @@ const config = require("../../config");
 const chalk = require("chalk");
 const path = require("path");
 const moment = require("moment");
-const root = require("app-root-path");
 const DB = require("../../index").DB;
 const Migrate = require("./index.js")
-let obremapConfig = {};
 
-try{
-	obremapConfig = require(path.join(root.path, "/obremap.config.js"));
-}catch(err){ }
-
-exports.default = ({ args, cwd, fs, exit = true }) => {
-	if(!args["--folder"]) args["--folder"] = obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
+exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
+	if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
 	if(!args["--batch"]) args["--batch"] = 0;
 	if(!args["--step"]) args["--step"] = 0;
 	try{
@@ -23,7 +17,7 @@ exports.default = ({ args, cwd, fs, exit = true }) => {
 
 		files.forEach(file => {
 			try{
-				let filePath = path.join(root.path, args["--folder"], file.migration);
+				let filePath = path.join(cwd, args["--folder"], file.migration);
 				let Migration = require(filePath);
 				console.log(chalk.yellow("Rolling Back:"), file.migration);
 				let start = moment(new Date());

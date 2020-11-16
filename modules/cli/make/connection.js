@@ -3,8 +3,7 @@ const inquirer = require("inquirer");
 const lang = require('../../config/languages');
 const path = require("path");
 const questions = require("../../config/cli/questions.cli");
-const root = require("app-root-path");
-
+c 
 module.exports = ({ args, cwd, fs }) => {
 	let answers;
 	if(!args["--wizard"]){
@@ -15,13 +14,13 @@ module.exports = ({ args, cwd, fs }) => {
 			"--config-file" : true,
 			connections : [args]
 		};
-		return setConnetion(args);
+		return setConnetion(args, cwd);
 	}
 	if(!args["_createConnection"])
 		connectionConfig(args)
 		.then(ans => {
 			answers = ans;
-			setConnetion(answers)
+			setConnetion(answers, cwd)
 		});
 
 	else
@@ -29,7 +28,7 @@ module.exports = ({ args, cwd, fs }) => {
 			connectionConfig(args)
 			.then(ans => {
 				answers = ans;
-				if(setConnetion(answers)){
+				if(setConnetion(answers, cwd)){
 					done(answers);
 				}
 			});
@@ -77,7 +76,7 @@ const createConnection = (answers) => {
 	})
 }
 
-const setConnetion = (args) => {
+const setConnetion = (args, cwd) => {
 	if(!args["__set-connection"] || !args["connections"]) return true;
 	if(!args["--config-file"]){
 		console.log(`\n------------------------------------------------------------------------\n\n${lang[args["_lang"]].connectionEnv}\n${lang[args["_lang"]].connectionEnvMsg}\n\n------------------------------------------------------------------------\n`);
@@ -103,7 +102,7 @@ console.log(`\n-----------------------------------------------------------------
 		return true;
 	}
 
-	const configPath = path.join(root.path, "/obremap.config.js");
+	const configPath = path.join(cwd, "/obremap.config.js");
 	let config = {databases:{}};
 	let configFile = null;
 	try{ config = require(configPath) }

@@ -3,17 +3,11 @@ const inquirer = require("inquirer");
 const path = require("path");
 const pluralize = require("pluralize");
 const questions = require("../../config/cli/questions.cli");
-const root = require("app-root-path");
 const utils = require("../../config/utils");
 const lang = require('../../config/languages');
 const connection = require('../make/connection');
-let obremapConfig = {};
 
-try{
-	obremapConfig = require(path.join(root.path, "/obremap.config.js"));
-}catch(err){ }
-
-module.exports = ({ args, cwd, fs }) => {
+module.exports = ({ args, cwd, fs, obremapConfig }) => {
 	configuration(args).then(answers => {
 		args = answers
 
@@ -42,7 +36,7 @@ ${args["--how-import"] == "import" ? 'export default' : 'module.exports ='} clas
 		/*
 		check if models folder exists
 		*/
-		if(!args["--folder"]) args["--folder"] = obremapConfig.folders ? obremapConfig.folders.models : config.folders.models;
+		if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.models : config.folders.models;
 		if(!/^\//.test(args["--folder"])) args["--folder"] = `/${args["--folder"]}`;
 		try {
 			fs.accessSync(`${cwd}${args["--folder"]}`, fs.F_OK)

@@ -1,6 +1,8 @@
 #! /usr/bin/env node
 import fs from 'fs'
 import yargs from "yargs";
+import chalk from "chalk";
+import path from "path";
 import { toCase, regex } from "../config/utils";
 import "core-js/stable";
 import "regenerator-runtime/runtime";
@@ -340,11 +342,24 @@ const argsToOptions = yargs
 .wrap(yargs.terminalWidth())
 .alias("v", "version")
 .alias("h", "help")
+.option("dev", {
+	type : "boolean",
+	describe : "Use Node Obremap CLI as development mode to get error trace.",
+	default : false
+})
 .example('$0 make:model User', '-  Use custom config')
+.strict()
 .argv
 
 const start = async (args) => {
 	let newArgs = {};
+	let obremapConfig = null;
+	let cwd = process.cwd();
+	global.dev = args["--dev"];
+	try{
+		obremapConfig = require(path.join(cwd, "/obremap.config.js"));
+	}catch(err){}
+
 	Object.entries(args).map(obj => {
 		if(obj[0].length > 2)
 			newArgs[`--${toCase(obj[0], true).replace("_", "-")}`] = obj[1];
@@ -355,14 +370,21 @@ const start = async (args) => {
 	let command = await import(`./${cmd}/${type || "index.js"}`)
 	let options = ({
 		args: newArgs,
-		cwd: process.cwd(),
-		fs
+		cwd,
+		fs,
+		obremapConfig
 	})
 	
 	if(command.default) command = command.default
 	if(command.default) command = command.default
 
-	command(options)
+	try {
+		command(options)
+	} catch (err) {
+		console.log(chalk.red("Error:"), err.message);
+		if(global.dev)
+			console.log(err);
+	}
 }
 
 start(argsToOptions);

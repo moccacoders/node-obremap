@@ -1,20 +1,18 @@
 const chalk = require("chalk");
 const path = require("path");
-const root = require("app-root-path");
 
 const config = require("../../config");
 const { getTableName } = require('../../global/get-name');
 const model = require("./model");
-const obremapConfig = require(path.join(root.path, "/obremap.config.js"));
 const utils = require("../../config/utils");
 const moduleName = process.env.NODE_ENV == "test" ? "../dist" : "@moccacoders/node-obremap";
 
-module.exports = ({ args, cwd, fs }) => {
+module.exports = ({ args, cwd, fs, obremapConfig }) => {
 	let name = args["--name"];
 	let up = "";
 	let down = "";
 	let column = "";
-	if(!args["--folder"]) args["--folder"] = obremapConfig.folders ? obremapConfig.folders.seeders : config.folders.seeders;
+	if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.seeders : config.folders.seeders;
 	if(!/^\//.test(args["--folder"])) args["--folder"] = `/${args["--folder"]}`;
 	let folderPath = path.join(cwd, args["--folder"]);
 	const fileName = utils.toCase(name.replace(/(_|\-|\.)?seeder/i, ""));

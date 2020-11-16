@@ -1,5 +1,4 @@
 require("dotenv").config();
-const root = require("app-root-path");
 const path = require("path");
 
 export default (model) => {
@@ -7,8 +6,8 @@ export default (model) => {
 		global.dbConn = dbConfig(model.connection);
 		return require(`./${global.dbConn.driver}`).default
 	} catch(e) {
-		// console.log(e.message);
-		throw new Error('You must specify process.env.DB_DRIVER before creating a model.')
+		if(global.dev) console.log(e);
+		throw Error('You must specify process.env.DB_DRIVER before creating a model.')
 	}
 }
 
@@ -17,7 +16,7 @@ export const dbConfig = (connection) => {
 	let configFile = null;
 
 	try{
-		configFile = require(path.join(root.path, "/obremap.config.js"));
+		configFile = require(path.join(process.cwd(), "/obremap.config.js"));
 	}catch(e){
 		configFile = null;
 	}
@@ -27,7 +26,7 @@ export const dbConfig = (connection) => {
 		global.TZ = configFile.timezone || null;
 	}
 
-	if(!configFile)
+	if(!configFile || !configFile.databases)
 		Object.entries(process.env).map((elem, ind) => {
 			const [key, value] = elem;
 			

@@ -2,18 +2,12 @@ const config = require("../../config");
 const chalk = require("chalk");
 const path = require("path");
 const moment = require("moment");
-const root = require("app-root-path");
 const { DB } = require("../../index");
-let obremapConfig = {};
 
-try{
-	obremapConfig = require(path.join(root.path, "/obremap.config.js"));
-}catch(err){ }
-
-exports.default = ({ args, cwd, fs, exit = true }) => {
-	if(!args["--folder"]) args["--folder"] = obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
+exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
+	if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
 	try{
-		let files = fs.readdirSync(path.join(root.path, args["--folder"])).sort();
+		let files = fs.readdirSync(path.join(cwd, args["--folder"])).sort();
 		let batch = 0;
 
 		[files, batch] = exports.migrations(files)
@@ -24,7 +18,7 @@ exports.default = ({ args, cwd, fs, exit = true }) => {
 		files.forEach(file => {
 			console.log(chalk.yellow("Migrating:"), file);
 			let start = moment(new Date());
-			let filePath = path.join(root.path, args["--folder"], file);
+			let filePath = path.join(cwd, args["--folder"], file);
 			let Migration = require(filePath);
 			Migration = new Migration();
 			Migration = Migration.up();
