@@ -6,14 +6,21 @@ const root = require("app-root-path");
 const config = require("../../config");
 const { getTableName } = require('../../global/get-name');
 const model = require('./model');
-const obremapConfig = require(path.join(root.path, "/obremap.config.js"));
 const utils = require("../../config/utils");
+let obremapConfig = null;
 
 module.exports = ({ args, cwd, fs }) => {
+	try {
+		obremapConfig = require(path.join(cwd, "/obremap.config.js"));
+	}catch{
+		obremapConfig = null
+	}
+
 	let name = args["--name"];
 	let type = "";
 	let column, from, to, match, tableName = null;
-	if(!args["--folder"]) args["--folder"] = obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
+	if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
+	console.log(args["--folder"])
 	if(!/^\//.test(args["--folder"])) args["--folder"] = `/${args["--folder"]}`;
 	let folderPath = path.join(cwd, args["--folder"]);
 	try {
