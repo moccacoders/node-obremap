@@ -42,7 +42,6 @@
     "@babel/cli": "7.10.4",
     "@babel/core": "7.10.4",
     "@babel/plugin-transform-modules-amd": "^7.12.1",
-    "app-root-path": "3.0.0",
     "arg": "4.1.3",
     "chalk": "4.1.0",
     "core-js": "^3.7.0",
