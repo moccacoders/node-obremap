@@ -6,6 +6,7 @@ export default (model) => {
 		global.dbConn = dbConfig(model.connection);
 		return require(`./${global.dbConn.driver}`).default
 	} catch(e) {
+		console.log(global.dev)
 		if(global.dev) console.log(e);
 		throw Error('You must specify process.env.DB_DRIVER before creating a model.')
 	}
@@ -17,9 +18,7 @@ export const dbConfig = (connection) => {
 
 	try{
 		configFile = require(path.join(process.cwd(), "/obremap.config.js"));
-	}catch(e){
-		configFile = null;
-	}
+	}catch(e){ }
 
 	if(configFile && configFile.databases){
 		databases = configFile.databases;

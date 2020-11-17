@@ -32,7 +32,11 @@ export default class Seeder {
 	            let runTime = parseFloat(microtime(true) - startTime).toFixed(2);
 	            if(silent === false)
 					console.log(chalk.green("Seeded:"), name, `${runTime} Seconds`);
-			}catch(err){ console.log(chalk.red("Error:"), err.message); process.exit() }
+			}catch(err){
+				console.log(chalk.red("Error:"), err.message);
+				if(global.dev) console.log(err)
+				process.exit()
+			}
 		})
 	}
 

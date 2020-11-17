@@ -465,6 +465,15 @@ export default class SchemaBuilder {
 		return this;
 	}
 
+	constrained(table){
+		let field = this.fields[this.#FIELD_INDEX].name;
+		this.alterTables.push({
+			name : `${this.model.tableName}_${field}_foreign`,
+			type,
+			id
+		});
+	}
+
 	// GENERAL UTILS
 	createField(options){
 		if(!options.name) throw Error("Column Name is required.");

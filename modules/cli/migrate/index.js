@@ -3,22 +3,24 @@ const chalk = require("chalk");
 const path = require("path");
 const moment = require("moment");
 const { DB } = require("../../index");
+const { microtime } = require('../../config/utils.js')
 
 exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
 	if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.migrations : config.folders.migrations;
 	try{
 		let files = fs.readdirSync(path.join(cwd, args["--folder"])).sort();
+		if(args["--path"]) files = args["--path"];
 		let batch = 0;
 
-		[files, batch] = exports.migrations(files)
+		[files, batch] = exports.migrations({files, obremapConfig})
 		if(files.length == 0){
 			console.log(chalk.green(`Nothing to migrate on "${args["--folder"]}"`));
 		}
 
 		files.forEach(file => {
 			console.log(chalk.yellow("Migrating:"), file);
-			let start = moment(new Date());
-			let filePath = path.join(cwd, args["--folder"], file);
+			let startTime = microtime(true)
+			let filePath = path.join(cwd, (file.search(args["--folder"]) >= 0) ? "" : args["--folder"], file);
 			let Migration = require(filePath);
 			Migration = new Migration();
 			Migration = Migration.up();
@@ -28,21 +30,21 @@ exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
 				batch: batch + 1
 			})
 
-			let end = moment(new Date());
-			let diff = end.diff(start, "seconds");
-
-			console.log(chalk.green("Migrated:"), file, `(${diff} seconds)`);
+			let runTime = parseFloat(microtime(true) - startTime).toFixed(2);
+			console.log(chalk.green("Migrated:"), file, `(${runTime} seconds)`);
 		});
 		if(exit) return process.exit()
 	}catch(err){
-		console.log(chalk.red("Error: "), err.message);
-		process.exit(1)
 		if(err.message.search("no such file or directory") >= 0)
 			return console.log(chalk.green(`Nothing to migrate on "${args["--folder"]}"`));
+
+		console.log(chalk.red("Errores: "), err.message);
+		if(global.dev) console.log(err);
+		process.exit(1)
 	}
 }
 
-const migrations = (files, reset=false, batch=0, step=0) => {
+const migrations = ({files, reset=false, batch=0, step=0, obremapConfig}) => {
 	let connection = DB.connection != "default" ? DB.connection : "";
 	let database = null;
 	if(!files) files = [];

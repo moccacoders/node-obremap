@@ -222,6 +222,15 @@ const argsToOptions = yargs
 			describe : "How do you want to import the 'Node OBREMAP' module?",
 			choices: ['import', 'require'],
 			default : "import"
+		},
+		"p" : {
+			alias : "path",
+			type : "array",
+			describe : "The path(s) to the migrations files to be executed."
+		},
+		"pretend" : {
+			type: "boolean",
+			describe: "Dump the SQL queries that would be run."
 		}
 	})
 	.version(false)
@@ -342,10 +351,12 @@ const argsToOptions = yargs
 .wrap(yargs.terminalWidth())
 .alias("v", "version")
 .alias("h", "help")
-.option("dev", {
-	type : "boolean",
-	describe : "Use Node Obremap CLI as development mode to get error trace.",
-	default : false
+.option({
+	"verbose" : {
+		type : "boolean",
+		default : false,
+		describe : "Set this to get complete error trace"
+	}
 })
 .example('$0 make:model User', '-  Use custom config')
 .strict()
@@ -355,7 +366,6 @@ const start = async (args) => {
 	let newArgs = {};
 	let obremapConfig = null;
 	let cwd = process.cwd();
-	global.dev = args["--dev"];
 	try{
 		obremapConfig = require(path.join(cwd, "/obremap.config.js"));
 	}catch(err){}
@@ -364,7 +374,7 @@ const start = async (args) => {
 		if(obj[0].length > 2)
 			newArgs[`--${toCase(obj[0], true).replace("_", "-")}`] = obj[1];
 	});
-
+	global.dev = newArgs["--verbose"];
 	const [cmd, type] = args._[0].split(":");
 	newArgs["_type"] = type;
 	let command = await import(`./${cmd}/${type || "index.js"}`)

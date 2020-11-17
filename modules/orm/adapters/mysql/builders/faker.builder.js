@@ -127,7 +127,7 @@ export default class Faker {
 			}
 			return item.type;
 		})
-		type = type.empty()		;
+		if(type) type = type.wrap();
 		this.data.push({ method, type, ...other });
 		return this;
 	}
@@ -167,7 +167,7 @@ export default class Faker {
 			})
 			this.times--;
 		}
-		fake = fake.empty()
+		fake = fake.wrap()
 		return fake;
 	}
 }

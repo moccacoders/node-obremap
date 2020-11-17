@@ -10,14 +10,20 @@ exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
 	if(!args["--batch"]) args["--batch"] = 0;
 	if(!args["--step"]) args["--step"] = 0;
 	try{
-		let [files, batch] = Migrate.migrations(files, true, args["--batch"], args["--step"])
+		let [files, batch] = Migrate.migrations({
+			files : [],
+			reset : true,
+			batch : args["--batch"],
+			step : args["--step"],
+			obremapConfig
+		})
 		if(files.length == 0){
 			console.log(chalk.green(`Nothing to Rolling Back on "${args["--folder"]}"`));
 		}
 
 		files.forEach(file => {
 			try{
-				let filePath = path.join(cwd, args["--folder"], file.migration);
+				let filePath = path.join(cwd, file.migration.search(args["--folder"]) >= 0 ? "" : args["--folder"], file.migration);
 				let Migration = require(filePath);
 				console.log(chalk.yellow("Rolling Back:"), file.migration);
 				let start = moment(new Date());
@@ -32,6 +38,8 @@ exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
 			}catch(err){
 				if(err.message.search("Cannot find module") >= 0)
 					console.log(chalk.red("Migration not found:"), file.migration)
+				console.log(chalk.red("Error:"), err.message)
+				if(global.dev) console.log(err)
 			}
 		});
 		if(exit) return process.exit()
@@ -39,5 +47,6 @@ exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
 		if(err.message.search("no such file or directory") >= 0)
 			return console.log(chalk.green(`Nothing to migrate on "${args["--folder"]}"`));
 		console.log(chalk.red("Error:"), err.message)
+		if(global.dev) console.log(err)
 	}
 }
