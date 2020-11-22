@@ -13,28 +13,28 @@ exports.default = ({ args, cwd, fs, obremapConfig }) => {
 		inquirer.prompt(questions(args).migrations)
 		.then(args => {
 			if(args["--force"] == true){
-				exports.start({ args, cwd, fs })
+				exports.start({ args, cwd, fs, obremapConfig })
 			}else{
 				return console.log("Fresh process canceled by user", chalk.green(`successfully`));
 			}
 		})
 		.catch(err => console.log(chalk.red("Error:"), err.message))
 	else
-		exports.start({ args, cwd, fs });
+		exports.start({ args, cwd, fs, obremapConfig });
 }
 
-exports.start = ({ args, cwd, fs }) => {
-	let dropTables = exports.dropTables();
+exports.start = ({ args, cwd, fs, obremapConfig }) => {
+	let dropTables = exports.dropTables(obremapConfig);
 	if(dropTables){
-		Migrate.default({ args, cwd, fs, exit: !args["--seed"]})
+		Migrate.default({ args, cwd, fs, obremapConfig, exit: !args["--seed"]})
 		if(args["--seed"]){
 			delete args["--folder"]
-			Seed.default({ args, cwd, fs })
+			Seed.default({ args, cwd, fs, obremapConfig })
 		}
 	}
 }
 
-exports.dropTables = () => {
+exports.dropTables = obremapConfig => {
 	let connection = DB.connection != "default" ? DB.connection : "";
 	let database = null;
 	if(obremapConfig && obremapConfig.databases){
