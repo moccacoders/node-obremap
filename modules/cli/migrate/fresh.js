@@ -53,7 +53,7 @@ exports.dropTables = obremapConfig => {
 	}
 
 	let tables = DB.sqlSync(`SELECT table_name FROM information_schema.tables WHERE table_schema = ?`, [database])
-	tables = tables.map(table => table.TABLE_NAME)
+	tables = tables.map(table => table.table_name)
 	if(tables.length == 0){
 		console.log("Droped all tables", chalk.green("successfully."));
 		return true;

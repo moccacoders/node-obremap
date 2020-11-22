@@ -76,7 +76,7 @@ const migrations = ({files, reset=false, batch=0, step=0, obremapConfig}) => {
 	if(step>0) all = all.limit(step)
 	files.map((file, ind) => {
 		if(ind == 0)
-			all = all.where(`(migration = '${file}'`);
+			all = all.where(`(migration = '${file}'${files.length-1==0 ? ")" : ""}`);
 		else
 			all = all.orWhere(`migration = '${file}'${ind==files.length-1? ")" : ""}`)
 	})

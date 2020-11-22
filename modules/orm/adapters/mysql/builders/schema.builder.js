@@ -342,6 +342,23 @@ export default class SchemaBuilder {
 		return this.timestamp(name, length)
 	}
 
+	string(name, length=45){
+		this.createField({
+			name,
+			type: "varchar",
+			length
+		});
+		return this;
+	}
+
+	text(name){
+		this.createField({
+			name,
+			type : "text"
+		})
+		return this;
+	}
+
 	timestampTz(name, length = 0){
 		return this.timestamp(name, length)
 	}
@@ -357,15 +374,6 @@ export default class SchemaBuilder {
 			name,
 			type : "tinyint"
 		})
-		return this;
-	}
-
-	string(name, length=45){
-		this.createField({
-			name,
-			type: "varchar",
-			length
-		});
 		return this;
 	}
 
