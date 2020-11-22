@@ -26,7 +26,7 @@ export default class SchemaBuilder {
 		this.createField({
 			name,
 			type: "bigint",
-			unsigned: true,
+			unsigned: true
 		});
 		return this;
 	}
@@ -440,6 +440,15 @@ export default class SchemaBuilder {
 		return this;
 	}
 
+	constrained(table){
+		let field = this.fields[this.#FIELD_INDEX].name;
+		this.alterTables.push({
+			name : `${this.model.tableName}_${field}_foreign`,
+			type,
+			id
+		});
+	}
+
 	default(value){
 		this.fields[this.#FIELD_INDEX].default = value;
 		return this;
@@ -465,13 +474,9 @@ export default class SchemaBuilder {
 		return this;
 	}
 
-	constrained(table){
-		let field = this.fields[this.#FIELD_INDEX].name;
-		this.alterTables.push({
-			name : `${this.model.tableName}_${field}_foreign`,
-			type,
-			id
-		});
+	primaryKey(){
+		this.fields[this.#FIELD_INDEX].primary = true;
+		return this;
 	}
 
 	// GENERAL UTILS

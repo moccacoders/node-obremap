@@ -8,8 +8,9 @@ const utils = require("../../config/utils");
 const moduleName = process.env.NODE_ENV == "test" ? "../dist" : "@moccacoders/node-obremap";
 
 module.exports = ({ args, cwd, fs, obremapConfig }) => {
-	let name = args["--name"];
+	let name = args["--name"].replace(/_?(table|create|add|rename-table|rename-column)_?/g, "");
 	let up = "";
+	let fields = [];
 	let down = "";
 	let column = "";
 	if(!args["--folder"]) args["--folder"] = obremapConfig && obremapConfig.folders ? obremapConfig.folders.seeders : config.folders.seeders;
@@ -17,6 +18,39 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
 	let folderPath = path.join(cwd, args["--folder"]);
 	const fileName = utils.toCase(name.replace(/(_|\-|\.)?seeder/i, ""));
 	const filePath = path.join(folderPath, `/${fileName}.seeder.js`);
+
+	if(args["--fields"] && args["--fields"].length > 0){
+		args["--fields"].map(field => {
+			let options = field.split(",");
+			let opts = 1;
+			field = {};
+			
+			let names = ["type", "name"];
+			Object.entries(options).map(obj => {
+				let [ind, value] = obj;
+				let modifiers;
+				let modLen = !field["modifiers"] ? 0 : field["modifiers"].length;
+				let name = names[ind] ? names[ind] : `opt${opts}`;
+				if(value.search(/\./) >= 0){
+					[value, ...modifiers] = value.split(/\./)
+					modifiers.map(modifier => {
+						let val, match;
+						if(modifier.search(/(.+)-(.+)/) >= 0)
+							[match, modifier, val] = modifier.match(/(.+)-(.+)/);
+
+						if(!field["modifiers"]) field["modifiers"] = [];
+						if(!field["modifiers"][modLen]) field["modifiers"][modLen] = {};
+						field["modifiers"][modLen]["name"] = modifier;
+						if(val) field["modifiers"][modLen]["value"] = val;
+						modLen++;
+					})
+				}
+				field[name] = value;
+				if(field[`opt${opts}`]) opts++;
+			});
+			fields.push(field)
+		})
+	}
 
 	try {
 		let file = fs.readFileSync(filePath)
@@ -41,11 +75,12 @@ ${args["--how-import"] == "import" ? 'export default' : 'module.exports ='} clas
 	static run() {
 		/*
 			DB.table('${tableName}').truncate();
-			DB.table('${tableName}').timestamps().set([
-				{
+			DB.table('${tableName}').timestamps(${fields.filter(field => field.type.search("timestamp") >= 0).length > 0}).set([
+				{${ 
+					fields ? processFields(fields) : `
 					name : 'John',
 					last_name : 'Doe',
-					email : 'john.doe@example.com'
+					email : 'john.doe@example.com'`}
 				}
 			]).create();
 		*/
@@ -148,4 +183,15 @@ ${args["--how-import"] == "import" ? 'export default' : 'module.exports ='} clas
 			return false;
 		}
 	}
+}
+
+const processFields = (fields) => {
+	let str = ``;
+	fields.map(field => {
+		let { type, name, modifiers, ...opts } = field;
+		if(name)
+		str += `
+					${name} : ${type.search(/(id|int)/) >= 0 ? 0 : `''`}`;
+	})
+	return str;
 }

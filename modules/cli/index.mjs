@@ -182,6 +182,15 @@ const argsToOptions = yargs
 			alias : "folder",
 			type : "string",
 			describe : "Defines the custom folder path."
+		},
+		"fields" : {
+			type: "array",
+			describe : "Defines the migrations fields."
+		},
+		"s" : {
+			alias : "seeder",
+			type : "boolean",
+			describe : "Set this option if you want to create a Seeder Class."
 		}
 	})
 	.version(false)
