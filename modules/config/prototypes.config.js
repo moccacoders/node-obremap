@@ -26,3 +26,4 @@ if(!Array.prototype.hasOwnProperty("wrap")){
 		}
 	});
 }
+
