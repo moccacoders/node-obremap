@@ -5,6 +5,15 @@ export default class Schema {
 	static tableName = null;
 	static connection = "default";
 	static timestamps = false;
+
+	constructor () {
+		if(typeof this.constructor.run === "undefined")
+			throw Error(`Method [run] missing from ${this.constructor.name}`);
+		
+		return this.container ?
+			this.container.call([this, "run"]) :
+			this.constructor.run()
+	}
 	
 	static create (tableName, action) {
 		this.tableName = tableName;
@@ -14,9 +23,7 @@ export default class Schema {
 		try{
 			let createTable = adapter(this).createTable(this.schemaBuilder)
 			return createTable
-		}catch(err){
-			return err
-		}
+		}catch(err){ throw err }
 	}
 
 	static dropIfExists (tableName) {
