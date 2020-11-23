@@ -68,7 +68,7 @@ const migrations = ({files, reset=false, batch=0, step=0, obremapConfig}) => {
 		try{
 			DB.sqlSync(`CREATE TABLE \`migrations\` ( \`id\` int(10) unsigned NOT NULL AUTO_INCREMENT, \`migration\` varchar(255) NOT NULL, \`batch\` int(11) NOT NULL, PRIMARY KEY (\`id\`) )`)
 		console.log("Migration table created", chalk.green("successfully."));
-		}catch(err){console.log(err)}
+		}catch(err){console.log("Migration table already", chalk.green("exists."));}
 	}
 
 	let all = DB.table("migrations");

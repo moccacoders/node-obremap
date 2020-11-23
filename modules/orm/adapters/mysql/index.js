@@ -594,9 +594,28 @@ class MysqlAdapter {
 
 
   processFields(fields){
-    return fields.map(field => {
-      return `\`${field.name}\` ${field.type}${field.length && field.length > 0 ? `(${field.length})` : ""} ${field.unsigned ? "unsigned" : ""} ${field.nullable ? "null" : "not null"} ${field.auto_increment ? "auto_increment" : ""} ${field.primary ? "primary key" : ""}`.trim();
+    let uniques = [];
+    fields = fields.map(field => {
+      if(field.unique) uniques.push(`\`${field.name}\``);
+
+      let str = [];
+      str.push(`\`${field.name}\` ${field.type}`);
+      if(field.length && field.length > 0) str.push(`(${field.length})`);
+      if(field.unsigned) str.push("unsigned");
+      if(field.nullable) str.push("null");
+      else str.push("not null");
+      if(field.auto_increment) str.push("auto_increment");
+      if(field.primary) str.push("primary key");
+      if(field.default) str.push(`default ${["CURRENT_TIMESTAMP", "GETDATE()"].includes(field.default) ? field.default : `'${field.default}'`}`);
+      if(field.comment) str.push(`comment '${field.comment}'`);
+      
+      return str.join(" ").trim();
     })
+
+    if(uniques.length > 0)
+      fields.push(`unique (${uniques.join(", ")})`);
+    console.log(fields);
+    return fields;
   }
 
 

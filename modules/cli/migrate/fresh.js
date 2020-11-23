@@ -26,9 +26,11 @@ exports.default = ({ args, cwd, fs, obremapConfig }) => {
 exports.start = ({ args, cwd, fs, obremapConfig }) => {
 	let dropTables = exports.dropTables(obremapConfig);
 	if(dropTables){
+		console.log("")
 		Migrate.default({ args, cwd, fs, obremapConfig, exit: !args["--seed"]})
 		if(args["--seed"]){
 			delete args["--folder"]
+			console.log("")
 			Seed.default({ args, cwd, fs, obremapConfig })
 		}
 	}
@@ -51,7 +53,6 @@ exports.dropTables = obremapConfig => {
 	} else if (process.env[`DB_${connection}_NAME`]) {
 		database = process.env[`DB_${connection}_NAME`];
 	}
-	console.log(database)
 
 	let tables = DB.sqlSync(`SELECT table_name FROM information_schema.tables WHERE table_schema = ?`, [database])
 	tables = tables.map(table => table.table_name)
