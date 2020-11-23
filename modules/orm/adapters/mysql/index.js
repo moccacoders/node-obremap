@@ -612,9 +612,7 @@ class MysqlAdapter {
       return str.join(" ").trim();
     })
 
-    if(uniques.length > 0)
-      fields.push(`unique (${uniques.join(", ")})`);
-    console.log(fields);
+    if(uniques.length > 0) fields.push(`unique (${uniques.join(", ")})`);
     return fields;
   }
 
