@@ -477,6 +477,11 @@ export default class SchemaBuilder {
 		return this;
 	}
 
+	unique(){
+		this.fields[this.#FIELD_INDEX].unique = true;
+		return this;
+	}
+
 	useCurrent(){
 		this.fields[this.#FIELD_INDEX].default = "CURRENT_TIMESTAMP";
 		return this;

@@ -35,7 +35,7 @@ exports.start = ({ args, cwd, fs, obremapConfig }) => {
 }
 
 exports.dropTables = obremapConfig => {
-	let connection = DB.connection != "default" ? DB.connection : "";
+	let connection = DB.connection != "default" ? DB.connection : "default";
 	let database = null;
 	if(obremapConfig && obremapConfig.databases){
 		database = obremapConfig.databases[DB.connection];
@@ -45,12 +45,13 @@ exports.dropTables = obremapConfig => {
 			database = new URL(database)
 			database = database.pathname.slice(1);
 		}
-	} else if (process.env[`DATABASE_URL_${connection}`]) {
-		database = new URL(process.env[`DATABASE_URL_${connection}`])
+	} else if (process.env[`DATABASE_URL_${connection}`] || process.env[`DATABASE_URL`]) {
+		database = new URL(process.env[`DATABASE_URL_${connection}`] ||  process.env[`DATABASE_URL`])
 		database = database.pathname.slice(1);
 	} else if (process.env[`DB_${connection}_NAME`]) {
 		database = process.env[`DB_${connection}_NAME`];
 	}
+	console.log(database)
 
 	let tables = DB.sqlSync(`SELECT table_name FROM information_schema.tables WHERE table_schema = ?`, [database])
 	tables = tables.map(table => table.table_name)
