@@ -510,4 +510,10 @@ export default class SchemaBuilder {
 				throw Error(`This field name ("${name}") already exists`);
 		})
 	}
+
+	dropColumn(column){
+		this.column = column;
+		this.drop = true;
+		return this;
+	}
 }

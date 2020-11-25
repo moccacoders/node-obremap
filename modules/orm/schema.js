@@ -42,7 +42,14 @@ export default class Schema {
 		}
 	}
 
-	static table () {
-		return true;
+	static table (tableName, action) {
+		this.tableName = tableName;
+		this.schemaBuilder = adapter(this).schemaBuilder({ model : this })
+		action(this.schemaBuilder)
+
+		try{
+			let createTable = adapter(this).alterTable(this.schemaBuilder)
+			return createTable
+		}catch(err){ throw err }
 	}
 }

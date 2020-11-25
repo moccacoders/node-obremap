@@ -1,3 +1,4 @@
+const config = require("../../config");
 const chalk = require("chalk");
 const Reset = require("./reset.js")
 const DB = require("../../index").DB;

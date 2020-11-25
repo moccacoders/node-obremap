@@ -580,10 +580,24 @@ class MysqlAdapter {
     return connection.sync.query(sql);
   }
 
+  alterTable ({ options, model, fields, alterTables, engine, charset, collation, drop, column }) {
+    fields = this.processFields(fields).join(", ");
+    if(drop) fields = `\`${column}\``;
+    let sql = `alter table \`${model.tableName}\` ${drop ? "drop" : "add"} column ${fields}`;
+    sql = connection.async.format(sql);
+    return connection.sync.query(sql);
+  }
+
   dropTable ({ options, model }) {
     let sql = `drop table ${options.ifExists === true ? "if exists " : ""}\`${model.tableName}\``;
     sql = connection.async.format(sql);
     return connection.sync.query(sql);
+  }
+
+  dropColumn ({ model, column }) {
+    let sql = `alter table ${model.tableName} drop column \`${column}\``;
+    // console.log(model, column)
+    return true;
   }
 
   truncateTable (model) {
@@ -609,6 +623,7 @@ class MysqlAdapter {
       if(field.auto_increment) str.push("auto_increment");
       if(field.default) str.push(`default ${["CURRENT_TIMESTAMP", "GETDATE()"].includes(field.default) ? field.default : `'${field.default}'`}`);
       if(field.comment) str.push(`comment '${field.comment}'`);
+      if(field.after) str.push(`after \`${field.after}\``);
       
       return str.join(" ").trim();
     })
