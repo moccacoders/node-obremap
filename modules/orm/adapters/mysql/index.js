@@ -217,10 +217,10 @@ class MysqlAdapter {
     let sql = connection.async.format(`INSERT INTO ${model.getTableName} (??) VALUES ?`, [v,d]);
     let results = connection.sync.query(sql)
     let result = this.makeRelatable({
-      ...data,
+      ...data[0],
       ...{id: results.insertId}
     }, model)
-    return (result[0]) ? result[0] : result;
+    return result;
   }
 
   /*
