@@ -220,7 +220,7 @@ class MysqlAdapter {
       ...data,
       ...{id: results.insertId}
     }, model)
-    return result;
+    return (result[0]) ? result[0] : result;
   }
 
   /*
