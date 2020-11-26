@@ -40,7 +40,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like)/i);
+            let operator = `${val}`.match(/^(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
@@ -65,7 +65,7 @@ class MysqlAdapter {
         if(typeof object == "object")
           Object.entries(object).map(obj => {
             let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like)/i);
+            let operator = `${val}`.match(/^(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
             if(!operator) operator = ["="];
             val = `${val}`.replace(operator[0], "").replace(/ /i, "");
             if(val === "null" || val === null){
