@@ -160,7 +160,7 @@ class MysqlAdapter {
   */
 
   create({ model, data }) {
-    if(data.length == undefined) data = [data];
+    if(data.length == undefined || data.length == 0) data = [data];
     let d = [];
     let v = [];
     data.map(item => {
@@ -191,7 +191,7 @@ class MysqlAdapter {
   }
 
   createSync({ model, data, timestamps, createdAt, updatedAt }) {
-    if(data.length == undefined) data = [data];
+    if(data.length == undefined || data.length == 0) data = [data];
     let d = [];
     let v = [];
     data.map(item => {
