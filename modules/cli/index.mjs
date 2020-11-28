@@ -34,11 +34,6 @@ const argsToOptions = yargs
 			describe : "Select the driver you want to use.",
 			default: "mysql"
 		},
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
 		"i" : {
 			alias : "created-at-name",
 			type : "string",
@@ -83,13 +78,6 @@ const argsToOptions = yargs
 			alias : "date-format",
 			type : "string",
 			describe : "Define the format of your dates. See: https://momentjs.com/docs/#/displaying/format/."
-		},
-		"o" : {
-			alias : "how-import",
-			type : "string",
-			describe : "How do you want to import the 'Node OBREMAP' module?",
-			choices: ['import', 'require'],
-			default : "import"
 		}
 	})
 	.version(false)
@@ -178,11 +166,6 @@ const argsToOptions = yargs
 			type : "boolean",
 			describe : "Set this option if you want to create an Obremap Model Class."
 		},
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
 		"fields" : {
 			type: "array",
 			describe : "Defines the migrations fields."
@@ -208,11 +191,6 @@ const argsToOptions = yargs
 			type : "string",
 			describe : "Defines the table name."
 		},
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		}
 	})
 	.version(false)
 	.help("h")
@@ -220,18 +198,6 @@ const argsToOptions = yargs
 .command('migrate', 'Execute all migrations', yargs => {
 	yargs
 	.option({
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
-		"o" : {
-			alias : "how-import",
-			type : "string",
-			describe : "How do you want to import the 'Node OBREMAP' module?",
-			choices: ['import', 'require'],
-			default : "import"
-		},
 		"p" : {
 			alias : "path",
 			type : "array",
@@ -248,18 +214,6 @@ const argsToOptions = yargs
 .command('migrate:reset', 'Rollback all database migrations', yargs => {
 	yargs
 	.option({
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
-		"o" : {
-			alias : "how-import",
-			type : "string",
-			describe : "How do you want to import the 'Node OBREMAP' module?",
-			choices: ['import', 'require'],
-			default : "import"
-		}
 	})
 	.version(false)
 	.help("h")
@@ -267,18 +221,6 @@ const argsToOptions = yargs
 .command('migrate:refresh', 'Reset and re-run all migrations', yargs => {
 	yargs
 	.option({
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
-		"o" : {
-			alias : "how-import",
-			type : "string",
-			describe : "How do you want to import the 'Node OBREMAP' module?",
-			choices: ['import', 'require'],
-			default : "import"
-		}
 	})
 	.version(false)
 	.help("h")
@@ -291,18 +233,6 @@ const argsToOptions = yargs
 			type : "number",
 			describe : "The number of migrations to be reverted"
 		},
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
-		"o" : {
-			alias : "how-import",
-			type : "string",
-			describe : "How do you want to import the 'Node OBREMAP' module?",
-			choices: ['import', 'require'],
-			default : "import"
-		}
 	})
 	.version(false)
 	.help("h")
@@ -316,22 +246,10 @@ const argsToOptions = yargs
 			type : "boolean",
 			describe: "Force the operation to run when in production"
 		},
-		"p" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
 		"s" : {
 			alias : "seed",
 			type : "boolean",
 			describe : "Indicates if the seed task should be re-run."
-		},
-		"o" : {
-			alias : "how-import",
-			type : "string",
-			describe : "How do you want to import the 'Node OBREMAP' module?",
-			choices: ['import', 'require'],
-			default : "import"
 		}
 	})
 	.version(false)
@@ -340,18 +258,6 @@ const argsToOptions = yargs
 .command('seed', 'Execute all migrations', yargs => {
 	yargs
 	.option({
-		"f" : {
-			alias : "folder",
-			type : "string",
-			describe : "Defines the custom folder path."
-		},
-		"o" : {
-			alias : "how-import",
-			type : "string",
-			describe : "How do you want to import the 'Node OBREMAP' module?",
-			choices: ['import', 'require'],
-			default : "import"
-		}
 	})
 	.version(false)
 	.help("h")
@@ -365,6 +271,16 @@ const argsToOptions = yargs
 		type : "boolean",
 		default : false,
 		describe : "Set this to get complete error trace"
+	},
+	"o" : {
+		alias : "how-import",
+		type : "string",
+		describe : "How do you want to import the 'Node OBREMAP' module?",
+		choices: ['import', 'require']
+	},
+	"folder" : {
+		type : "string",
+		describe : "Defines the custom folder path."
 	}
 })
 .example('$0 make:model User', '-  Use custom config')
@@ -375,6 +291,7 @@ const start = async (args) => {
 	let newArgs = {};
 	let obremapConfig = null;
 	let cwd = process.cwd();
+	let config = require("../config/index");
 	try{
 		obremapConfig = require(path.join(cwd, "/obremap.config.js"));
 	}catch(err){}
@@ -396,6 +313,9 @@ const start = async (args) => {
 	
 	if(command.default) command = command.default
 	if(command.default) command = command.default
+
+	if(!newArgs["--how-import"] || newArgs["--how-import"] === null)
+		newArgs["--how-import"] = (obremapConfig && obremapConfig.howImport) ? obremapConfig.howImport : config.howImport
 
 	try {
 		command(options)

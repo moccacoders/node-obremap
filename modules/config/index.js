@@ -7,6 +7,7 @@ module.exports = {
 		migrations : "/migrations",
 		seeders : "/seeds"
 	},
+	howImport : "import",
 	default : {
 		driver : "mysql",
 		mysql : {

@@ -16,14 +16,14 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
 		let options = "";
 		Object.entries(args).map((arg, ind) => {
 			let [key, val] = arg;
-			if(/^_(.+)?/.test(key) || ["--name", "--driver", "--how-import", "--wizard", "--folder"].includes(key)) return true;
+			if(/^_(.+)?/.test(key) || ["--name", "--driver", "--how-import", "--wizard", "--folder", "--verbose"].includes(key)) return true;
 			key = utils.toCase(key.replace("--", "").replace("-", "_"), false);
 			if(val == config.default[args["--driver"]][key] || val == utils.toCase(pluralize(args["--name"] || "default"), args["--snake-case"])) return true;
 			options += `static ${key} = ${typeof val == "string" ? `'${val}'` : val};
 	`;
 		});
 
-		const template = `${args["--how-import"] == "import" ? `import { Model } from '@moccacoders/obremap'` : `const Model = require("@moccacoders/node-obremap").Model`};
+		const template = `${args["--how-import"] == "import" ? `import { Model } from '@moccacoders/node-obremap'` : `const Model = require("@moccacoders/node-obremap").Model`};
 ${args["--how-import"] == "import" ? 'export default' : 'module.exports ='} class ${modelName} extends Model {
 	${options}${args["--table-name"] ? "" : `
 	/*
