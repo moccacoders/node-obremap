@@ -1,6 +1,6 @@
 {
   "name": "@moccacoders/node-obremap",
-  "version": "4.6.3",
+  "version": "4.6.4",
   "description": "OBREMAP Node ORM is an Object-Relational Mapping tool for Node JS. OBREMAP provides a beautiful and simple ActiveRecord implementation to work with your database.",
   "homepage": "https://github.com/moccacoders/node-obremap#readme",
   "bin": {
