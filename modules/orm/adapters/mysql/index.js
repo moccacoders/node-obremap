@@ -126,7 +126,10 @@ class MysqlAdapter {
         if(col.search(/ as /i) >= 0) [col, alias] = col.split(/ as /i);
         if(col.search(/\./i) >= 0) [table, col] = col.split(".")
         if(col.search(/count\(([a-z0-9\*]+)\)/i) >= 0){
-          col = col.replace(/count\(([a-z0-9\*]+)\)/i, `COUNT(\`${col.search(/count\((.+)?([\*]+(.+)?)\)/i) < 0 ? table : ""}\`.\`$1\`)`);
+          if(col.search(/count\((.+)?([\*]+(.+)?)\)/i) >= 0)
+            col = col.replace(/count\((.+)\)/i, `COUNT(*)`);
+          else
+            col = col.replace(/count\(([a-z0-9\*]+)\)/i, `COUNT(\`${table}\`.\`$1\`)`);
           funct = true;
         }
 
