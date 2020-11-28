@@ -503,6 +503,7 @@ class MysqlAdapter {
   */
 
   makeRelatable(result, model) {
+    if(result.id == null) delete result.id;
     return new Proxy(result, {
       get(target, name) {
         if(name in target && target[name] != null) return target[name]
