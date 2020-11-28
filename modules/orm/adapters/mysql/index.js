@@ -93,7 +93,7 @@ class MysqlAdapter {
       let results = connection.sync.query(options.sql)
       if(joins.length > 0 && typeof joins == "object")
         results = this.mergeSyncJoins(results, joins, joinsSQL);
-      if(/COUNT\(([\w]+)\)/.test(select))
+      if(/COUNT\((.+)\)/.test(select))
         results = results[0].count;
       if(first == 1)
         results = results[0]
