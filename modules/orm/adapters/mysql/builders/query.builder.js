@@ -168,7 +168,7 @@ export default class Builder {
 	}
 
 	count() {
-		this.options.select = `COUNT(${this.options.model.primaryKey}) as count`
+		this.options.select = `COUNT(*) as count`
 		let result = adapter.select(this.options, this.model);
 		return result;
 	}
@@ -185,7 +185,7 @@ export default class Builder {
 
 	countSync() {
 		this.options.sync = true;
-		this.options.select = `COUNT(${this.options.model.primaryKey}) as count`
+		this.options.select = `COUNT(*) as count`
 		let result = adapter.select(this.options, this.model);
 		return result;
 	}
