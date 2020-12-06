@@ -323,6 +323,7 @@ export default class Model {
 
 	static join(includeTable, localField, operator, remoteField, type = "INNER"){
 		if(!["=", "<", ">", "!=", "<>", "<=", ">=", "<=>"].includes(operator)){
+			if(remoteField) type = remoteField;
 			remoteField = operator;
 			operator = "=";
 		}
