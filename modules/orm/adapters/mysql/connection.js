@@ -10,13 +10,13 @@ function handleDisconnect() {
 
 	connection.async.connect(err => {
 		if(err) {
-			console.error('error when connecting to db:', err)
+			if(process.env.DEBUG === 'true') console.error('error when connecting to db:', err)
 			setTimeout(handleDisconnect, 2000);
 		}
 	})
 
 	connection.async.on('error',err => {
-		console.error('db error', err)
+		if(process.env.DEBUG === 'true') console.error('db error', err)
 		if(err.code === 'PROTOCOL_CONNECTION_LOST') handleDisconnect()
 		else throw err
 	})
