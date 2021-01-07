@@ -11,7 +11,6 @@ exports.default = ({ args, cwd, fs, exit = true, obremapConfig }) => {
 		let files = fs.readdirSync(path.join(cwd, args["--folder"])).sort();
 		if(args["--path"]) files = args["--path"];
 		let batch = 0;
-		console.log(args["--path"]);
 
 		[files, batch] = exports.migrations({files, obremapConfig})
 		if(files.length == 0){
