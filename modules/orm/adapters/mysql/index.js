@@ -140,9 +140,9 @@ class MysqlAdapter {
             col = col.replace(/count\(([a-z0-9\*]+)\)/i, `COUNT(\`${table}\`.\`$1\`)`);
           funct = true;
         }
-        if(col.search(/sum(.*)/)) funct = true;
+        if(col.search(/sum(.*)/) >= 0) funct = true;
         if (col == '*') newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${col}`);
-        else newSelect.push(`${!funct ? `${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
+        else newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
       })
     })
     return newSelect;
