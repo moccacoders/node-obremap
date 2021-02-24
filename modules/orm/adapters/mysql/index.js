@@ -129,9 +129,13 @@ class MysqlAdapter {
       s.split(/, ?/i).map(col => {
         let table = originalTable;
         let alias = null;
+        let noTable = true;
 
         if(col.search(/ as /i) >= 0) [col, alias] = col.split(/ as /i);
-        if(col.search(/\./i) >= 0) [table, col] = col.split(".")
+        if(col.search(/\./i) >= 0){
+          [table, col] = col.split(".")
+          noTable = false;
+        }
         if(col.search(/count\(([a-z0-9\*]+)\)/i) >= 0){
           if(col.search(/count\((.+)?([\*]+(.+)?)\)/i) >= 0)
             col = col.replace(/count\((.+)\)/i, `COUNT(*)`);
