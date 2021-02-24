@@ -81,7 +81,7 @@ export default class Model {
 
 	static count() {
 		return adapter(this).select({
-			select: `COUNT(*) as count`,
+			select: `COUNT(*) as count_obremap_rows`,
 			model: this
 		})
 	}
@@ -89,7 +89,7 @@ export default class Model {
 	static countSync() {
 		return adapter(this).select({
 			sync : true,
-			select: `COUNT(*) as count`,
+			select: `COUNT(*) as count_obremap_rows`,
 			model: this
 		})
 	}

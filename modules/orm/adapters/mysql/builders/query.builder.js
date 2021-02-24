@@ -173,7 +173,7 @@ export default class Builder {
 	}
 
 	count() {
-		this.options.select = `COUNT(*) as count`
+		this.options.select = `COUNT(*) as count_obremap_rows`
 		let result = adapter.select(this.options, this.model);
 		return result;
 	}
@@ -190,7 +190,7 @@ export default class Builder {
 
 	countSync() {
 		this.options.sync = true;
-		this.options.select = `COUNT(*) as count`
+		this.options.select = `COUNT(*) as count_obremap_rows`
 		let result = adapter.select(this.options, this.model);
 		return result;
 	}

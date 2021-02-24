@@ -100,7 +100,7 @@ class MysqlAdapter {
       let results = connection.sync.query(options.sql)
       if(joins.length > 0 && typeof joins == "object")
         results = this.mergeSyncJoins(results, joins, joinsSQL);
-      if(/COUNT\((.+)\)/.test(select))
+      if(/count_obremap_rows/.test(select))
         results = results[0].count;
       if(first == 1)
         results = results[0]
@@ -114,7 +114,7 @@ class MysqlAdapter {
       connection.async.query(options,  (error, results) => {
         if(error) return reject(error)
 
-        if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
+        if(/count_obremap_rows/.test(select)) resolve(results[0].count);
         if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
