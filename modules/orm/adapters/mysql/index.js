@@ -83,7 +83,7 @@ class MysqlAdapter {
       where = where.join(" AND ")
     }
 
-    let select = select ? (sync ? this.selectSync(select, model.getTableName) : select) : [];
+    select = select ? (sync ? this.selectSync(select, model.getTableName) : select) : [];
     let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName) : [];
     select = [
       ...select,
