@@ -83,8 +83,8 @@ class MysqlAdapter {
       where = where.join(" AND ")
     }
 
-    select = select ? (sync ? this.selectSync(select, model.getTableName) : select) : [];
-    let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName) : [];
+    select = select ? (sync ? this.selectSync(select, model.getTableName, joins) : select) : [];
+    let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName, select) : [];
     select = [
       ...select,
       ...joinsSelect
@@ -121,7 +121,7 @@ class MysqlAdapter {
     })
   }
 
-  selectSync (select, originalTable) {
+  selectSync (select, originalTable, joins) {
     let newSelect = [];
     let funct = null;
     if(typeof select == "string") select = [select];
@@ -139,32 +139,53 @@ class MysqlAdapter {
             col = col.replace(/count\(([a-z0-9\*]+)\)/i, `COUNT(\`${table}\`.\`$1\`)`);
           funct = true;
         }
-        if(col.search(/sum(.*)/))
-
-        if (col == '*' ) newSelect.push(`${table}.${col}`);
+        if(col.search(/sum(.*)/)) funct = true;
+        if (col == '*') newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${col}`);
         else newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
       })
     })
     return newSelect;
   }
 
-  joinsSelect(joins, originalTable) {
-    let select = [];
+  joinsSelect(joins, originalTable, select) {
+    let newSelect = [];
+    let tables = select.map(ele => {
+      let matches = ele.match(/\`(.*)\`\./)
+      if(matches || ele === '*') return matches ? matches[1] : ele;
+    }).filter(ele => ele);
+
+    joins = joins.filter(ele => {
+      let matches = ele.includeTable.match(/(.*) ?as ?(.*)/);
+      return (matches && tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*');
+    })
+
     [{ includeTable:originalTable }, ...joins].map((join, ind) => {
       let table = join.includeTable;
       let tableName = null;
+      let columns = [];
+      let search = false;
+
       if(join.includeTable.search(/ as /i) >= 0){
         table = join.includeTable.split(/ as /i)[1]
         tableName = join.includeTable.split(/ as /i)[0];
       }
 
-      let columns = [];
+      select.map(field => {
+        let newTable = originalTable;
+        let col = field;
+        if(field.search(/(.*)\./) >= 0) [ newTable, col ] = field.split('.');
+        newTable = newTable.replace(/\`/g, '');
+        if(col != '*' && (newTable === table || (newTable === undefined && ind == 0))) columns.push(field);
+        else if (newTable === table) search = true;
+      })
+
+      if(columns.length > 0 && !search) return newSelect.push(columns);
       connection.sync.query(`SHOW COLUMNS FROM ${tableName || table}`).filter(column => {
         columns.push(`\`${table}\`.\`${column.Field}\` AS \`${ind != 0 ? `${table}_table_` : ""}${column.Field}\``);
       })
-      select.push(columns);
+      newSelect.push(columns);
     })
-    return select;
+    return newSelect;
   }
 
   /*
