@@ -15,7 +15,7 @@ class MysqlAdapter {
 
     Builds the mysql query, used query builder and root model class
   */
-  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql, sync, first }) {
+  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql, sync, first, groupBy }) {
     if(model.sync) sync = true;
     let joinsSQL = false;
     if(joins[0] === true){
@@ -31,6 +31,7 @@ class MysqlAdapter {
       });
     }
     if(typeof orderBy == "string") orderBy = [orderBy];
+    if(typeof groupBy == "string") groupBy = [groupBy];
     
     if(orWhere && typeof orWhere == "object"){
       let newOrWhere = (orWhere[0]) ? orWhere : [orWhere];
@@ -83,7 +84,7 @@ class MysqlAdapter {
     }
 
     const options = {
-      sql: `SELECT ${select ? (sync ? this.selectSync(select, model.getTableName) : select) : (joins && sync ? this.joinsSelect(joins, model.getTableName) : '*')} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
+      sql: `SELECT ${select ? (sync ? this.selectSync(select, model.getTableName) : select) : (joins && sync ? this.joinsSelect(joins, model.getTableName) : '*')} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
       nestTables: joins.length > 0 && joinsSQL
     }
 

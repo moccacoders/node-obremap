@@ -61,6 +61,11 @@ export default class Builder {
 		return this
 	}
 
+	groupBy(groupBy) {
+		this.options.groupBy = groupBy
+		return this
+	}
+
 	select(...select) {
 		this.options.select = select
 		return this

@@ -269,6 +269,13 @@ export default class Model {
 		})
 	}
 
+	static groupBy(groupBy) {
+		return adapter(this).queryBuilder({
+			groupBy,
+			model: this
+		})
+	}
+
 
 	/*
 	  contrain a query with a where clause
