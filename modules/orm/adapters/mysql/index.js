@@ -83,8 +83,14 @@ class MysqlAdapter {
       where = where.join(" AND ")
     }
 
+    let select = select ? (sync ? this.selectSync(select, model.getTableName) : select) : [];
+    let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName) : [];
+    select = [
+      ...select,
+      ...joinsSelect
+    ];
     const options = {
-      sql: `SELECT ${select ? (sync ? this.selectSync(select, model.getTableName) : select) : (joins && sync ? this.joinsSelect(joins, model.getTableName) : '*')} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
+      sql: `SELECT ${select.length > 0 ? select.join(', ') : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
       nestTables: joins.length > 0 && joinsSQL
     }
 
@@ -133,12 +139,13 @@ class MysqlAdapter {
             col = col.replace(/count\(([a-z0-9\*]+)\)/i, `COUNT(\`${table}\`.\`$1\`)`);
           funct = true;
         }
+        if(col.search(/sum(.*)/))
 
-        if(col == '*') newSelect.push(col)
+        if (col == '*' ) newSelect.push(`${table}.${col}`);
         else newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
       })
     })
-    return newSelect.join(", ");
+    return newSelect;
   }
 
   joinsSelect(joins, originalTable) {
@@ -157,7 +164,7 @@ class MysqlAdapter {
       })
       select.push(columns);
     })
-    return select.join(", ");
+    return select;
   }
 
   /*
