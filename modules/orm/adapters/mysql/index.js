@@ -134,7 +134,8 @@ class MysqlAdapter {
           funct = true;
         }
 
-        newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
+        if(col == '*') newSelect.push(col)
+        else newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
       })
     })
     return newSelect.join(", ");
