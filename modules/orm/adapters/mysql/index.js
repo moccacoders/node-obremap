@@ -149,15 +149,17 @@ class MysqlAdapter {
 
   joinsSelect(joins, originalTable, select) {
     let newSelect = [];
-    let tables = select.map(ele => {
-      let matches = ele.match(/\`(.*)\`\./)
-      if(matches || ele === '*') return matches ? matches[1] : ele;
-    }).filter(ele => ele);
+    if(select.length > 0){
+      let tables = select.map(ele => {
+        let matches = ele.match(/\`(.*)\`\./)
+        if(matches || ele === '*') return matches ? matches[1] : ele;
+      }).filter(ele => ele);
 
-    joins = joins.filter(ele => {
-      let matches = ele.includeTable.match(/(.*) ?as ?(.*)/);
-      return (matches && tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*');
-    });
+      joins = joins.filter(ele => {
+        let matches = ele.includeTable.match(/(.*) ?as ?(.*)/);
+        return (matches && tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*');
+      });
+    }
 
     [{ includeTable:originalTable }, ...joins].map((join, ind) => {
       let table = join.includeTable;
