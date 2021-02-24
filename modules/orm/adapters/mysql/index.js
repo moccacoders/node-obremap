@@ -157,7 +157,7 @@ class MysqlAdapter {
     joins = joins.filter(ele => {
       let matches = ele.includeTable.match(/(.*) ?as ?(.*)/);
       return (matches && tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*');
-    })
+    });
 
     [{ includeTable:originalTable }, ...joins].map((join, ind) => {
       let table = join.includeTable;
