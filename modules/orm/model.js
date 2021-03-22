@@ -377,9 +377,7 @@ export default class Model {
 		let joins = {};
 		relationships.map(rel => {
 			let relationship = this;
-			// if(!relationship[rel]){
-				relationship = new relationship();
-			// }
+			relationship = new relationship();
 			return joins[rel] = relationship[rel](this);
 		})
 		return adapter(this).queryBuilder({
