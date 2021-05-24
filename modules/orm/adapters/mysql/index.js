@@ -627,7 +627,7 @@ class MysqlAdapter {
   }
 
   alterTable ({ options, model, fields, alterTables, engine, charset, collation, drop, column }) {
-    fields = this.processFields(fields).split(", ");
+    fields = this.processFields(fields).join(", ");
     let modify = /modify column/.test(fields);
     if(drop) fields = `\`${column}\``;
     let sql = `alter table \`${model.tableName}\` ${modify ? '' : `${drop ? "drop" : "add"} column `}${fields}`;
