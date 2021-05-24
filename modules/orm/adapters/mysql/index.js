@@ -662,7 +662,7 @@ class MysqlAdapter {
       if(field.unique) uniques.push(`\`${field.name}\``);
 
       let str = [];
-      str.push(`${field.modify ? "modify " : ""}\`${field.name}\`${field.modify ? ` ${field.name}` : ''} ${field.type}`);
+      str.push(`${field.modify ? "modify " : ""}\`${field.name}\` ${field.type}`);
       if(field.length && field.length > 0) str.push(`(${field.length})`);
       if(field.unsigned) str.push("unsigned");
       if(field.nullable) str.push("null");
