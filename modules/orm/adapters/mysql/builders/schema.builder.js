@@ -516,4 +516,9 @@ export default class SchemaBuilder {
 		this.drop = true;
 		return this;
 	}
+
+	change(){
+		this.fields[this.#FIELD_INDEX].modify = true;
+		return this;
+	}
 }
