@@ -627,9 +627,11 @@ class MysqlAdapter {
   }
 
   alterTable ({ options, model, fields, alterTables, engine, charset, collation, drop, column }) {
-    fields = this.processFields(fields).join(", ");
+    fields = this.processFields(fields);
+    let modify = /modify column/.test(fields);
+    fields = fields.split(`${modify ? ',' : ''} `);
     if(drop) fields = `\`${column}\``;
-    let sql = `alter table \`${model.tableName}\` ${/modify column/.test(fields) ? '' : (`${drop ? "drop " : "add "} column`)}${fields}`;
+    let sql = `alter table \`${model.tableName}\` ${modify ? '' : `${drop ? "drop" : "add"} column `}${fields}`;
     sql = connection.async.format(sql);
     return connection.sync.query(sql);
   }
@@ -661,7 +663,7 @@ class MysqlAdapter {
       if(field.unique) uniques.push(`\`${field.name}\``);
 
       let str = [];
-      str.push(`${field.modify ? "modify column " : ""}\`${field.name}\`${field.modify ? ` ${field.name}` : ''} ${field.type}`);
+      str.push(`${field.modify ? "modify " : ""}\`${field.name}\`${field.modify ? ` ${field.name}` : ''} ${field.type}`);
       if(field.length && field.length > 0) str.push(`(${field.length})`);
       if(field.unsigned) str.push("unsigned");
       if(field.nullable) str.push("null");
