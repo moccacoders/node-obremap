@@ -379,7 +379,6 @@ class MysqlAdapter {
       }, model)
     }
 
-
     // return new Promise((resolve, reject) => {
     //   if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
     //   connection.async.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
