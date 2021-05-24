@@ -215,6 +215,9 @@ class MysqlAdapter {
       d.push(o)
     })
 
+    data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
+    data[model.updatedAt] = moment(data[model.updatedAt]).format(model.getDateFormat());
+
     return new Promise((resolve, reject) => {
       connection.async.query(`INSERT INTO ${model.getTableName} (??) VALUES ?`, [v,d],  (error, result) => {
         if(error) return reject(error)
@@ -250,6 +253,8 @@ class MysqlAdapter {
       })
       d.push(o)
     })
+    data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
+    data[model.updatedAt] = moment(data[model.updatedAt]).format(model.getDateFormat());
     let sql = connection.async.format(`INSERT INTO ${model.getTableName} (??) VALUES ?`, [v,d]);
     let results = connection.sync.query(sql)
     let result = this.makeRelatable({
@@ -301,6 +306,8 @@ class MysqlAdapter {
       where = where.join(" AND ")
     }
 
+    if(data[model.createdAt]) data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
+    if(data[model.updatedAt]) data[model.updatedAt] = moment(data[model.updatedAt]).format(model.getDateFormat());
     if(model.sync) return this.updateSync({ model, data, id, where })
     return new Promise((resolve, reject) => {
       if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
@@ -361,6 +368,8 @@ class MysqlAdapter {
       queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${connection.async.escape(value)}`);
     });
 
+    if(queryValues[model.createdAt]) queryValues[model.createdAt] = moment(queryValues[model.createdAt]).format(model.getDateFormat());
+    if(queryValues[model.updatedAt]) queryValues[model.updatedAt] = moment(queryValues[model.updatedAt]).format(model.getDateFormat());
     if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
     let result = connection.sync.query(`UPDATE ${model.getTableName} SET ${queryValues.join(", ")} WHERE ${where}`);
     if(result.affectedRows > 0){
