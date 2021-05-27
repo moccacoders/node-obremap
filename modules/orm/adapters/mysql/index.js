@@ -272,7 +272,7 @@ class MysqlAdapter {
       where = { id };
 
     if(model.timestamps === true){
-      if(!data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
+      data[model.updatedAt] = model.currentDate;
     }
 
     let idName = `${data[`${model.getTableName}.id`] ? `${model.getTableName}.` : ""}id`
@@ -327,7 +327,7 @@ class MysqlAdapter {
       where = { id };
 
     if(model.timestamps === true){
-      if(!data[model.updatedAt]) data[model.updatedAt] = model.currentDate;
+      data[model.updatedAt] = model.currentDate;
     }
 
     if(data[model.createdAt]) data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
