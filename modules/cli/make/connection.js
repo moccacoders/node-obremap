@@ -77,7 +77,7 @@ const createConnection = (answers) => {
 }
 
 const setConnetion = (args, cwd) => {
-	if(!args["__set-connection"] || !args["connections"]) return true;
+	if(!args["__set-connection"] || !args["connections"]) return true;
 	if(!args["--config-file"]){
 		console.log(`\n------------------------------------------------------------------------\n\n${lang[args["_lang"]].connectionEnv}\n${lang[args["_lang"]].connectionEnvMsg}\n\n------------------------------------------------------------------------\n`);
 

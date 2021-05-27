@@ -33,7 +33,7 @@ export const dbConfig = (connection) => {
 			const url = key.match(/DATABASE_URL([\w]+)?/i);
 			if(url){
 				let params = new URL(value);
-				let name = url[1] ? url[1].slice(1).toLowerCase() : "default";
+				let name = url[1] ? url[1].slice(1).toLowerCase() : "default";
 
 				databases[name] = {
 					host : params.hostname,
@@ -48,7 +48,7 @@ export const dbConfig = (connection) => {
 			// DB
 			const db = key.match(/DB([\w]+)?_([\w]+)/i);
 			if(db){
-				let name = db[1] ? db[1].slice(1).toLowerCase() : "default";
+				let name = db[1] ? db[1].slice(1).toLowerCase() : "default";
 				let prop = (db[2] == "NAME" ? "database" : db[2] == "USERNAME" ? "user" : db[2]).toLowerCase();
 				if(!databases[name]) databases[name] = {};
 				databases[name][prop] = value;
@@ -63,7 +63,7 @@ export const dbConfig = (connection) => {
 			user : params.username,
 			password : params.password,
 			database : params.pathname.slice(1),
-			port: params.port || 3306,
+			port: params.port || 3306,
 			driver : params.protocol.replace(":", "")
 		};
 	}

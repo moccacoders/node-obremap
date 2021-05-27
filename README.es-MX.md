@@ -102,7 +102,7 @@ La configuración es similar a lo visto anteriormente.
 Para configurar multiples conexiones por medio de las variables de entorno **OBREMAP Node ORM** toma todas las varibles que tengan como prefijo `DB_` y asigna el valor siguiente como variable de configuración. Por lo que si colocas `DB_HOST` esta será la variable de configuración principal (`default`) que contiene el hostname de la base de datos. Sin embargo, si colocas un identificador despues del prefijo `DB_`, este será tomado como nombre de conexión, a este debe seguir el nombre de la variable de conexión, ejemplo: `DB_LOCAL_HOST` para este caso el nombre de la conexión será `local` y la variable de conexión será `host`.
 
 ```json
-// CONEXIÓN PRINCIPAL
+// CONEXIÓN PRINCIPAL
 DB_DRIVER=mysql
 DB_HOST=127.0.0.1
 DB_USERNAME=user

@@ -45,8 +45,8 @@ exports.dropTables = obremapConfig => {
 			database = new URL(database)
 			database = database.pathname.slice(1);
 		}
-	} else if (process.env[`DATABASE_URL_${connection}`] || process.env[`DATABASE_URL`]) {
-		database = new URL(process.env[`DATABASE_URL_${connection}`] ||  process.env[`DATABASE_URL`])
+	} else if (process.env[`DATABASE_URL_${connection}`] || process.env[`DATABASE_URL`]) {
+		database = new URL(process.env[`DATABASE_URL_${connection}`] ||  process.env[`DATABASE_URL`])
 		database = database.pathname.slice(1);
 	} else if (process.env[`DB_${connection}_NAME`]) {
 		database = process.env[`DB_${connection}_NAME`];

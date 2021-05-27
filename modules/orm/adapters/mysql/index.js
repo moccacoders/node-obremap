@@ -142,7 +142,7 @@ class MysqlAdapter {
         }
         if(col.search(/sum(.*)/) >= 0) funct = true;
         if (col == '*') newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${col}`);
-        else newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
+        else newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
       })
     })
     return newSelect;
@@ -158,7 +158,7 @@ class MysqlAdapter {
 
       joins = joins.filter(ele => {
         let matches = ele.includeTable.match(/(.*) as (.*)/);
-        return (matches && tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*');
+        return (matches && tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*');
       });
     }
 
@@ -178,7 +178,7 @@ class MysqlAdapter {
         let col = field;
         if(field.search(/(.*)\./) >= 0) [ newTable, col ] = field.split('.');
         newTable = newTable.replace(/\`/g, '');
-        if(col != '*' && (newTable === table || (newTable === undefined && ind == 0))) columns.push(field);
+        if(col != '*' && (newTable === table || (newTable === undefined && ind == 0))) columns.push(field);
         else if (newTable === table) search = true;
       })
 
@@ -545,7 +545,7 @@ class MysqlAdapter {
   */
 
   makeRelatable(result, model) {
-    if(result.id == null || result.id == 0) delete result.id;
+    if(result.id == null || result.id == 0) delete result.id;
     return new Proxy(result, {
       get(target, name) {
         if(name in target && target[name] != null) return target[name]

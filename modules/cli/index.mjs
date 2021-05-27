@@ -314,7 +314,7 @@ const start = async (args) => {
 	if(command.default) command = command.default
 	if(command.default) command = command.default
 
-	if(!newArgs["--how-import"] || newArgs["--how-import"] === null)
+	if(!newArgs["--how-import"] || newArgs["--how-import"] === null)
 		newArgs["--how-import"] = (obremapConfig && obremapConfig.howImport) ? obremapConfig.howImport : config.howImport
 
 	try {

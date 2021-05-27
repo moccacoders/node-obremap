@@ -169,7 +169,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--config-file",
-				message: (ans) => { return lang[ans["_lang"] || answers["_lang"]].questions.configFile },
+				message: (ans) => { return lang[ans["_lang"] || answers["_lang"]].questions.configFile },
 				type : "confirm",
 				default: config.default.connection.configFile,
 				when : (ans) => {
@@ -184,7 +184,7 @@ module.exports = answers => {
 			},
 			{
 				name : "__multi-connections",
-				message: (ans) => { return lang[ans["_lang"] || answers["_lang"]].questions.multiConnections },
+				message: (ans) => { return lang[ans["_lang"] || answers["_lang"]].questions.multiConnections },
 				type : "confirm",
 				default: config.default.connection.multiConnections,
 				when : (ans) => {
@@ -195,7 +195,7 @@ module.exports = answers => {
 		connection : [
 			{
 				name : "__url-config",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.urlConfig}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.urlConfig}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "confirm",
 				default: config.default.connection.urlConfig,
 				when : (ans) => {
@@ -204,7 +204,7 @@ module.exports = answers => {
 			},
 			{
 				name : "__url",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.url}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.url}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "confirm",
 				default: config.default.connection.url,
 				when : (ans) => {
@@ -213,7 +213,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--connection-url",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.connectionUrl}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.connectionUrl}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "input",
 				validate : (input) => {
 					return utils.regex.url.test(input) || lang[answers["_lang"]].error.url;
@@ -224,7 +224,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--driver",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.driver}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.driver}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "list",
 				choices: config.drivers,
 				default: config.default.driver,
@@ -238,7 +238,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--hostname",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.hostname}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.hostname}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "input",
 				default: config.default.connection.hostname,
 				when : (ans) => {
@@ -247,7 +247,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--username",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.username}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.username}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "input",
 				default: config.default.connection.username,
 				when : (ans) => {
@@ -256,7 +256,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--password",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.password}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.password}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "input",
 				default: config.default.connection.password,
 				when : (ans) => {
@@ -265,7 +265,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--database",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.database}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.database}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "input",
 				default: config.default.connection.database,
 				when : (ans) => {
@@ -274,7 +274,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--port",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.port}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.port}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "input",
 				default: ans => { return config.default[ans["--driver"] || answers["--driver"]].port },
 				when : (ans) => {
@@ -283,7 +283,7 @@ module.exports = answers => {
 			},
 			{
 				name : "--connection-name",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.connectionName}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.connectionName}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "input",
 				default: ans => { return answers["--connection"] || config.default.connection.connectionName; },
 				validate: (input) => {
@@ -304,7 +304,7 @@ module.exports = answers => {
 			},
 			{
 				name : "__moreConnections",
-				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.moreConnections}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
+				message: (ans) => { return `${lang[ans["_lang"] || answers["_lang"]].questions.moreConnections}${(answers["connections"] && answers["connections"].length > 0) ? ` (${answers["connections"].length + 1})` : ""}` },
 				type : "confirm",
 				default: config.default.connection.moreConnections,
 				when : (ans) => {

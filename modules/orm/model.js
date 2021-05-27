@@ -442,7 +442,7 @@ export default class Model {
 			result: () => {
 				let val = this.values;
 				return Model.where({
-					[remoteField]: val[localField] || val[completeLocalField]
+					[remoteField]: val[localField] || val[completeLocalField]
 				});
 			},
 			includeTable: getTableName(Model.name, Model.snakeCase),

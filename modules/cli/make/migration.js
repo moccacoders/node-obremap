@@ -207,7 +207,7 @@ const processFields = (fields) => {
 	fields.map(field => {
 		let { type, name, modifiers, ...opts } = field;
 		str += `
-			table.${type}(${name ? `'${name}'` : ""}${Object.entries(opts).length > 0 ? Object.entries(opts).map((opt, ind) => { return `${ind==0 ? ", " : ""}${!isNaN(opt[1]) ? opt[1] : `'${opt[1]}'`}` }).join(", ") : ""})${modifiers ? modifiers.map((mod, ind) => { return `${ind==0 ? "." : ""}${mod.name}(${mod.value ? `${!isNaN(mod.value) || mod.value == 'true' || mod.value == 'false' ? mod.value : `'${mod.value}'`}` : ""})` }).join(".") : ""};`;
+			table.${type}(${name ? `'${name}'` : ""}${Object.entries(opts).length > 0 ? Object.entries(opts).map((opt, ind) => { return `${ind==0 ? ", " : ""}${!isNaN(opt[1]) ? opt[1] : `'${opt[1]}'`}` }).join(", ") : ""})${modifiers ? modifiers.map((mod, ind) => { return `${ind==0 ? "." : ""}${mod.name}(${mod.value ? `${!isNaN(mod.value) || mod.value == 'true' || mod.value == 'false' ? mod.value : `'${mod.value}'`}` : ""})` }).join(".") : ""};`;
 	})
 	return str;
 }
