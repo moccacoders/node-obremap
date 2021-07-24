@@ -8,6 +8,7 @@ _*
 models
 app
 seeds
+.DS_Store
 
 ## EXCEPTS
 !tests/setup/models

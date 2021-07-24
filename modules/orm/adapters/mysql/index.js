@@ -90,6 +90,7 @@ class MysqlAdapter {
       sql: `SELECT ${select.length > 0 ? select.join(', ') : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
       nestTables: joins.length > 0 && joinsSQL
     }
+    options.sql = connection.async.format(options.sql);
 
     if(toSql) return options.sql;
 
@@ -121,29 +122,10 @@ class MysqlAdapter {
   selectSync (select, originalTable, joins) {
     let newSelect = [];
     let funct = null;
-    if(typeof select == "string") select = [select];
+    if(typeof select == "string") select = [connection.async.format(select)];
     select.map(s => {
-      s.split(/, ?/i).map(col => {
-        let table = originalTable;
-        let alias = null;
-        let noTable = true;
-
-        if(col.search(/ as /i) >= 0) [col, alias] = col.split(/ as /i);
-        if(col.search(/\./i) >= 0){
-          [table, col] = col.split(".")
-          noTable = false;
-        }
-        if(col.search(/count\(([a-z0-9\*]+)\)/i) >= 0){
-          if(col.search(/count\((.+)?([\*]+(.+)?)\)/i) >= 0)
-            col = col.replace(/count\((.+)\)/i, `COUNT(*)`);
-          else
-            col = col.replace(/count\(([a-z0-9\*]+)\)/i, `COUNT(\`${table}\`.\`$1\`)`);
-          funct = true;
-        }
-        if(col.search(/sum(.*)/) >= 0) funct = true;
-        if (col == '*') newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${col}`);
-        else newSelect.push(`${!funct ? `\`${table}\`.` : ""}${col.search(/\`/i) >= 0 || funct ? `${col}` : `\`${col}\``} AS ${table != originalTable ? `${table}_table_` : ""}${alias||col}`);
-      })
+      if (s == '*') newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${s}`);
+      connection.async.escape(s);
     })
     return newSelect;
   }
