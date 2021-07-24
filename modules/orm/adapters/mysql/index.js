@@ -124,7 +124,15 @@ class MysqlAdapter {
     let funct = null;
     if(typeof select == "string") select = [connection.async.format(select)];
     select.map(s => {
-      if (s == '*') newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${s}`);
+      if (s == '*'){
+        let noTable = true;
+        let table = originalTable;
+        if(s.search(/ ((.+)\.\*)/) >= 0){
+          noTable = false;
+          [table, col] = s.split('.')
+        }
+        newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${col}`);
+      }
       connection.async.escape(s);
     })
     return newSelect;
