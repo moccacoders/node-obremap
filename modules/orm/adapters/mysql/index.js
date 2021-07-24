@@ -127,6 +127,7 @@ class MysqlAdapter {
       if (s == '*'){
         let noTable = true;
         let table = originalTable;
+        let col = s;
         if(s.search(/ ((.+)\.\*)/) >= 0){
           noTable = false;
           [table, col] = s.split('.')
