@@ -134,7 +134,7 @@ class MysqlAdapter {
         }
         newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${col}`);
       }
-      connection.async.escape(s);
+      newSelect.push(connection.async.escape(s));
     })
     return newSelect;
   }
