@@ -6,6 +6,19 @@ import { getTableName } from '../../../global/get-name'
 import moment from 'moment';
 
 class MysqlAdapter {
+  static supportedCastTypes = [
+    'array',
+    'boolean',
+    'date',
+    'datetime',
+    'decimal',
+    'double',
+    'float',
+    'integer',
+    'object',
+    'string',
+    'timestamp'
+  ];
 
   /*
     Generic Adapter Methods (these should be in every adapter)
@@ -103,6 +116,7 @@ class MysqlAdapter {
       if(first == 1)
         results = results[0]
 
+      // return this.attributeCasting({model, results});
       return results;
     }
 
@@ -114,6 +128,7 @@ class MysqlAdapter {
 
         if(/count_obremap_rows/.test(select)) resolve(results[0].count_obremap_rows);
         if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
+        // results = this.attributeCasting({model, results});
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
     })
@@ -678,6 +693,55 @@ class MysqlAdapter {
         if(error) return reject(error)
       })
     })
+  }
+
+  attributeCasting ({model, results}) {
+    let object = false;
+    let casts = {};
+    Object.entries(model.casts).filter(o=>this.supportedCastTypes.includes(o[1])).map(a=>casts[a[0]]=a[1])
+
+    if(casts.length == 0) return results;
+    if(results.length === undefined){
+      object = true;
+      results = [results];
+    }
+
+    results = results.map(result => {
+      let keys = Object.entries(result).map(o=>o[0]); // [algo, is_adim, is_algo]
+      let castingKeys = keys.filter(k=>k in casts);  
+      castingKeys.map(k => {
+        let type = casts[k];
+        results[k] = this.casting(type, results[k]);
+      })
+    })
+
+    if(object) return results[0];
+    return results;
+  }
+
+  casting (type, data) {
+    switch(type){
+      case 'array':
+        return data.split(',');
+      case 'boolean':
+        return !!data;
+      case 'object':
+        return JSON.parse(data);
+      case 'date':
+      case 'datetime':
+      case 'timestamp':
+        return moment(data).format(type == 'date' ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH:mm:ss');
+      case 'decimal':
+      case 'double':
+      case 'float':
+        return parseFloat(data);
+      case 'integer':
+        return parseInt(data);
+      case 'string':
+        return String(data);
+      default:
+        return data;
+    }
   }
 }
 

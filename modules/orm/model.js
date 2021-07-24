@@ -27,6 +27,8 @@ export default class Model {
 	static deleted_at = "deleted_at";
 	static deleted_by = "deleted_by";
 
+	static casts = [];
+
 	constructor(values) {
 		this.values = values;
 	}
