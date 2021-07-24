@@ -116,8 +116,8 @@ class MysqlAdapter {
       if(first == 1)
         results = results[0]
 
-      // return this.attributeCasting({model, results});
-      return results;
+      return this.attributeCasting({model, results});
+      // return results;
     }
 
     return new Promise((resolve, reject) => {
@@ -128,7 +128,7 @@ class MysqlAdapter {
 
         if(/count_obremap_rows/.test(select)) resolve(results[0].count_obremap_rows);
         if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
-        // results = this.attributeCasting({model, results});
+        results = this.attributeCasting({model, results});
         resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
       })
     })
