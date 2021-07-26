@@ -696,7 +696,7 @@ class MysqlAdapter {
   }
 
   attributeCasting ({model, results}) {
-    if(!results) return results;
+    if(!results) return results; 
     let object = false;
     let casts = {};
     Object.entries(model.casts).filter(o=>this.supportedCastTypes.includes(o[1])).map(a=>casts[a[0]]=a[1])
