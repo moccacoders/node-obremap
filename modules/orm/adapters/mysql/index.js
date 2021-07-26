@@ -104,6 +104,7 @@ class MysqlAdapter {
       nestTables: joins.length > 0 && joinsSQL
     }
     options.sql = connection.async.format(options.sql);
+    options.sql = options.sql.replace(/(\"|\')(true|false)(\"|\')/, "$2")
 
     if(toSql) return options.sql;
 
