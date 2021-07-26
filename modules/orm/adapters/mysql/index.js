@@ -140,7 +140,7 @@ class MysqlAdapter {
     let funct = null;
     if(typeof select == "string") select = [connection.async.format(select)];
     select.map(s => {
-      if (s.search(/((.+)\.)?\*/i) >= 0){
+      if (s.search(/((.+)\.)?\*$/i) >= 0){
         let noTable = true;
         let table = originalTable;
         let col = s;
