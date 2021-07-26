@@ -160,13 +160,13 @@ class MysqlAdapter {
     let newSelect = [];
     if(select.length > 0){
       let tables = select.map(ele => {
-        let matches = ele.match(/\`(.*)\`\./)
+        let matches = ele.match(/\`?(.*)\`?\./)
         if(matches || ele === '*') return matches ? matches[1] : ele;
       }).filter(ele => ele);
 
       joins = joins.filter(ele => {
         let matches = ele.includeTable.match(/(.*) as (.*)/);
-        return (matches && tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*');
+        return (matches && (tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*'));
       });
     }
 
@@ -186,7 +186,7 @@ class MysqlAdapter {
         let col = field;
         if(field.search(/(.*)\./) >= 0) [ newTable, col ] = field.split('.');
         newTable = newTable.replace(/\`/g, '');
-        if(col != '*' && (newTable === table || (newTable === undefined && ind == 0))) columns.push(field);
+        if(col != '*' && ((newTable === table || newTable === undefined) && ind == 0)) columns.push(field);
         else if (newTable === table) search = true;
       })
 
