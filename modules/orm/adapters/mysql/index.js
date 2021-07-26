@@ -703,7 +703,7 @@ class MysqlAdapter {
     Object.entries(model.casts).filter(o=>this.supportedCastTypes.includes(o[1])).map(a=>casts[a[0]]=a[1])
 
     if(casts.length == 0) return results;
-    if(results.length === undefined){
+    if(Array.isArray(results) === false){
       object = true;
       results = [results];
     }
