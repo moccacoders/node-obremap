@@ -722,6 +722,7 @@ class MysqlAdapter {
   }
 
   casting (type, data) {
+    if(!data) return data;
     switch(type){
       case 'array':
         return data.split(',');
