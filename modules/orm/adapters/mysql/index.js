@@ -6,7 +6,7 @@ import { getTableName } from '../../../global/get-name'
 import moment from 'moment';
 
 class MysqlAdapter {
-  static supportedCastTypes = [
+  supportedCastTypes = [
     'array',
     'boolean',
     'date',
