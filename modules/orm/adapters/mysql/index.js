@@ -696,7 +696,7 @@ class MysqlAdapter {
   }
 
   attributeCasting ({model, results}) {
-    if(!results) return results; 
+    if(!results) return results;
     let object = false;
     let casts = {};
     Object.entries(model.casts).filter(o=>this.supportedCastTypes.includes(o[1])).map(a=>casts[a[0]]=a[1])
@@ -708,12 +708,13 @@ class MysqlAdapter {
     }
 
     results = results.map(result => {
-      let keys = Object.entries(result).map(o=>o[0]); // [algo, is_adim, is_algo]
+      let keys = Object.entries(result).map(o=>o[0]);
       let castingKeys = keys.filter(k=>k in casts);  
       castingKeys.map(k => {
         let type = casts[k];
-        results[k] = this.casting(type, results[k]);
+        result[k] = this.casting(type, result[k]);
       })
+      return result;
     })
 
     if(object) return results[0];
