@@ -100,7 +100,7 @@ class MysqlAdapter {
     let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName, select) : [];
     select = joinsSelect.length > 0 ? joinsSelect : select;
     const options = {
-      sql: `SELECT ${select.length > 0 ? select.join(', ') : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset ? `${offset},` : ""}${connection.async.escape(limit)}` : ''}`,
+      sql: `SELECT ${select.length > 0 ? select.join(', ') : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset !== undefined ? `${offset},` : ""}${limit}` : ''}`,
       nestTables: joins.length > 0 && joinsSQL
     }
     options.sql = connection.async.format(options.sql);
