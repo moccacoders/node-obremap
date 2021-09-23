@@ -24,8 +24,8 @@ describe('Model.allSync()', () => {
 
 	it('test sync get all', () => {
 		let chats = Chat.where({ user_id : 1 })
-		.join("users", "chats.user_id", "users.id")
-		.join("users as u", "chats.user_id", "u.id")
+		.join("users", "chats.user_id", "users.id", "left")
+		.join("users as u", "chats.user_id", "u.id", "left")
 		.allSync();
 
 		expect(chats[0].users.id).to.be.equal(1);
@@ -34,11 +34,11 @@ describe('Model.allSync()', () => {
 
 	it('test sync get all', () => {
 		let chats = Chat.where({ user_id : 1 })
-		.select("id, chats.user_id, users.name, users.id")
-		.join("users", "chats.user_id", "users.id")
-		.join("users as u", "chats.user_id", "u.id")
+		.select("chats.id", "chats.user_id", "users.name", "users.id")
+		.join("users", "chats.user_id", "users.id", "left")
+		.join("users as u", "chats.user_id", "u.id", "left")
 		.allSync();
-
+		
 		expect(chats[0].users.id).to.be.equal(1);
 		expect(chats.length).to.be.equal(1);
 	})

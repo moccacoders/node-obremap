@@ -19,7 +19,7 @@ describe('Logical remove Model.deleteSync()', () => {
 	})
 
 	it('logical delete with deleted_by', () => {
-		let user = User.deleteSync(id, 12)
+		let user = User.deleteSync(id, 12);
 		expect(user.eliminado).to.be.equal(1)
 		expect(user.eliminado_por).to.be.equal(12)
 		expect(/([\d]{4,4})-([\d]{2,2})-([\d]{2,2})(.*)/.test(user.fecha_de_eliminacion)).to.be.equal(true)

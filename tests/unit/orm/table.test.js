@@ -1,9 +1,8 @@
-import { Schema } from '../../../modules'
 import { DB } from '../../../modules'
 
 describe('Model.table()', () => {
 	it('change table name', async function() {
-		let chat = Schema.table("other_table").select('id').where({ id: 1 }).toSql()
+		let chat = DB.table("other_table").select('id').where({ id: 1 }).toSql()
 		expect(chat.search("other_table")).to.be.greaterThan(0)
 	})
 

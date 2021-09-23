@@ -4,6 +4,7 @@ import UserProfile from '../../setup/models/user-profile'
 describe('Model.create()', () => {
 	it('creates a row with automatic created and updated at field', async function() {
 		let chat = await Chat.create({ user_id: 23 })
+		console.log(chat);
 		expect(chat.user_id).to.be.equal(23)
 	})
 

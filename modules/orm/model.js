@@ -452,4 +452,23 @@ export default class Model {
 			remoteField: `${getTableName(Model.name, Model.snakeCase)}.${remoteField}`,
 		}
 	}
+
+	hasManyThrough(Model, TroughModel, troughField = 'id', remoteField = null, localField = 'id' ) {
+		let name = this.name || this.constructor.name;
+		let snakeCase = this.snakeCase || this.constructor.snakeCase;
+		let completeLocalField = `${getTableName(name, snakeCase)}.${localField}`;
+
+		remoteField = remoteField || getFieldName(name);
+		return {
+			result: () => {
+				let val = this.values;
+				return Model.where({
+					[troughField]: val[localField] || val[completeLocalField]
+				}).join(TroughModel, troughField, remoteField, 'left');
+			},
+			includeTable: getTableName(Model.name, Model.snakeCase),
+			localField : completeLocalField,
+			remoteField: `${getTableName(Model.name, Model.snakeCase)}.${remoteField}`,
+		}
+	}
 }

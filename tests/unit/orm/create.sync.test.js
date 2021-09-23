@@ -14,7 +14,7 @@ describe('Model.createSync()', () => {
 	})
 
 	it('creates a row with created and update at field', () => {
-		let chat = User.createSync({ name : "Bob", created_at : new Date(), user_profile_id : true })
+		let chat = User.createSync({ name : "Bob", created_at : new Date() })
 		expect(chat.name).to.be.equal("Bob")
 	})
 

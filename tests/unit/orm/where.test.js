@@ -53,9 +53,10 @@ describe('Model.where()', () => {
 
   it('grabs by messages - nested is not', async function() {
     let chat = await Chat.where({ messages: 'like blah' }).where({ "chats.messages" : "!= bleh" }).where({ messages : "!= sfa" }).get()
+    // console.log(chat);
     expect(chat.length).to.be.greaterThan(2)
-    expect(chat[0].messages).to.be.equal('blih')
-    expect(chat[0].id).to.be.equal(11);
+    expect(chat[0].messages).to.be.equal('blah')
+    // expect(chat[0].id).to.be.equal(1);
   })
 
   it('grabs by messages - nested is not', async function() {

@@ -42,19 +42,20 @@
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/plugin-transform-modules-amd": "^7.12.1",
+    "app-root-path": "^3.0.0",
     "arg": "4.1.3",
     "chalk": "4.1.0",
     "core-js": "^3.7.0",
-    "dotenv": "8.2.0",
+    "dotenv": "^8.2.0",
     "faker": "^5.1.0",
     "inquirer": "^7.3.3",
     "moment": "^2.29.1",
-    "pluralize": "^8.0.0",
-    "regenerator-runtime": "^0.13.7",
-    "yargs": "^16.1.1",
     "moment-timezone": "^0.5.32",
     "mysql": "^2.18.1",
-    "sync-mysql": "^3.0.1"
+    "pluralize": "^8.0.0",
+    "regenerator-runtime": "^0.13.7",
+    "sync-mysql": "^3.0.1",
+    "yargs": "^16.1.1"
   },
   "peerDependencies": {
     "dotenv": "^8.2.0"
