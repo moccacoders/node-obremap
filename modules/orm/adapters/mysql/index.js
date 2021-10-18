@@ -6,6 +6,8 @@ import { getTableName } from '../../../global/get-name'
 import moment from 'moment';
 
 class MysqlAdapter {
+  model = null;
+  joins = null;
   supportedCastTypes = [
     'array',
     'boolean',
@@ -28,13 +30,16 @@ class MysqlAdapter {
 
     Builds the mysql query, used query builder and root model class
   */
-  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql, sync, first, groupBy }) {
+  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql, sync, first, groupBy, with : withRelation = false }) {
+    this.model = model;
     if(model.sync) sync = true;
     let joinsSQL = false;
     if(joins[0] === true){
       joinsSQL = true;
       joins.splice(0,1);
     }
+
+    this.joins = joins;
 
     if(typeof orderBy == "object"){
       orderBy = Object.entries(orderBy).map((elem, ind) => {
@@ -97,15 +102,15 @@ class MysqlAdapter {
     }
 
     select = select ? (sync ? this.selectSync(select, model.getTableName, joins) : select) : [];
-    let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName, select) : [];
-    select = joinsSelect.length > 0 ? joinsSelect : select;
+    let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName, select, withRelation) : [];
+    select = joinsSelect.length > 0 && !withRelation ? joinsSelect : select;
     const options = {
-      sql: `SELECT ${select.length > 0 ? ( Array.isArray(select) ? select.join(', ') : select) : '*'} FROM ${model.getTableName}${this.getJoins(joins, joinsSQL).join(" ")}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset !== undefined ? `${offset},` : ""}${limit}` : ''}`,
+      sql: `SELECT ${select.length > 0 ? ( Array.isArray(select) && !withRelation ? select.join(',') : select) : '*'} FROM ${model.getTableName}${!withRelation ? this.getJoins(joins, joinsSQL).join(" ") : ''}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset !== undefined ? `${offset},` : ""}${limit}` : ''}`,
       nestTables: joins.length > 0 && joinsSQL
     }
     options.sql = connection.async.format(options.sql);
-    options.sql = options.sql.replace(/(\"|\')(true|false)(\"|\')/, "$2")
-
+    options.sql = options.sql.replace(/(\"|\')(true|false)(\"|\')/, "$2");
+    if(withRelation) options.sql = `SELECT ${model.getTableName}.*,${joinsSelect.join(',')} FROM (${options.sql}) AS ${model.getTableName} ${this.getJoins(joins, joinsSQL).join(" ")}`;
     if(toSql) return options.sql;
 
     if(sync){
@@ -156,7 +161,7 @@ class MysqlAdapter {
     return newSelect;
   }
 
-  joinsSelect(joins, originalTable, select) {
+  joinsSelect(joins, originalTable, select, withRelation) {
     let newSelect = [];
     if(select.length > 0){
       let tables = select.map(ele => {
@@ -170,7 +175,8 @@ class MysqlAdapter {
       });
     }
 
-    [{ includeTable:originalTable }, ...joins].map((join, ind) => {
+    if(!withRelation) joins = [{ includeTable:originalTable }, ...joins];
+    joins.map((join, ind) => {
       let table = join.includeTable;
       let tableName = null;
       let columns = [];
@@ -186,13 +192,13 @@ class MysqlAdapter {
         let col = field;
         if(field.search(/(.*)\./) >= 0) [ newTable, col ] = field.split('.');
         newTable = newTable.replace(/\`/g, '');
-        if(col != '*' && ((newTable === table || newTable === undefined) && ind == 0)) columns.push(field);
+        if(col != '*' && ((newTable === table || newTable === undefined) && (!withRelation && ind == 0))) columns.push(field);
         else if (newTable === table) search = true;
       })
 
       if(columns.length > 0 && !search) return newSelect.push(columns);
       connection.sync.query(`SHOW COLUMNS FROM ${tableName || table}`).filter(column => {
-        columns.push(`\`${table}\`.\`${column.Field}\` AS \`${ind != 0 ? `${table}_table_` : ""}${column.Field}\``);
+        columns.push(`\`${table}\`.\`${column.Field}\` AS \`${(withRelation || ind != 0) ? `${table}_table_` : ""}${column.Field}\``);
       })
       newSelect.push(columns);
     })
@@ -204,6 +210,7 @@ class MysqlAdapter {
   */
 
   create({ model, data }) {
+    this.model = model;
     if(data.length == undefined || data.length == 0) data = [data];
     let d = [];
     let v = [];
@@ -238,6 +245,7 @@ class MysqlAdapter {
   }
 
   createSync({ model, data, timestamps, createdAt, updatedAt }) {
+    this.model = model;
     if(data.length == undefined || data.length == 0) data = [data];
     let d = [];
     let v = [];
@@ -276,6 +284,7 @@ class MysqlAdapter {
     update a row in the database
   */
   update({ model, data, id, where }) {
+    this.model = model;
     if(typeof id != "object" && id != undefined)
       where = { id };
 
@@ -331,6 +340,7 @@ class MysqlAdapter {
   }
 
   updateSync({ model, data, id, where }) {
+    this.model = model;
     if(typeof id != "object" && id != undefined)
       where = { id };
 
@@ -433,6 +443,7 @@ class MysqlAdapter {
     delete a row in the database
   */
   delete({ model, id, where }) {
+    this.model = model;
     if(typeof id != "object" && id != undefined)
       where = { id };
 
@@ -471,6 +482,7 @@ class MysqlAdapter {
   }
 
   deleteSync({ model, id, where }) {
+    this.model = model;
     if(typeof id != "object" && id != undefined)
       where = { id };
 
@@ -609,6 +621,7 @@ class MysqlAdapter {
 
   mergeSyncJoins (results, joins, joinsSQL) {
     let response = [];
+    let unique = this.getUniqueColumn(this.model.getTableName);
     results.map(result => {
       let obj = {};
       Object.entries(result).map(object => {
@@ -623,8 +636,32 @@ class MysqlAdapter {
       })
       response.push(obj);
     })
-    
-    return response;
+
+    let newResponse = [];
+    response.map(obj => {
+      let objInd = newResponse.findIndex(e => e[unique] == obj[unique]);
+      if(objInd >= 0) {
+        Object.entries(obj).map(obj => {
+          const [ key, val ] = obj;
+          let regex = new RegExp(key);
+          let join = this.joins.find(e => e.alias ? regex.test(e.alias) : e.includeTable == key);
+          if (join && join.many) newResponse[objInd][key].push(val);
+        })
+      } else {
+        Object.entries(obj).map(o => {
+          const [ key, val ] = o;
+          let regex = new RegExp(key);
+          let join = this.joins.find(e => e.alias ? regex.test(e.alias) : e.includeTable == key);
+
+          if (join && join.many) obj[key] = [val];
+          return obj;
+        })
+
+        newResponse.push(obj);
+      }
+    })
+  
+    return newResponse;
   }
 
   createTable ({ options, model, fields, alterTables, engine, charset, collation }) {
@@ -650,8 +687,8 @@ class MysqlAdapter {
   }
 
   dropColumn ({ model, column }) {
+    this.model = model;
     let sql = `alter table ${model.tableName} drop column \`${column}\``;
-    // console.log(model, column)
     return true;
   }
 
@@ -747,6 +784,15 @@ class MysqlAdapter {
       default:
         return data;
     }
+  }
+
+  getUniqueColumn (table) {
+    let unique = null;
+    connection.sync.query(`SHOW COLUMNS FROM ${table}`).map(column => {
+      if(/pri/i.test(column.Key || column.key || '')) unique = (column.Field || column.field);
+      if(/uni/i.test(column.Key || column.key || '')) unique = (column.Field || column.field);
+    })
+    return unique;
   }
 }
 

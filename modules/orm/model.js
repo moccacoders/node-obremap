@@ -1,6 +1,8 @@
 import moment from 'moment-timezone';
 import adapter from './adapters'
 import { getTableName, getFieldName } from '../global/get-name'
+import _ from 'lodash';
+import pluralize from 'pluralize';
 
 export default class Model {
 	static snakeCase = true;
@@ -376,14 +378,20 @@ export default class Model {
 	  ex Model.with('user').first()
 	*/
 	static with(...relationships) {
-		let joins = {};
+		let joins = [true];
 		relationships.map(rel => {
+			let join = {};
 			let relationship = this;
 			relationship = new relationship();
-			return joins[rel] = relationship[rel](this);
+			join = relationship[rel](this);
+			if(Array.isArray(join)) joins = _.merge(joins, join);
+			else joins.push(join);
+			return join;
 		})
+		if(joins[0] !== true) joins.splice(0,0,true);
 		return adapter(this).queryBuilder({
 			joins,
+			with: true,
 			model: this
 		})
 	}
@@ -453,22 +461,39 @@ export default class Model {
 		}
 	}
 
-	hasManyThrough(Model, TroughModel, troughField = 'id', remoteField = null, localField = 'id' ) {
+	hasManyThrough(Model, TroughModel, troughField = null, remoteField = null, localField = 'id', localTroughField = 'id' ) {
 		let name = this.name || this.constructor.name;
 		let snakeCase = this.snakeCase || this.constructor.snakeCase;
 		let completeLocalField = `${getTableName(name, snakeCase)}.${localField}`;
-
-		remoteField = remoteField || getFieldName(name);
-		return {
-			result: () => {
-				let val = this.values;
-				return Model.where({
-					[troughField]: val[localField] || val[completeLocalField]
-				}).join(TroughModel, troughField, remoteField, 'left');
-			},
-			includeTable: getTableName(Model.name, Model.snakeCase),
-			localField : completeLocalField,
-			remoteField: `${getTableName(Model.name, Model.snakeCase)}.${remoteField}`,
+		let completeRemoteField = `${getTableName(name, snakeCase)}.${remoteField}`;
+		let troughAlias = 'obremap_trough_table';
+		let troughTable = getTableName(TroughModel.tableName, TroughModel.snakeCase);
+		if(troughTable.search(/ as /i) >= 0){
+			troughTable = troughTable.split(' as ');
+			troughTable[1] = troughAlias;
+			troughTable = troughTable.join(' as ');
+		} else {
+			troughTable += ` as ${troughAlias}`;
 		}
+
+		if(!troughField) troughField = `${pluralize(getTableName(name, snakeCase), 1)}${troughField[0] != '_' ? '_' : ''}${troughField}`;
+		if(!remoteField) remoteField = `${pluralize(getTableName(Model.name, Model.snakeCase), 1)}${remoteField[0] != '_' ? '_' : ''}${remoteField}`;
+
+		return [{
+			includeTable: troughTable,
+			alias : troughAlias,
+			localField: completeLocalField,
+			remoteField: `${troughAlias}.${troughField}`,
+			operator : "=",
+			type: 'LEFT',
+			many : true
+		},{
+			includeTable: getTableName(Model.name, Model.snakeCase),
+			remoteField: `${troughAlias}.${remoteField}`,
+			localField: `${getTableName(Model.name, Model.snakeCase)}.${localTroughField}`,
+			operator : "=",
+			type: 'LEFT',
+			many : true
+		}];
 	}
 }
