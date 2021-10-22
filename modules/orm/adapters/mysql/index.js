@@ -639,7 +639,7 @@ class MysqlAdapter {
 
     let newResponse = [];
     response.map(obj => {
-      let objInd = newResponse.findIndex(e => e[unique] == obj[unique]);
+      let objInd = unique ? newResponse.findIndex(e => e[unique] == obj[unique]) : -1;
       if(objInd >= 0) {
         Object.entries(obj).map(obj => {
           const [ key, val ] = obj;
