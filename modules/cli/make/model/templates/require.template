@@ -1,0 +1,10 @@
+// THIS MODEL FILE WAS CREATED BY OBREMAP CLI
+const Model = require("@moccacoders/node-obremap").Model
+module.exports = class #__MODEL_NAME__# extends Model {
+    /*
+		overwrite table name, this action is optional
+		static tableName = "table_name";
+	*/
+	
+	#__CONFIGURATION__#
+}

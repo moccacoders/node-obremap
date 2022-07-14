@@ -1,0 +1,23 @@
+// THIS SEEDER FILE WAS CREATED BY OBREMAP CLI
+import { Seeder } from '@moccacoders/node-obremap';
+import { DB } from '@moccacoders/node-obremap';
+
+export default class #__SEEDER_NAME__# extends Seeder{
+	/**
+	 * Run seeder #__SEEDER_NAME__#.
+	 * @return void
+	 */
+	static run() {
+	/*
+		DB.table('#__TABLE_NAME__#').truncate();
+		DB.table('#__TABLE_NAME__#')
+			.timestamps(#__TIMESTAMPS__#)
+			.set([
+				{
+					#__FIELDS__#
+				}
+			])
+			.create();
+	*/
+	}
+}

@@ -1,0 +1,10 @@
+// THIS MODEL FILE WAS CREATED BY OBREMAP CLI
+import { Model } from "@moccacoders/node-obremap";
+export default class #__MODEL_NAME__# extends Model {
+  	/*
+		overwrite table name, this action is optional
+		static tableName = "table_name";
+	*/
+	
+	#__CONFIGURATION__#
+}

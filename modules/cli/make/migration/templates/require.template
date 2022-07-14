@@ -1,0 +1,24 @@
+// THIS MIGRATION FILE WAS CREATED BY OBREMAP CLI
+const Schema = require("@moccacoders/node-obremap").Schema
+/*
+	Model Name: `#__MODEL_NAME__#`
+	Database Table: `#__TABLE_NAME__#`
+*/
+
+module.exports = class #__MODEL_NAME__# {
+	/**
+	 * Run the migrations.
+	 * @return void
+	 */
+	up() {
+		#__UP__#
+	}
+
+	/**
+	 * Reverse the migrations.
+	 * @return void
+	 */
+	down() {
+		#__DOWN__#
+	}
+}
