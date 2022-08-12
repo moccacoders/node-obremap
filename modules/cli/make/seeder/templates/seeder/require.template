@@ -1,6 +1,6 @@
 // THIS SEEDER FILE WAS CREATED BY OBREMAP CLI
-import { Seeder, DB } from "#__MODULE_NAME__#";
-export default class #__SEEDER_NAME__# extends Seeder{
+const { Seeder, DB } = require("#__MODULE_NAME__#");
+module.exports = class #__SEEDER_NAME__# extends Seeder{
 	/**
 	 * Run seeder #__SEEDER_NAME__#.
 	 * @return void
@@ -15,7 +15,7 @@ export default class #__SEEDER_NAME__# extends Seeder{
 					#__FIELDS__#
 				}
 			])
-			.create();
+			.insert();
 	*/
 	}
 }

@@ -14,7 +14,7 @@
     "local-test": "mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive",
     "build": "babel modules --out-dir dist --no-comments --copy-files",
     "local-cover": "nyc --reporter=text mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit",
-    "test": "nyc --reporter=html  --reporter=lcov --reporter=text-lcov ./node_modules/.bin/_mocha --timeout 0 -- --require @babel/register --require tests/setup/setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit | coveralls",
+    "test": "jest --unhandled-rejections=strict",
     "test-file": "mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup "
   },
   "repository": {
@@ -56,9 +56,11 @@
     "@babel/cli": "^7.15.7",
     "@babel/core": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@moccacoders/node-obremap": "./",
     "babel-plugin-module-resolver": "^4.1.0",
     "concat-stream": "2.0.0",
-    "inquirer-test": "2.0.1"
+    "inquirer-test": "2.0.1",
+    "jest": "^28.1.3"
   },
   "bugs": {
     "url": "https://github.com/moccacoders/node-obremap/issues",

@@ -68,6 +68,8 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
 
   if (!createSeederContainer({ args, cwd, fs })) return false;
 
+  const moduleName =
+    process.env.NODE_ENV == "test" ? "../dist" : "@moccacoders/node-obremap";
   const className = utils.toCase(name, false, true);
   const tableName =
     args["--table-name"] || getTableName(name.replace(/(_|\-|\.)?seeder/i, ""));
@@ -76,6 +78,7 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
       path.join(__dirname, `templates/seeder/${args["--how-import"]}.template`),
       "utf8"
     )
+    .replaceAll("#__MODULE_NAME__#", moduleName)
     .replaceAll("#__SEEDER_NAME__#", className)
     .replaceAll("#__TABLE_NAME__#", tableName)
     .replaceAll(
@@ -136,6 +139,8 @@ const createSeederContainer = ({ args, cwd, fs }) => {
         return { import: match[0], name: match[1] };
       });
     }
+    const moduleName =
+      process.env.NODE_ENV == "test" ? "../dist" : "@moccacoders/node-obremap";
     const template = fs
       .readFileSync(
         path.join(
@@ -145,6 +150,7 @@ const createSeederContainer = ({ args, cwd, fs }) => {
         "utf8"
       )
       .replace("#__IMPORTS__#", importClass.sort().join("\r"))
+      .replaceAll("#__MODULE_NAME__#", moduleName)
       .replace("#__CALLS__#", className.sort().join(",\r\t\t\t"));
     fs.writeFileSync(containerPath, template, { recursive: true });
     console.log(chalk.green("Container created:"), containerPath);

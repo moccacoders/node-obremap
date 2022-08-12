@@ -16,6 +16,7 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
     from,
     to,
     match,
+    moveType,
     tableName = null;
   if (!args["--folder"])
     args["--folder"] =
@@ -32,18 +33,8 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
 
   let fileName = name;
   name = name.split("_");
-  if (["create", "add", "rename"].includes(name[0])) {
-    if (name[0] == "create") {
-      type = "create";
-    }
-    if (name[0] == "add") {
-      type = "add";
-    }
-
-    if (name[0] == "rename") {
-      type = "rename";
-    }
-
+  if (["create", "add", "rename", "move"].includes(name[0])) {
+    type = name[0];
     delete name[0];
   }
 
@@ -80,13 +71,14 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
     });
   }
 
-  // create_[tableName]_table
-  // add_[column]_to_[tableName]_table
-  // rename_[column]_to_[columnTo]_on_[tableName]_table
-  // rename_[tableName]_to_[tableNameTo]_table
+  // create_[tableName]_table [CREATE NEW TABLE]
+  // add_[column]_to_[tableName]_table [ADD A NEW COLUMN TO TABLE]
+  // move_[column]_after_[existingColumn]_on_[tableName]_table [MOVE COLUMN POSITION ON TABLE]
+  // rename_[column]_to_[columnTo]_on_[tableName]_table [RENAME COLUMN ON TABLE]
+  // rename_[tableName]_to_[tableNameTo]_table [RENAME TABLE]
 
   if (name[name.length - 1] == "table") {
-    if (type == "rename") {
+    if (["rename", "move"].includes(type)) {
       if (name.includes("on")) type += "-column";
       else type += "-table";
     }
@@ -94,8 +86,9 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
   }
 
   name = name.filter((e) => e).join("_");
-  if (name.search(/_to_/) >= 0) {
-    [match, from, to] = name.match(/(.+)_to_(.+)/);
+  if (name.search(/(_to_|_after_)/) >= 0) {
+    [match, from, moveType, to] = name.match(/(.+)(_to_|_after_)(.+)/);
+    moveType = moveType.replaceAll(/_/g, "");
     if (to.search(/_on_/) >= 0) {
       [match, tableName] = to.match(/_on_(.+)/);
       to = to.replace(/_on_(.+)/, "");
@@ -118,6 +111,7 @@ module.exports = ({ args, cwd, fs, obremapConfig }) => {
     )
     .replaceAll("#__MODEL_NAME__#", utils.toCase(fileName, false, true))
     .replaceAll("#__TABLE_NAME__#", "tableName")
+    .replaceAll("#__MODULE_NAME__#", moduleName)
     .replace(
       "#__UP__#",
       processUp({ type, tableName, column, from, to, fields })
@@ -181,8 +175,15 @@ const processUp = ({ type, tableName, column, from, to, fields }) => {
 
     case "rename-column":
       template = `Schema.table('${tableName}', table => {
-			table.renameColumn('${from}', '${to}');
+			table.renameColumn('string', '${from}', '${to}');
 		})`;
+      break;
+
+    case "move-column":
+      if (from && to)
+        template = `Schema.table('${tableName}', table => {
+          table.moveColumn('string', '${from}', '${to}');
+        })`;
       break;
   }
   return template;
@@ -207,8 +208,16 @@ const processDown = ({ type, tableName, column, from, to, fields }) => {
 
     case "rename-column":
       template = `Schema.table('${tableName}', table => {
-			table.renameColumn('${to}', '${from}');
+			table.renameColumn('string', '${to}', '${from}');
 		})`;
+      break;
+    case "move-column":
+      if (from && to) {
+        template = `Schema.table('${tableName}', table => {
+          // Replace #__EXISTING_COLUMN_NAME__# for correct column name to roll back
+          table.moveColumn('string', '${to}', '#__EXISTING_COLUMN_NAME__#');
+        })`;
+      }
       break;
   }
 

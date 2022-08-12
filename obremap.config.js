@@ -3,6 +3,7 @@ require("dotenv").config();
 module.exports = {
   config: "test",
   timezone: "America/Mexico_City",
+  howImport: "require",
   databases: {
     default: process.env.DATABASE_URL_OTHER,
     test: {

@@ -1,27 +1,11 @@
-import mysql from 'mysql'
-import SyncMysql from 'sync-mysql'
+import mysql from "mysql";
 
-let connection = {};
-
-/* istanbul ignore next */
 function handleDisconnect() {
-	connection.async = mysql.createConnection(global.dbConn)
-	connection.sync = new SyncMysql(global.dbConn);
-
-	connection.async.connect(err => {
-		if(err) {
-			if(process.env.OBREMAP_DEBUG === 'true') console.error('error when connecting to db:', err)
-			setTimeout(handleDisconnect, 2000);
-		}
-	})
-
-	connection.async.on('error',err => {
-		if(process.env.OBREMAP_DEBUG === 'true') console.error('db error', err)
-		if(err.code === 'PROTOCOL_CONNECTION_LOST') handleDisconnect()
-		else throw err
-	})
+  let connection = mysql.createConnection(global.dbConn);
+  return connection;
 }
 
-handleDisconnect()
+const connect = () => handleDisconnect();
+const format = (...options) => mysql.format(...options);
 
-export default connection;
+export { connect, format };

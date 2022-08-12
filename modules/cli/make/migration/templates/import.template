@@ -1,5 +1,5 @@
 // THIS MIGRATION FILE WAS CREATED BY OBREMAP CLI
-import { Schema } from '@moccacoders/node-obremap';
+import { Schema } from "#__MODULE_NAME__#";
 /*
 	Model Name: `#__MODEL_NAME__#`
 	Database Table: `#__TABLE_NAME__#`
@@ -10,15 +10,15 @@ export default class #__MODEL_NAME__# {
 	 * Run the migrations.
 	 * @return void
 	 */
-	up() {
-		#__UP__#
+	static up() {
+		return #__UP__#
 	}
 
 	/**
 	 * Reverse the migrations.
 	 * @return void
 	 */
-	down() {
-		#__DOWN__#
+	static down() {
+		return #__DOWN__#
 	}
 }

@@ -53,12 +53,15 @@ module.exports = ({ args, cwd, obremapConfig }) => {
 	`;
     });
 
+    const moduleName =
+      process.env.NODE_ENV == "test" ? "../dist" : "@moccacoders/node-obremap";
     const template = fs
       .readFileSync(
         path.join(__dirname, `/templates/${args["--how-import"]}.template`),
         "utf8"
       )
       .replace("#__MODEL_NAME__#", modelName)
+      .replace("#__MODULE_NAME__#", moduleName)
       .replace("#__CONFIGURATION__#", options);
 
     if (!args["--folder"])

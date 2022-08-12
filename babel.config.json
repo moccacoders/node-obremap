@@ -6,7 +6,10 @@
   	"@babel/plugin-proposal-class-properties",
     [
       "module-resolver", {
-        "root": ["./modules"]
+        "root": ["./modules"],
+        "alias" : {
+          "tests" : "./tests"
+        }
       }
     ]
     
