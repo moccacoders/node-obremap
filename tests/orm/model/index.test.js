@@ -32,10 +32,5 @@ describe("Validate model structure", () => {
     expect(Model.formatDate()).toMatch(
       /([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})/
     );
-    // const timezone = await Model.getTimezone;
-    // const config = require(`${process.cwd()}/obremap.config.js`);
-    // expect([process.env.TZ, config.timezone, "America/Los_Angeles"]).toContain(
-    //   timezone
-    // );
   });
 });

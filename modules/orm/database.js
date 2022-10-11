@@ -62,6 +62,6 @@ export default class DB extends Model {
 
   static getDifferenceDate(start, end) {
     const duration = moment.duration(end.diff(start));
-    return duration.milliseconds();
+    return duration.milliseconds() + " ms";
   }
 }
