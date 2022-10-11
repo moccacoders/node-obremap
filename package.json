@@ -36,7 +36,7 @@
     "query-builder",
     "relationship"
   ],
-  "author": "Raymundo Salazar <raymundo.salazar@moccacoders.com>",
+  "author": "Raymundo Salazar <raymundo.salser@hotmail.com>",
   "license": "MIT",
   "dependencies": {
     "@babel/preset-env": "^7.18.6",
