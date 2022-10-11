@@ -12,15 +12,15 @@ class MysqlAdapter {
   supportedCastTypes = {
     array: (val) => val.split(","),
     boolean: (val) => Boolean(val),
-    date: (val) => this.model.formatDate(val),
-    datetime: (val) => this.model.formatDate(val),
+    date: (val) => this.model.model.formatDate(val),
+    datetime: (val) => this.model.model.formatDate(val),
     decimal: (val) => parseFloat(val),
     double: (val) => parseFloat(val),
     float: (val) => parseFloat(val),
     integer: (val) => parseInt(val),
     object: (val) => JSON.parse(val),
     string: (val) => String(val),
-    timestamp: (val) => this.model.formatDate(val),
+    timestamp: (val) => this.model.model.formatDate(val),
   };
   log = {
     sql: null,
@@ -29,8 +29,10 @@ class MysqlAdapter {
   };
 
   setModel(model) {
-    this.log.time.start = model.formatDate(new Date(), true);
+    this.log.time.start = model.model.formatDate(new Date(), true);
     this.model = model;
+    this.options = model.options;
+    this.init = model.init;
   }
 
   /**
@@ -41,15 +43,18 @@ class MysqlAdapter {
    * @returns MySQL Collection
    * @throws Promise rejection
    */
-  sql({ sql, values, nestTables = true, format = false }, formatResponse) {
+  sql(
+    { sql, values, nestTables = true, format = false, direct = false },
+    formatResponse
+  ) {
     return new Promise((resolve, reject) => {
       const _reject = (err) => {
-        this.model.init();
+        this.init();
         return reject(err);
       };
 
       const _resolve = (res) => {
-        this.model.init();
+        this.init();
         return resolve(res);
       };
 
@@ -63,9 +68,11 @@ class MysqlAdapter {
           nestTables,
           values,
         },
-        (err, res) => {
+        (err, res, fields) => {
+          if (direct && this.model.tableName != fields[0].table)
+            this.model.table(fields[0].table);
           connection.end();
-          this.log.time.end = this.model.formatDate(new Date(), true);
+          this.log.time.end = this.model.model.formatDate(new Date(), true);
           DB.logQuery(
             this.log.sql,
             this.log.bindings,
@@ -75,7 +82,10 @@ class MysqlAdapter {
           try {
             if (nestTables) res = this.processNestTables(res);
             if (formatResponse) res = formatResponse(res);
-            if (this.model.casts && Object.entries(this.model.casts).length > 0)
+            if (
+              this.model.model.casts &&
+              Object.entries(this.model.model.casts).length > 0
+            )
               res = this.processCasts(res);
             _resolve(res);
           } catch (err) {
@@ -92,7 +102,7 @@ class MysqlAdapter {
   }
 
   first(formatResponse = undefined) {
-    this.model.options.limit = 1;
+    this.options.limit = 1;
     const { sql, values } = this.processSQL();
     return this.sql(
       { sql, values, nestTables: false },
@@ -101,13 +111,13 @@ class MysqlAdapter {
   }
 
   last() {
-    this.model.options = { orderBy: [this.model.primaryKey, "DESC"], limit: 1 };
+    this.options = { orderBy: [this.model.model.primaryKey, "DESC"], limit: 1 };
     const { sql } = this.processSQL();
     return this.sql({ sql });
   }
 
   count() {
-    this.model.options.select = [`COUNT(*) as count`];
+    this.options.select = [`COUNT(*) as count`];
     const { sql, values } = this.processSQL();
     return this.sql({ sql, values, nestTables: false }, (res) => {
       return res[0].count;
@@ -115,7 +125,7 @@ class MysqlAdapter {
   }
 
   max(column) {
-    this.model.options.select = [`MAX(${column}) as max`];
+    this.options.select = [`MAX(${column}) as max`];
     const { sql } = this.processSQL();
     return this.sql({ sql, nestTables: false }, (res) => {
       return res[0].max;
@@ -123,7 +133,7 @@ class MysqlAdapter {
   }
 
   min(column) {
-    this.model.options.select = [`MIN(${column}) as min`];
+    this.options.select = [`MIN(${column}) as min`];
     const { sql } = this.processSQL();
     return this.sql({ sql, nestTables: false }, (res) => {
       return res[0].min;
@@ -131,7 +141,7 @@ class MysqlAdapter {
   }
 
   sum(column) {
-    this.model.options.select = [`SUM(${column}) as sum`];
+    this.options.select = [`SUM(${column}) as sum`];
     const { sql } = this.processSQL();
     return this.sql({ sql, nestTables: false }, (res) => {
       return res[0].sum;
@@ -139,7 +149,7 @@ class MysqlAdapter {
   }
 
   avg(column) {
-    this.model.options.select = [`AVG(${column}) as avg`];
+    this.options.select = [`AVG(${column}) as avg`];
     const { sql } = this.processSQL();
     return this.sql({ sql, nestTables: false }, (res) => {
       return res[0].avg;
@@ -156,7 +166,7 @@ class MysqlAdapter {
       try {
         let { sql, values } = this.processSQL(type);
         if (showValues) sql = mysql.format(sql, values);
-        this.model.init();
+        this.init();
         resolve(sql);
       } catch (error) {
         reject(error);
@@ -241,12 +251,12 @@ class MysqlAdapter {
     const model = this.model;
     let sql = "";
     let { joins, values: joinValues } = this.processJoins();
-    let { where, values } = this.processWhere(model.options.where);
+    let { where, values } = this.processWhere(model.options?.where);
     const limit = `${
-      model.options.limit ? ` LIMIT ${model.options.limit}` : ""
+      model.options?.limit ? ` LIMIT ${model.options.limit}` : ""
     }`;
     const offset = `${
-      model.options.offset ? ` OFFSET ${model.options.offset}` : ""
+      model.options?.offset ? ` OFFSET ${model.options.offset}` : ""
     }`;
     const orderBy = this.processOrderBy();
     const groupBy = this.processGroupBy();
@@ -271,7 +281,7 @@ class MysqlAdapter {
         sql = `TRUNCATE TABLE ${model.getTableName}`;
         break;
       default:
-        sql = `SELECT ${this.processSelect(model.options.select)} FROM ${
+        sql = `SELECT ${this.processSelect(model.options?.select)} FROM ${
           model.getTableName
         }${joins}${where}${groupBy}${orderBy}${limit}${offset}`;
     }
@@ -279,7 +289,7 @@ class MysqlAdapter {
   }
 
   processColumns(type = "update") {
-    let { set } = this.model.options;
+    let { set } = this.options;
     set = set ?? [];
     if (!Array.isArray(set)) set = [set];
     let columns = _.uniq(
@@ -298,7 +308,7 @@ class MysqlAdapter {
       set.map((item) => {
         let values = Object.values(item);
         if (this.model.getTimestamps) {
-          values.push(this.model.currentDate);
+          values.push(this.model.model.currentDate);
         }
         return values;
       }),
@@ -416,8 +426,8 @@ class MysqlAdapter {
 
   processJoins() {
     const values = [];
-    if (!this.model.options.joins) return { joins: "", values };
-    let joins = this.model.options.joins.map(
+    if (!this.options?.joins) return { joins: "", values };
+    let joins = this.options.joins.map(
       ({ table, first, operator, second, type, where }) => {
         table = `\`${table.replaceAll(/\`/gi, "").split(".").join("`.`")}\``;
         if (where) values.push(where);
@@ -431,7 +441,7 @@ class MysqlAdapter {
   }
 
   processGroupBy() {
-    let { groupBy } = this.model.options;
+    let { groupBy } = this.options;
     if (!groupBy || groupBy.length === 0) return "";
     groupBy = groupBy.map((group) => {
       return `${/\`/.test(group) ? group : `\`${group}\``}`;
@@ -440,7 +450,7 @@ class MysqlAdapter {
   }
 
   processOrderBy() {
-    let { orderBy } = this.model.options;
+    let { orderBy } = this.options;
     if (!orderBy || orderBy.length === 0) return "";
     orderBy = orderBy.map((order) => {
       return `${/\`/.test(order[0]) ? order[0] : `\`${order[0]}\``} ${
@@ -463,6 +473,7 @@ class MysqlAdapter {
       ) >= 0
     )
       return response;
+
     let tableName = this.model.getTableName.replaceAll(/\`/gi, "").split(".");
     tableName = tableName[tableName.length - 1];
     const newResponse = [];
@@ -472,8 +483,9 @@ class MysqlAdapter {
         let idx;
         if (key === tableName) {
           idx = newResponse.findIndex((ele) =>
-            ele[this.model.primaryKey]
-              ? ele[this.model.primaryKey] === val[this.model.primaryKey]
+            ele[this.model.model.primaryKey]
+              ? ele[this.model.model.primaryKey] ===
+                val[this.model.model.primaryKey]
               : false
           );
           if (idx < 0) return newResponse.push(val);
@@ -492,7 +504,7 @@ class MysqlAdapter {
 
   processCasts(response) {
     const { casts } = this.model;
-    if (typeof response !== "object" || !Array.isArray(response))
+    if (typeof response !== "object" || !Array.isArray(response) || !casts)
       return response;
     response.map((res) => {
       Object.entries(casts).map((cast) => {

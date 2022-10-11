@@ -1,7 +1,9 @@
 import { logPlugin } from "@babel/preset-env/lib/debug";
+import { resolve } from "app-root-path";
 import moment from "moment";
 import adapter from "./adapters";
 import SchemaBuilder from "./adapters/mysql/builders/schema.builder";
+import { dbConfig } from "./adapters";
 // import { getTableName, getFieldName } from "../global/get-name";
 
 export default class Schema extends SchemaBuilder {
@@ -16,6 +18,10 @@ export default class Schema extends SchemaBuilder {
     return this.container
       ? this.container.call([this, "run"])
       : this.constructor.run();
+  }
+
+  static get getConnection() {
+    return dbConfig(this.connection);
   }
 
   static create(tableName, action) {

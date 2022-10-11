@@ -1,9 +1,8 @@
 import moment from "moment-timezone";
-import { getTableName } from "../global/get-name";
 import _ from "lodash";
 import QueryBuilder from "./adapters/mysql/builders/query.builder";
 
-export default class Model extends QueryBuilder {
+export default class Model {
   static snakeCase = true;
   static tableName = null;
 
@@ -30,6 +29,26 @@ export default class Model extends QueryBuilder {
 
   static casts = {};
 
+  constructor() {
+    this.model = this.constructor;
+    return new Proxy(this, {
+      get: function get(_class, method) {
+        if (method in _class) return _class[method];
+        return new QueryBuilder(_class.model)[method];
+      },
+    });
+  }
+
+  /**
+   * Execute a SQL query. In order to avoid SQL Injection attacks, you should always escape any user provided data before using it inside a SQL query.
+   * @param {string} sql - SQL query, use "?" instead of values to use escaping method.
+   * @param {array} values - These values will be used to be replaced in the escaping method.
+   * @returns
+   */
+  static sql(sql, values = []) {
+    return new this().sql(sql, values);
+  }
+
   static get getTimezone() {
     return (
       this.timezone || global.TZ || process.env.TZ || "America/Los_Angeles"
@@ -44,11 +63,7 @@ export default class Model extends QueryBuilder {
     date = moment(date).tz(this.getTimezone);
     if (!notFormat)
       date = date.format(
-        notFormat
-          ? ""
-          : this.dateFormat != "TIMESTAMP"
-          ? this.dateFormat
-          : "YYYY-MM-DD HH:mm:ss"
+        this.dateFormat != "TIMESTAMP" ? this.dateFormat : "YYYY-MM-DD HH:mm:ss"
       );
     return date;
   }

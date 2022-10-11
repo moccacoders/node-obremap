@@ -4,62 +4,64 @@ import _ from "lodash";
 import url from "url";
 
 export default class QueryBuilder {
-  static options = {};
-  static get operators() {
-    return [
-      "=",
-      "<",
-      ">",
-      "<=",
-      ">=",
-      "<>",
-      "!=",
-      "<=>",
-      "like",
-      "like binary",
-      "not like",
-      "ilike",
-      "&",
-      "|",
-      "^",
-      "<<",
-      ">>",
-      "rlike",
-      "not rlike",
-      "regexp",
-      "not regexp",
-      "~",
-      "~*",
-      "!~",
-      "!~*",
-      "similar to",
-      "not similar to",
-      "not ilike",
-      "~~*",
-      "!~~*",
-      "in",
-      "not in",
-      "is null",
-      "is not null",
-      "between",
-      "not between",
-      "json_contains",
-      "not json_contains",
-      "json_length",
-      "not json_length",
-      null,
-    ];
+  options = {};
+  operators = [
+    "=",
+    "<",
+    ">",
+    "<=",
+    ">=",
+    "<>",
+    "!=",
+    "<=>",
+    "like",
+    "like binary",
+    "not like",
+    "ilike",
+    "&",
+    "|",
+    "^",
+    "<<",
+    ">>",
+    "rlike",
+    "not rlike",
+    "regexp",
+    "not regexp",
+    "~",
+    "~*",
+    "!~",
+    "!~*",
+    "similar to",
+    "not similar to",
+    "not ilike",
+    "~~*",
+    "!~~*",
+    "in",
+    "not in",
+    "is null",
+    "is not null",
+    "between",
+    "not between",
+    "json_contains",
+    "not json_contains",
+    "json_length",
+    "not json_length",
+    null,
+  ];
+
+  constructor(model) {
+    this.setModel(model);
+    this.adapter = adapter(this);
   }
 
   /**
    * Execute a SQL query. In order to avoid SQL Injection attacks, you should always escape any user provided data before using it inside a SQL query.
-   * @param {*} sql - SQL query, use "?" instead of values to use escaping method.
-   * @param {*} values - These values will be used to be replaced in the escaping method.
+   * @param {string} sql - SQL query, use "?" instead of values to use escaping method.
+   * @param {array} values - These values will be used to be replaced in the escaping method.
    * @returns
    */
-  static sql(sql, values = []) {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).sql({ sql, values });
+  sql(sql, values = []) {
+    return this.adapter.sql({ sql, values, direct: true });
   }
 
   /**
@@ -67,9 +69,8 @@ export default class QueryBuilder {
    * you may also add constraints to queries, and then use the get method to retrieve the results.
    * @returns Obremap Collection
    */
-  static all() {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).all();
+  all() {
+    return this.adapter.all();
   }
 
   /**
@@ -77,9 +78,8 @@ export default class QueryBuilder {
    * This method will return a single Obremap object
    * @returns Obremap object
    */
-  static first() {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).first();
+  first() {
+    return this.adapter.first();
   }
 
   /**
@@ -87,83 +87,74 @@ export default class QueryBuilder {
    * This method will return a single Obremap object
    * @returns Obremap object
    */
-  static last() {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).last();
+  last() {
+    return this.adapter.last();
   }
 
   /**
    * Get the count of seleced rows
    * @returns Number
    */
-  static count() {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).count();
+  count() {
+    return this.adapter.count();
   }
 
-  static max(column) {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).max(column);
+  max(column) {
+    return this.adapter.max(column);
   }
 
-  static min(column) {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).min(column);
+  min(column) {
+    return this.adapter.min(column);
   }
 
-  static sum(column) {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).sum(column);
+  sum(column) {
+    return this.adapter.sum(column);
   }
 
-  static avg(column) {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).avg(column);
+  avg(column) {
+    return this.adapter.avg(column);
   }
 
-  static average(column) {
+  average(column) {
     return this.avg(column);
   }
 
-  static get() {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).get();
+  get() {
+    return this.adapter.get();
   }
 
-  static toSql(values = false, type = "select") {
-    this.setModel(this);
-    return adapter(this.options.model ?? this).toSql(values, type);
+  toSql(values = false, type = "select") {
+    return this.adapter.toSql(values, type);
   }
 
-  static insertToSql(values = false) {
+  insertToSql(values = false) {
     return this.toSql(values, "insert");
   }
 
-  static updateToSql(values = false) {
+  updateToSql(values = false) {
     return this.toSql(values, "update");
   }
 
-  static deleteToSql(values = false) {
+  deleteToSql(values = false) {
     return this.toSql(values, "delete");
   }
 
-  static truncateToSql(values = false) {
+  truncateToSql(values = false) {
     return this.toSql(values, "truncate");
   }
 
-  static find(id, ...columns) {
+  find(id, ...columns) {
     return this.where((this.options.model ?? this).primaryKey, id)
       .select(...columns)
       .first();
   }
 
-  static value(column) {
-    this.setModel(this);
+  value(column) {
     this.select(column);
-    return adapter(this.options.model ?? this).value(column);
+    return this.adapter.value(column);
   }
 
-  static paginate(perPage = 15, page = 1, pageName = "page") {
+  paginate(perPage = 15, page = 1, pageName = "page") {
     let from = (page - 1) * perPage;
     from = from > 0 ? from : 1;
     from = page > 1 ? from + 1 : from;
@@ -196,7 +187,7 @@ export default class QueryBuilder {
       });
   }
 
-  static implode(column, glue = "") {
+  implode(column, glue = "") {
     return this.select(column)
       .get()
       .then((res) => {
@@ -204,26 +195,25 @@ export default class QueryBuilder {
       });
   }
 
-  static exists() {
+  exists() {
     return this.count().then((count) => count > 0);
   }
 
-  static doesntExist() {
+  doesntExist() {
     return this.exists().then((res) => !res);
   }
 
-  static update(values) {
+  update(values) {
     if (values) this.set(values, undefined, true);
-    return adapter(this.options.model ?? this).update();
+    return this.adapter.update();
   }
 
-  static insert(values) {
+  insert(values) {
     if (values) this.set(values, undefined, true);
-    return adapter(this.options.model ?? this).insert();
+    return this.adapter.insert();
   }
 
-  static delete(id, user_id) {
-    this.setModel(this);
+  delete(id, user_id) {
     if (id) this.where(this.options.model.primaryKey, id);
     if (this.getLogicalDeleted) {
       let set = {
@@ -233,47 +223,42 @@ export default class QueryBuilder {
       if (user_id) set[this.options.model.deletedBy] = user_id;
       return this.set(set).setTimestamps(false).update();
     }
-    return adapter(this.options.model ?? this).delete();
+    return this.adapter.delete();
   }
 
-  static truncate() {
-    return adapter(this.options.model ?? this).truncate();
+  truncate() {
+    return this.adapter.truncate();
   }
 
   // ### QUERYBUILDER ## //
-  static table(tableName) {
-    this.setModel(this);
+  table(tableName) {
     if (!tableName) return this;
     tableName = tableName.replaceAll(/\`/gi, "").split(".").join("`.`");
     this.options.tableName = `\`${tableName}\``;
     return this;
   }
 
-  static setTimestamps(timestamps) {
-    this.setModel(this);
+  setTimestamps(timestamps) {
     this.options.timestamps = timestamps;
     return this;
   }
 
-  static setCreatedAt(createdAt) {
-    this.setModel(this);
+  setCreatedAt(createdAt) {
     this.options.createdAt = createdAt;
     return this;
   }
 
-  static setUpdatedAt(updatedAt) {
-    this.setModel(this);
+  setUpdatedAt(updatedAt) {
     this.options.updatedAt = updatedAt;
     return this;
   }
 
-  static select(...select) {
-    this.setModel(this);
+  select(...select) {
     this.options.select = select;
     return this;
   }
 
-  static where(
+  where(
     column,
     operator = "=",
     value,
@@ -281,7 +266,6 @@ export default class QueryBuilder {
     parenthesis = true,
     isFunction = false
   ) {
-    this.setModel(this);
     let where = this.options.where ? this.options.where : [];
     if (!this.operators.includes(operator)) {
       value = operator;
@@ -335,7 +319,7 @@ export default class QueryBuilder {
     return this;
   }
 
-  static orWhere(
+  orWhere(
     column,
     operator = "=",
     value,
@@ -343,7 +327,6 @@ export default class QueryBuilder {
     parenthesis = true,
     isFunction = false
   ) {
-    this.setModel(this);
     let orWhere = this.options.orWhere ? this.options.orWhere : [];
     if (!this.operators.includes(operator)) {
       value = operator;
@@ -397,134 +380,127 @@ export default class QueryBuilder {
     return this;
   }
 
-  static whereIn(column, values) {
+  whereIn(column, values) {
     return this.where(column, "in", values);
   }
 
-  static orWhereIn(column, values) {
+  orWhereIn(column, values) {
     return this.orWhere(column, "in", values);
   }
 
-  static whereNotIn(column, values) {
+  whereNotIn(column, values) {
     return this.where(column, "not in", values);
   }
 
-  static orWhereNotIn(column, values) {
+  orWhereNotIn(column, values) {
     return this.orWhere(column, "not in", values);
   }
 
-  static whereNull(column) {
+  whereNull(column) {
     return this.where(column, "is null");
   }
 
-  static orWhereNull(column) {
+  orWhereNull(column) {
     return this.orWhere(column, "is null");
   }
 
-  static whereNotNull(column) {
+  whereNotNull(column) {
     return this.where(column, "is not null");
   }
 
-  static orWhereNotNull(column) {
+  orWhereNotNull(column) {
     return this.orWhere(column, "is not null");
   }
 
-  static whereBetween(column, values) {
+  whereBetween(column, values) {
     return this.where(column, "between", values, " AND ", false);
   }
 
-  static orWhereBetween(column, values) {
+  orWhereBetween(column, values) {
     return this.orWhere(column, "between", values, " AND ", false);
   }
 
-  static whereNotBetween(column, values) {
+  whereNotBetween(column, values) {
     return this.where(column, "not between", values, " AND ", false);
   }
 
-  static orWhereNotBetween(column, values) {
+  orWhereNotBetween(column, values) {
     return this.orWhere(column, "not between", values, " AND ", false);
   }
 
-  static whereJsonContains(column, value) {
+  whereJsonContains(column, value) {
     return this.where(column, null, value, "", true, "json_contains");
   }
 
-  static orWhereJsonContains(column, value) {
+  orWhereJsonContains(column, value) {
     return this.orWhere(column, null, value, "", true, "json_contains");
   }
 
-  static whereJsonDoesntContains(column, value) {
+  whereJsonDoesntContains(column, value) {
     return this.where(column, null, value, "", true, "not json_contains");
   }
 
-  static orWhereJsonDoesntContains(column, value) {
+  orWhereJsonDoesntContains(column, value) {
     return this.orWhere(column, null, value, "", true, "not json_contains");
   }
 
-  static whereJsonLength(column, operator = null, value) {
+  whereJsonLength(column, operator = null, value) {
     return this.where(column, operator, value, "", true, "json_length");
   }
 
-  static orWhereJsonLength(column, operator = null, value) {
+  orWhereJsonLength(column, operator = null, value) {
     return this.orWhere(column, operator, value, "", true, "json_length");
   }
 
-  static orderBy(column, direction = "ASC") {
-    this.setModel(this);
+  orderBy(column, direction = "ASC") {
     if (!this.options.orderBy) this.options.orderBy = [];
     this.options.orderBy = [...this.options.orderBy, [column, direction]];
     return this;
   }
 
-  static latest(column) {
-    this.setModel(this);
+  latest(column) {
     return this.orderBy(column ? column : this.options.model.createdAt, "desc");
   }
 
-  static oldest(column) {
-    this.setModel(this);
+  oldest(column) {
     return this.orderBy(column ?? this.options.model.createdAt, "asc");
   }
 
-  static reorder(column = null, direction = "ASC") {
+  reorder(column = null, direction = "ASC") {
     if (column !== null) this.orderBy(column, direction);
     this.options.orderBy = undefined;
     return this;
   }
 
-  static groupBy(...columns) {
-    this.setModel(this);
+  groupBy(...columns) {
     if (!this.options.groupBy) this.options.groupBy = [];
     this.options.groupBy = [...this.options.groupBy, ...columns];
     return this;
   }
 
-  static offset(offset) {
-    this.setModel(this);
+  offset(offset) {
     this.options.offset = offset;
     return this;
   }
 
-  static skip(value) {
+  skip(value) {
     return this.offset(value);
   }
 
-  static limit(limit) {
-    this.setModel(this);
+  limit(limit) {
     this.options.limit = limit;
     return this;
   }
 
-  static take(value) {
+  take(value) {
     return this.limit(value);
   }
 
-  static forPage(page, perPage = 15) {
+  forPage(page, perPage = 15) {
     return this.offset((page - 1) * perPage).limit(perPage);
   }
 
-  static set(column, value, override = false) {
-    this.setModel(this);
+  set(column, value, override = false) {
     let set = override ? {} : { ...this.options.set };
     if (typeof column === "string") {
       set[column] = value;
@@ -538,13 +514,12 @@ export default class QueryBuilder {
     return this;
   }
 
-  static logicalDeleted(logicalDelete = true) {
-    this.setModel(this);
+  logicalDeleted(logicalDelete = true) {
     this.options.logicalDelete = logicalDelete;
     return this;
   }
 
-  static join(
+  join(
     table,
     first,
     operator = null,
@@ -552,7 +527,6 @@ export default class QueryBuilder {
     type = "inner",
     where = false
   ) {
-    this.setModel(this);
     if (!this.options.joins) this.options.joins = [];
     let joins = [...this.options.joins];
 
@@ -574,57 +548,58 @@ export default class QueryBuilder {
     return this;
   }
 
-  static leftJoin(table, first, operator = null, second = null) {
+  leftJoin(table, first, operator = null, second = null) {
     return this.join(table, first, operator, second, "left");
   }
 
-  static rightJoin(table, first, operator = null, second = null) {
+  rightJoin(table, first, operator = null, second = null) {
     return this.join(table, first, operator, second, "right");
   }
 
-  static crossJoin(table, first, operator = null, second = null) {
+  crossJoin(table, first, operator = null, second = null) {
     return this.join(table, first, operator, second, "cross");
   }
 
-  static queryBuilder() {
+  queryBuilder() {
     return true;
   }
 
-  static setModel(model) {
+  setModel(model) {
     if (!model.builder) {
+      this.model = model;
       this.init();
       this.builder = true;
     }
   }
 
-  static init() {
+  init() {
     this.options = {};
     QueryBuilder.options = {};
     delete this.builder;
   }
 
-  static get getTableName() {
+  get getTableName() {
     let tableName =
       this.options.tableName ??
-      this.tableName ??
-      getTableName(this.name, this.snakeCase);
+      this.model.tableName ??
+      getTableName(this.model.name, this.model.snakeCase);
     tableName = tableName.replaceAll(/\`/gi, "").split(".").join("`.`");
     return `\`${tableName}\``;
   }
 
-  static get getTimestamps() {
-    return this.options.timestamps ?? this.timestamps;
+  get getTimestamps() {
+    return this.options.timestamps ?? this.model.timestamps;
   }
 
-  static get getCreatedAt() {
-    return this.options.createdAt ?? this.createdAt;
+  get getCreatedAt() {
+    return this.options.createdAt ?? this.model.createdAt;
   }
 
-  static get getUpdatedAt() {
-    return this.options.updatedAt ?? this.updatedAt;
+  get getUpdatedAt() {
+    return this.options.updatedAt ?? this.model.updatedAt;
   }
 
-  static get getLogicalDeleted() {
-    return this.options.logicalDelete ?? this.logicalDelete;
+  get getLogicalDeleted() {
+    return this.options.logicalDelete ?? this.model.logicalDelete;
   }
 }

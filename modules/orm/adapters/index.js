@@ -3,7 +3,7 @@ const path = require("path");
 
 export default (model) => {
   try {
-    global.dbConn = dbConfig(model.connection);
+    global.dbConn = dbConfig(model.model.connection);
     const adapter = require(`./${global.dbConn.driver}`).default;
     adapter.setModel(model);
     return adapter;
