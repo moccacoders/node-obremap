@@ -1,0 +1,17 @@
+{
+  "presets": [
+    "@babel/env"
+  ],
+  "plugins" : [
+  	"@babel/plugin-proposal-class-properties",
+    [
+      "module-resolver", {
+        "root": ["./modules"],
+        "alias" : {
+          "tests" : "./tests"
+        }
+      }
+    ]
+    
+  ]
+}

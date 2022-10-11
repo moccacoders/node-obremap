@@ -1,0 +1,21 @@
+// THIS SEEDER FILE WAS CREATED BY OBREMAP CLI
+const { Seeder, DB } = require("#__MODULE_NAME__#");
+module.exports = class #__SEEDER_NAME__# extends Seeder{
+	/**
+	 * Run seeder #__SEEDER_NAME__#.
+	 * @return void
+	 */
+	static run() {
+	/*
+		DB.table('#__TABLE_NAME__#').truncate();
+		return DB.table('#__TABLE_NAME__#')
+			.setTimestamps(#__TIMESTAMPS__#)
+			.set([
+				{
+					#__FIELDS__#
+				}
+			])
+			.insert();
+	*/
+	}
+}

@@ -1,0 +1,15 @@
+// THIS SEED CONTAINER FILE WAS CREATED BY OBREMAP CLI
+const { Seeder } = require("#__MODULE_NAME__#");
+#__IMPORTS__#
+
+module.exports = class SeedContainer extends Seeder {
+	/**
+	 * Set seed container.
+	 * @return void
+	 */
+	static run() {
+		this.call([
+			#__CALLS__#
+		])
+	}
+}

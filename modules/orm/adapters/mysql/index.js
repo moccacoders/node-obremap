@@ -1,803 +1,564 @@
-import connection from './connection'
-import QueryBuilder from './builders/query.builder'
-import SchemaBuilder from './builders/schema.builder'
-import FakerBuilder from './builders/faker.builder'
-import { getTableName } from '../../../global/get-name'
-import moment from 'moment';
+import mysql from "mysql";
+import _ from "lodash";
+import { connect, format as formatSQL } from "./connection";
+import SchemaBuilder from "./builders/schema.builder";
+import FakerBuilder from "./builders/faker.builder";
+import QueryBuilder from "./builders/query.builder";
+import { DB } from "/";
 
 class MysqlAdapter {
   model = null;
   joins = null;
-  supportedCastTypes = [
-    'array',
-    'boolean',
-    'date',
-    'datetime',
-    'decimal',
-    'double',
-    'float',
-    'integer',
-    'object',
-    'string',
-    'timestamp'
-  ];
+  supportedCastTypes = {
+    array: (val) => val.split(","),
+    boolean: (val) => Boolean(val),
+    date: (val) => this.model.model.formatDate(val),
+    datetime: (val) => this.model.model.formatDate(val),
+    decimal: (val) => parseFloat(val),
+    double: (val) => parseFloat(val),
+    float: (val) => parseFloat(val),
+    integer: (val) => parseInt(val),
+    object: (val) => JSON.parse(val),
+    string: (val) => String(val),
+    timestamp: (val) => this.model.model.formatDate(val),
+  };
+  log = {
+    sql: null,
+    bindings: [],
+    time: { start: null, end: null },
+  };
 
-  /*
-    Generic Adapter Methods (these should be in every adapter)
-    select, create, queryBuilder, getJoins, makeRelatable
-  /*
-
-
-    Builds the mysql query, used query builder and root model class
-  */
-  select({ model, select, where, limit, joins = [], orderBy, offset, orWhere, toSql, sync, first, groupBy, with : withRelation = false }) {
+  setModel(model) {
+    this.log.time.start = model.model.formatDate(new Date(), true);
     this.model = model;
-    if(model.sync) sync = true;
-    let joinsSQL = false;
-    if(joins[0] === true){
-      joinsSQL = true;
-      joins.splice(0,1);
-    }
-
-    this.joins = joins;
-
-    if(typeof orderBy == "object"){
-      orderBy = Object.entries(orderBy).map((elem, ind) => {
-        const [key, val] = elem;
-        if(!isNumeric(key)) return `\`${key}\` ${val.toUpperCase()}`
-        else return val
-      });
-    }
-    if(typeof orderBy == "string") orderBy = [orderBy];
-    if(typeof groupBy == "string") groupBy = [groupBy];
-    
-    if(orWhere && typeof orWhere == "object"){
-      let newOrWhere = (orWhere[0]) ? orWhere : [orWhere];
-      orWhere = [];
-
-      newOrWhere.map(object => {
-        if(typeof object == "object")
-          Object.entries(object).map(obj => {
-            let [key, val] = obj;
-            let operator = `${val}`.match(/^(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
-            if(!operator) operator = ["="];
-            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-            if(val === "null" || val === null){
-              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-              operator[0] = "";
-            }else{
-              val = connection.async.escape(val);
-            }
-            orWhere.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-          })
-        else orWhere.push(object)
-      })
-
-      orWhere = orWhere.join(" OR ");
-    }
-
-    if(where && typeof where == "object"){
-      let newWhere = (where[0]) ? where : [where];
-      where = [];
-
-      newWhere.map(object => {
-        if(typeof object == "object")
-          Object.entries(object).map(obj => {
-            let [key, val] = obj;
-            let operator = `${val}`.match(/^(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
-            if(!operator) operator = ["="];
-            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-            if(val === "null" || val === null){
-              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-              operator[0] = "";
-            }else{
-              val = connection.async.escape(val);
-            }
-            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-          })
-        else where.push(object)
-      })
-
-      where = where.join(" AND ")
-    }
-
-    select = select ? (sync ? this.selectSync(select, model.getTableName, joins) : select) : [];
-    let joinsSelect = joins && sync ? this.joinsSelect(joins, model.getTableName, select, withRelation) : [];
-    select = joinsSelect.length > 0 && !withRelation ? joinsSelect : select;
-    const options = {
-      sql: `SELECT ${select.length > 0 ? ( Array.isArray(select) && !withRelation ? select.join(',') : select) : '*'} FROM ${model.getTableName}${!withRelation ? this.getJoins(joins, joinsSQL).join(" ") : ''}${where ? ` WHERE ${where}` : ''}${orWhere ? `${!where ? " WHERE " : " OR "}${orWhere}` : ""}${groupBy ? ` GROUP BY ${groupBy.join(", ")}` : ''}${orderBy ? ` ORDER BY ${orderBy.join(", ").replace(/asc/g, "ASC").replace(/desc/g, "DESC")}` : ''}${limit ? ` LIMIT ${offset !== undefined ? `${offset},` : ""}${limit}` : ''}`,
-      nestTables: joins.length > 0 && joinsSQL
-    }
-    options.sql = connection.async.format(options.sql);
-    options.sql = options.sql.replace(/(\"|\')(true|false)(\"|\')/, "$2");
-    if(withRelation) options.sql = `SELECT ${model.getTableName}.*,${joinsSelect.join(',')} FROM (${options.sql}) AS ${model.getTableName} ${this.getJoins(joins, joinsSQL).join(" ")}`;
-    if(toSql) return options.sql;
-
-    if(sync){
-      let results = connection.sync.query(options.sql)
-      if(joins.length > 0 && typeof joins == "object")
-        results = this.mergeSyncJoins(results, joins, joinsSQL);
-      if(/count_obremap_rows/.test(select))
-        results = results[0].count_obremap_rows;
-      if(first == 1)
-        results = results[0]
-
-      return this.attributeCasting({model, results});
-      // return results;
-    }
-
-    return new Promise((resolve, reject) => {
-
-
-      connection.async.query(options,  (error, results) => {
-        if(error) return reject(error)
-
-        if(/count_obremap_rows/.test(select)) resolve(results[0].count_obremap_rows);
-        if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
-        results = this.attributeCasting({model, results});
-        resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
-      })
-    })
+    this.options = model.options;
+    this.init = model.init;
   }
 
-  selectSync (select, originalTable, joins) {
-    let newSelect = [];
-    let funct = null;
-    if(typeof select == "string") select = [connection.async.format(select)];
-    select.map(s => {
-      if (s.search(/((.+)\.)?\*$/i) >= 0){
-        let noTable = true;
-        let table = originalTable;
-        let col = s;
-        
-        if(s.search(/((.+)\.\*)/) >= 0){
-          noTable = false;
-          [table, col] = s.split('.')
+  /**
+   *
+   * @param {Object} SqlOptions
+   * @param { String } SqlOptions.sql
+   * @param { Array } SqlOptions.values
+   * @returns MySQL Collection
+   * @throws Promise rejection
+   */
+  sql(
+    { sql, values, nestTables = true, format = false, direct = false },
+    formatResponse
+  ) {
+    return new Promise((resolve, reject) => {
+      const _reject = (err) => {
+        this.init();
+        return reject(err);
+      };
+
+      const _resolve = (res) => {
+        this.init();
+        return resolve(res);
+      };
+
+      const connection = connect();
+      this.log.sql = sql;
+      this.log.bindings = values;
+      if (format) sql = formatSQL(sql);
+      connection.query(
+        {
+          sql,
+          nestTables,
+          values,
+        },
+        (err, res, fields) => {
+          if (direct && this.model.tableName != fields[0].table)
+            this.model.table(fields[0].table);
+          connection.end();
+          this.log.time.end = this.model.model.formatDate(new Date(), true);
+          DB.logQuery(
+            this.log.sql,
+            this.log.bindings,
+            DB.getDifferenceDate(this.log.time.start, this.log.time.end)
+          );
+          if (err) _reject(err);
+          try {
+            if (nestTables) res = this.processNestTables(res);
+            if (formatResponse) res = formatResponse(res);
+            if (
+              this.model.model.casts &&
+              Object.entries(this.model.model.casts).length > 0
+            )
+              res = this.processCasts(res);
+            _resolve(res);
+          } catch (err) {
+            _reject(err);
+          }
         }
-        newSelect.push(`${joins.length == 0 || (joins.length > 0 && !noTable) || originalTable != table ? `\`${table}\`.` : ''}${col}`);
-      }
-      newSelect.push(connection.async.format(s));
-    })
-    return newSelect;
-  }
-
-  joinsSelect(joins, originalTable, select, withRelation) {
-    let newSelect = [];
-    if(select.length > 0){
-      let tables = select.map(ele => {
-        let matches = ele.match(/\`?(.*)\`?\./)
-        if(matches || ele === '*') return matches ? matches[1] : ele;
-      }).filter(ele => ele);
-
-      joins = joins.filter(ele => {
-        let matches = ele.includeTable.match(/(.*) as (.*)/);
-        return (matches && (tables.includes(matches[2])) || tables.includes(ele.includeTable) || tables.includes('*'));
-      });
-    }
-
-    if(!withRelation) joins = [{ includeTable:originalTable }, ...joins];
-    joins.map((join, ind) => {
-      let table = join.includeTable;
-      let tableName = null;
-      let columns = [];
-      let search = false;
-
-      if(join.includeTable.search(/ as /i) >= 0){
-        table = join.includeTable.split(/ as /i)[1]
-        tableName = join.includeTable.split(/ as /i)[0];
-      }
-
-      select.map(field => {
-        let newTable = originalTable;
-        let col = field;
-        if(field.search(/(.*)\./) >= 0) [ newTable, col ] = field.split('.');
-        newTable = newTable.replace(/\`/g, '');
-        if(col != '*' && ((newTable === table || newTable === undefined) && (!withRelation && ind == 0))) columns.push(field);
-        else if (newTable === table) search = true;
-      })
-
-      if(columns.length > 0 && !search) return newSelect.push(columns);
-      connection.sync.query(`SHOW COLUMNS FROM ${tableName || table}`).filter(column => {
-        columns.push(`\`${table}\`.\`${column.Field}\` AS \`${(withRelation || ind != 0) ? `${table}_table_` : ""}${column.Field}\``);
-      })
-      newSelect.push(columns);
-    })
-    return newSelect;
-  }
-
-  /*
-    create a row in the database
-  */
-
-  create({ model, data }) {
-    this.model = model;
-    if(data.length == undefined || data.length == 0) data = [data];
-    let d = [];
-    let v = [];
-    data.map(item => {
-      if(model.timestamps === true){
-        if(model.createdAt && !item[model.createdAt]) item[model.createdAt] = model.currentDate;
-        if(model.updatedAt && !item[model.updatedAt]) item[model.updatedAt] = model.currentDate;
-      }
-      let o = [];
-      Object.entries(item).map(obj => {
-        let [key, val] = obj;
-        if(!v.includes(key))
-          v.push(key);
-
-        o.push(val);
-      })
-      d.push(o)
-    })
-
-    data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
-    data[model.updatedAt] = moment(data[model.updatedAt]).format(model.getDateFormat());
-
-    return new Promise((resolve, reject) => {
-      connection.async.query(`INSERT INTO ${model.getTableName} (??) VALUES ?`, [v,d],  (error, result) => {
-        if(error) return reject(error)
-        resolve(this.makeRelatable({
-          ...data[0],
-          ...{id: result.insertId}
-        }, model))
-      })
-    })
-  }
-
-  createSync({ model, data, timestamps, createdAt, updatedAt }) {
-    this.model = model;
-    if(data.length == undefined || data.length == 0) data = [data];
-    let d = [];
-    let v = [];
-    data.map(item => {
-      timestamps = timestamps !== undefined ? timestamps : model.timestamps;
-      createdAt = createdAt !== undefined ? createdAt : model.createdAt;
-      updatedAt = updatedAt !== undefined ? updatedAt : model.updatedAt;
-
-      if(timestamps === true){
-        if(createdAt && !item[createdAt]) item[createdAt] = model.currentDate;
-        if(updatedAt && !item[updatedAt]) item[updatedAt] = model.currentDate;
-      }
-
-      let o = [];
-      Object.entries(item).map(obj => {
-        let [key, val] = obj;
-        if(!v.includes(key))
-          v.push(key);
-
-        o.push(val);
-      })
-      d.push(o)
-    })
-    data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
-    data[model.updatedAt] = moment(data[model.updatedAt]).format(model.getDateFormat());
-    let sql = connection.async.format(`INSERT INTO ${model.getTableName} (??) VALUES ?`, [v,d]);
-    let results = connection.sync.query(sql)
-    let result = this.makeRelatable({
-      ...data[0],
-      ...{id: results.insertId}
-    }, model)
-    return result;
-  }
-
-  /*
-    update a row in the database
-  */
-  update({ model, data, id, where }) {
-    this.model = model;
-    if(typeof id != "object" && id != undefined)
-      where = { id };
-
-    if(model.timestamps === true){
-      data[model.updatedAt] = model.currentDate;
-    }
-
-    let idName = `${data[`${model.getTableName}.id`] ? `${model.getTableName}.` : ""}id`
-    if(data[idName] != undefined){
-      if(!where) where = {};
-      where[idName] = data[idName];
-      delete data[idName];
-    }
-
-    if(where && typeof where == "object"){
-      let newWhere = (where[0]) ? where : [where];
-      where = [];
-
-      newWhere.map(object => {
-        if(typeof object == "object")
-          Object.entries(object).map(obj => {
-            let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
-            if(!operator) operator = ["="];
-            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-            if(val === "null" || val === null){
-              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-              operator[0] = "";
-            }else{
-              val = connection.async.escape(val);
-            }
-            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-          })
-        else where.push(object)
-      })
-      where = where.join(" AND ")
-    }
-
-    if(data[model.createdAt]) data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
-    if(data[model.updatedAt]) data[model.updatedAt] = moment(data[model.updatedAt]).format(model.getDateFormat());
-    if(model.sync) return this.updateSync({ model, data, id, where })
-    return new Promise((resolve, reject) => {
-      if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
-      connection.async.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
-        if(error) return reject(error);
-        connection.async.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
-          resolve(this.makeRelatable({
-            ...res[0]
-          }, model))
-        });
-      })
-    })
-  }
-
-  updateSync({ model, data, id, where }) {
-    this.model = model;
-    if(typeof id != "object" && id != undefined)
-      where = { id };
-
-    if(model.timestamps === true){
-      data[model.updatedAt] = model.currentDate;
-    }
-
-    if(data[model.createdAt]) data[model.createdAt] = moment(data[model.createdAt]).format(model.getDateFormat());
-    if(data[model.updatedAt]) data[model.updatedAt] = moment(data[model.updatedAt]).format(model.getDateFormat());
-
-    let idName = `${data[`${model.getTableName}.id`] ? `${model.getTableName}.` : ""}id`
-    if(data[idName] != undefined){
-      if(!where) where = {};
-      where[idName] = data[idName];
-      delete data[idName];
-    }
-
-    if(where && typeof where == "object"){
-      let newWhere = (where[0]) ? where : [where];
-      where = [];
-
-      newWhere.map(object => {
-        if(typeof object == "object")
-          Object.entries(object).map(obj => {
-            let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
-            if(!operator) operator = ["="];
-            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-            if(val === "null" || val === null){
-              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-              operator[0] = "";
-            }else{
-              val = connection.async.escape(val);
-            }
-            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-          })
-        else where.push(object)
-      })
-      where = where.join(" AND ")
-    }
-
-    let queryValues = [];
-    Object.entries(data).map(obj => {
-      let [key, value] = obj;
-      if(value && value.constructor && value.constructor.name == "Date") value = moment(value).format(model.getDateFormat());
-      queryValues.push(`\`${model.getTableName}\`.\`${key}\` = ${connection.async.escape(value)}`);
+      );
     });
-
-    if(where == undefined || !where || where == "") throw new Error("Missing 'id' value or where object. [integer, object]");
-    let result = connection.sync.query(`UPDATE ${model.getTableName} SET ${queryValues.join(", ")} WHERE ${where}`);
-    if(result.affectedRows > 0){
-      let res = connection.sync.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`);
-      return this.makeRelatable({
-        ...res[0]
-      }, model)
-    }
-
-    // return new Promise((resolve, reject) => {
-    //   if(id == undefined || !id) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
-    //   connection.async.query(`UPDATE ${model.getTableName} SET ? WHERE ${where}`, data, (error, result) => {
-    //     if(error) return reject(error);
-    //     connection.async.query(`SELECT * FROM ${model.getTableName} WHERE ${where}`, (error, res) => {
-    //       resolve(this.makeRelatable({
-    //         ...res[0]
-    //       }, model))
-    //     });
-    //   })
-    // })
   }
 
-  /*
-    sql
-  */
+  all() {
+    const { sql } = this.processSQL();
+    return this.sql({ sql });
+  }
 
-  sql({ sql, values, sync = false }) {
-    const options = {
-      sql : connection.async.format(sql, values),
-      nestTables: true
-    }
+  first(formatResponse = undefined) {
+    this.options.limit = 1;
+    const { sql, values } = this.processSQL();
+    return this.sql(
+      { sql, values, nestTables: false },
+      formatResponse ?? ((res) => res[0])
+    );
+  }
 
-    if(sync){
-      let results = connection.sync.query(options.sql)
-      return results;
-    }
+  last() {
+    this.options = { orderBy: [this.model.model.primaryKey, "DESC"], limit: 1 };
+    const { sql } = this.processSQL();
+    return this.sql({ sql });
+  }
 
+  count() {
+    this.options.select = [`COUNT(*) as count`];
+    const { sql, values } = this.processSQL();
+    return this.sql({ sql, values, nestTables: false }, (res) => {
+      return res[0].count;
+    });
+  }
+
+  max(column) {
+    this.options.select = [`MAX(${column}) as max`];
+    const { sql } = this.processSQL();
+    return this.sql({ sql, nestTables: false }, (res) => {
+      return res[0].max;
+    });
+  }
+
+  min(column) {
+    this.options.select = [`MIN(${column}) as min`];
+    const { sql } = this.processSQL();
+    return this.sql({ sql, nestTables: false }, (res) => {
+      return res[0].min;
+    });
+  }
+
+  sum(column) {
+    this.options.select = [`SUM(${column}) as sum`];
+    const { sql } = this.processSQL();
+    return this.sql({ sql, nestTables: false }, (res) => {
+      return res[0].sum;
+    });
+  }
+
+  avg(column) {
+    this.options.select = [`AVG(${column}) as avg`];
+    const { sql } = this.processSQL();
+    return this.sql({ sql, nestTables: false }, (res) => {
+      return res[0].avg;
+    });
+  }
+
+  get() {
+    const { sql, values } = this.processSQL();
+    return this.sql({ sql, values });
+  }
+
+  toSql(showValues = false, type = "select") {
     return new Promise((resolve, reject) => {
-      connection.async.query(options,  (error, results) => {
-        if(error) return reject(error)
-        resolve(results)
-
-        // if(/COUNT\(([\w]+)\)/.test(select)) resolve(results[0].count);
-        // if(joins.length > 0 && typeof joins == "object") results = this.mergeInJoins(results, joins, joinsSQL);
-        // resolve(this.makeRelatable(limit === 1 ? results[0] : results, model))
-      })
-    })
+      try {
+        let { sql, values } = this.processSQL(type);
+        if (showValues) sql = mysql.format(sql, values);
+        this.init();
+        resolve(sql);
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
-
-  /*
-    delete a row in the database
-  */
-  delete({ model, id, where }) {
-    this.model = model;
-    if(typeof id != "object" && id != undefined)
-      where = { id };
-
-    if(where && typeof where == "object"){
-      let newWhere = (where[0]) ? where : [where];
-      where = [];
-
-      newWhere.map(object => {
-        if(typeof object == "object")
-          Object.entries(object).map(obj => {
-            let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
-            if(!operator) operator = ["="];
-            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-            if(val === "null" || val === null){
-              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-              operator[0] = "";
-            }else{
-              val = connection.async.escape(val);
-            }
-            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-          })
-        else where.push(object)
-      })
-      where = where.join(" AND ")
-    }
-
-    if(model.sync) return this.deleteSync({ model, id, where })
-    return new Promise((resolve, reject) => {
-      if(!where) return reject(new Error("Missing 'id' value or where object. [integer, object]"));
-      connection.async.query(`DELETE FROM ${model.getTableName} WHERE ${where}`, (error, result) => {
-        if(error) return reject(error);
-        resolve(result, model);
-      })
-    })
+  value() {
+    return this.first((res) => {
+      return res[0].username;
+    });
   }
 
-  deleteSync({ model, id, where }) {
-    this.model = model;
-    if(typeof id != "object" && id != undefined)
-      where = { id };
-
-    if(where && typeof where == "object"){
-      let newWhere = (where[0]) ? where : [where];
-      where = [];
-
-      newWhere.map(object => {
-        if(typeof object == "object")
-          Object.entries(object).map(obj => {
-            let [key, val] = obj;
-            let operator = `${val}`.match(/(=|!=|<=>|<>|>=|>|<=|<|like |in )/i);
-            if(!operator) operator = ["="];
-            val = `${val}`.replace(operator[0], "").replace(/ /i, "");
-            if(val === "null" || val === null){
-              val = ["!=", "<>", "<=>"].includes(operator[0]) ? "IS NOT NULL" : "IS NULL";
-              operator[0] = "";
-            }else{
-              val = connection.async.escape(val);
-            }
-            where.push(`${connection.async.escapeId(key)} ${operator[0]} ${val}`);
-          })
-        else where.push(object)
-      })
-      where = where.join(" AND ")
-    }
-
-    if(!where) throw new Error("Missing 'id' value or where object. [integer, object]");
-    let result = connection.sync.query(`DELETE FROM ${model.getTableName} WHERE ${where}`);
-    return result;
+  update() {
+    const { sql, values } = this.processSQL("update");
+    return this.sql({ sql, values, nestTables: false });
   }
 
+  insert() {
+    const { sql, values } = this.processSQL("insert");
+    return this.sql({ sql, values, nestTables: false });
+  }
 
-  /*
-    returns a new query builder instance
-  */
-  queryBuilder(options) {
-    return new QueryBuilder(options)
+  delete() {
+    const { sql, values } = this.processSQL("delete");
+    return this.sql({ sql, values, nestTables: false });
+  }
+
+  truncate() {
+    const { sql } = this.processSQL("truncate");
+    return this.sql({ sql, nestTables: false });
+  }
+
+  createTable({
+    options: { fields },
+    getCharset: charset,
+    getEngine: engine,
+    getCollation: collation,
+  }) {
+    fields = this.processFields(fields).join(", ");
+    const sql = `CREATE TABLE ${this.model.getTableName} (${fields}) DEFAULT CHARACTER SET ${charset} COLLATE '${collation}' ENGINE = ${engine}`;
+    return this.sql({ sql, format: true });
+  }
+
+  alterTable({ options: { fields, drop, column, ...options } }) {
+    fields = this.processFields(fields).join(", ");
+    let modify = /(modify|rename) column/i.test(fields);
+    if (drop) fields = `\`${column}\``;
+    const sql = `ALTER TABLE ${this.model.getTableName} ${
+      modify ? "" : `${drop ? "DROP" : "ADD"} COLUMN `
+    }${fields}`;
+    return this.sql({ sql, format: true });
+  }
+
+  dropTable({ options: { ifExists } }) {
+    let sql = `DROP TABLE ${ifExists === true ? "IF EXISTS " : ""}${
+      this.model.getTableName
+    }`;
+    return this.sql({ sql, format: true });
   }
 
   /*
     returns a new schema builder instance
   */
-  schemaBuilder(options) {
-    return new SchemaBuilder(options)
+
+  queryBuilder(options = {}) {
+    return new QueryBuilder(options);
+  }
+
+  schemaBuilder(options = {}) {
+    return new SchemaBuilder(options);
   }
 
   /*
     returns a new faker builder instance
   */
   fakerBuilder(options) {
-    return new FakerBuilder(options)
+    return new FakerBuilder(options);
   }
 
-  /*
-    creates join query from any model realtionships
-    used on eager loads
-  */
-  getJoins(joins, joinsSQL) {
-    if(typeof joins == "object" && !joinsSQL) return [];
-    return joins.map(join => {
-      let split = join.includeTable.split(" as ");
-      return ` ${join.type} JOIN \`${split[0]}\`${(split[1]) ? ` AS ${split[1]}` : ''} ON ${join.localField} ${join.operator} ${join.remoteField}`;
-    })
-  }
+  processSQL(type = "select") {
+    const model = this.model;
+    let sql = "";
+    let { joins, values: joinValues } = this.processJoins();
+    let { where, values } = this.processWhere(model.options?.where);
+    const limit = `${
+      model.options?.limit ? ` LIMIT ${model.options.limit}` : ""
+    }`;
+    const offset = `${
+      model.options?.offset ? ` OFFSET ${model.options.offset}` : ""
+    }`;
+    const orderBy = this.processOrderBy();
+    const groupBy = this.processGroupBy();
 
-
-  /*
-    Proxy object that returns item from resulting query
-    or will check for a relationship on the model
-    and return a promise.
-
-    ex
-    result.id -> returns `id` on the result Object
-
-    result.users
-      -> returns users if extists on the object.
-         otherwise, checks for `users` function on the
-         model and returns the related query promise
-  */
-
-  makeRelatable(result, model) {
-    if(result.id == null || result.id == 0) delete result.id;
-    return new Proxy(result, {
-      get(target, name) {
-        if(name in target && target[name] != null) return target[name]
-        if(getTableName(name, model.snakeCase) in target) return target[getTableName(name, model.snakeCase)]
-
-        let instance = new model(result)
-        if(name in instance) return instance[name]().result()
-      }
-    })
-  }
-
-  /*
-    MYSQL SPECIFIC METHODS
-  */
-
-
-  /*
-    Joins nested tables for when eager loading a relationship
-
-    converts
-    {
-      users: { name: 'Bob'},
-      chats: {...},
+    let { columns, values: updateValues } = ["update", "insert"].includes(type)
+      ? this.processColumns(type)
+      : { columns: "", values: [] };
+    switch (type) {
+      case "update":
+        values = [...updateValues, ...values];
+        sql = `UPDATE ${model.getTableName} SET ${columns}${joins}${where}${orderBy}${limit}${offset}`;
+        break;
+      case "insert":
+        values = [...updateValues, ...values];
+        sql = `INSERT INTO ${model.getTableName} ${columns}`;
+        break;
+      case "delete":
+        sql = `DELETE FROM ${model.getTableName}${joins}${where}${groupBy}${orderBy}${limit}${offset}`;
+        break;
+      case "truncate":
+        values = [...updateValues, ...values];
+        sql = `TRUNCATE TABLE ${model.getTableName}`;
+        break;
+      default:
+        sql = `SELECT ${this.processSelect(model.options?.select)} FROM ${
+          model.getTableName
+        }${joins}${where}${groupBy}${orderBy}${limit}${offset}`;
     }
-    to
-    {
-      name: 'Bob',
-      chats: {...}
-    }
-  */
-  mergeInJoins(results, joins, joinsSQL) {
-    let response = [];
-    results.map((result, ind) => {
-      let newResult = {};
-      Object.keys(result).forEach((item, index) => {
-        if(index==0) return newResult = result[item]
-
-        // if(typeof joins == "object" && !joinsSQL){
-        //   Object.entries(joins).map(obj => {
-        //     let [key, val] = obj;
-        //     let localFieldSplit = val.localField.split(".");
-        //     let localField = localFieldSplit[localFieldSplit.length - 1];
-        //     newResult[key] = val.result({[val.localField] : newResult[localField]});
-        //   });
-        // }
-        
-        newResult[item] = result[item]
-      })
-      response[ind] = newResult
-    })
-    return response;
+    return { sql, values };
   }
 
-  mergeSyncJoins (results, joins, joinsSQL) {
-    let response = [];
-    let unique = this.getUniqueColumn(this.model.getTableName);
-    results.map(result => {
-      let obj = {};
-      Object.entries(result).map(object => {
-        let [key, value] = object;
-        if(key.search(/_table_/i) >= 0){
-          let match = key.split(/_table_/i);
-          if(!obj[match[0]] || typeof obj[match[0]] != "object") obj[match[0]] = {};
-          obj[match[0]][match[1]] = value;
+  processColumns(type = "update") {
+    let { set } = this.options;
+    set = set ?? [];
+    if (!Array.isArray(set)) set = [set];
+    let columns = _.uniq(
+      _.flatten(
+        set.map((item) => {
+          let keys = Object.keys(item);
+          if (this.model.getTimestamps) {
+            if (type === "update") keys.push(this.model.getUpdatedAt);
+            if (type === "insert") keys.push(this.model.getCreatedAt);
+          }
+          return keys;
+        })
+      )
+    );
+    let values = [
+      set.map((item) => {
+        let values = Object.values(item);
+        if (this.model.getTimestamps) {
+          values.push(this.model.model.currentDate);
         }
-        else
-          obj[key] = value;
+        return values;
+      }),
+    ];
+    if (type === "insert") columns = `(\`${columns.join("`, `")}\`) VALUES ?`;
+    if (type === "update") columns = `SET \`${columns.join("` = ?, `")}\` = ?`;
+
+    return {
+      columns,
+      values,
+    };
+  }
+
+  processSelect(select) {
+    return !select || select.length == 0
+      ? "*"
+      : `${select
+          .map((s) => {
+            if (/ as /gi.test(s)) {
+              s = s.split(" as ");
+              s = `${/\(/gi.test(s[0]) ? `${s[0]}` : `\`${s[0]}\``} AS \`${
+                s[1]
+              }\``;
+            } else {
+              s = `\`${s}\``;
+            }
+            return s;
+          })
+          .join(", ")}`;
+  }
+
+  processWhere(where) {
+    if (!where || where.length === 0) return { where: "", values: [] };
+    let values = [];
+    where = where
+      .map((item, ind) => {
+        let {
+          column,
+          operator,
+          value,
+          orWhere: or,
+          separator,
+          parenthesis,
+          isFunction,
+        } = item;
+
+        if (typeof column === "object") {
+          let isOr = false;
+          item = `(${item
+            .map((item, idx) => {
+              let {
+                column,
+                operator,
+                value,
+                orWhere,
+                separator,
+                parenthesis,
+                isFunction,
+              } = item;
+
+              isOr = orWhere;
+              if (Array.isArray(value)) values = [...values, ...value];
+              else values.push(value);
+              value = Array.isArray(value)
+                ? `${parenthesis ? "(" : ""}${value
+                    .map(() => "?")
+                    .join(separator)}${parenthesis ? ")" : ""}`
+                : value
+                ? "?"
+                : "";
+              if (isFunction)
+                return `${idx !== 0 ? "AND " : ""}${isFunction}(\`${column}\`${
+                  !operator ? `, ${value}` : ""
+                })${operator ? ` ${operator} ${value}` : ""}`;
+              return `${
+                idx !== 0 ? "AND " : ""
+              }\`${column}\` ${operator} ${value}`;
+            })
+            .join(" ")})`;
+          return `${ind !== 0 ? (isOr ? "OR " : "AND ") : ""}${item}`;
+        } else {
+          if (Array.isArray(value)) values = [...values, ...value];
+          else values.push(value);
+          value = Array.isArray(value)
+            ? `${parenthesis ? "(" : ""}${value
+                .map(() => "?")
+                .join(separator)}${parenthesis ? ")" : ""}`
+            : value
+            ? "?"
+            : "";
+          if (isFunction)
+            return `${
+              ind !== 0 ? (or ? "OR " : "AND ") : ""
+            }${isFunction}(\`${column}\`${!operator ? `, ${value}` : ""})${
+              operator ? ` ${operator} ${value}` : ""
+            }`;
+          return `${
+            ind !== 0 ? (or ? "OR " : "AND ") : ""
+          }\`${column}\` ${operator} ${
+            Array.isArray(value)
+              ? `${parenthesis ? "(" : ""}${value
+                  .map(() => "?")
+                  .join(separator)}${parenthesis ? ")" : ""}`
+              : value
+              ? "?"
+              : ""
+          }`;
+        }
       })
-      response.push(obj);
-    })
+      .join(" ");
+    where = ` WHERE ${where}`;
+    values = values.filter((ele) => ele);
+    return { where, values };
+  }
 
-    let newResponse = [];
-    response.map(obj => {
-      let objInd = unique ? newResponse.findIndex(e => e[unique] == obj[unique]) : -1;
-      if(objInd >= 0) {
-        Object.entries(obj).map(obj => {
-          const [ key, val ] = obj;
-          let regex = new RegExp(key);
-          let join = this.joins.find(e => e.alias ? regex.test(e.alias) : e.includeTable == key);
-          if (join && join.many) newResponse[objInd][key].push(val);
-        })
-      } else {
-        Object.entries(obj).map(o => {
-          const [ key, val ] = o;
-          let regex = new RegExp(key);
-          let join = this.joins.find(e => e.alias ? regex.test(e.alias) : e.includeTable == key);
-
-          if (join && join.many) obj[key] = [val];
-          return obj;
-        })
-
-        newResponse.push(obj);
+  processJoins() {
+    const values = [];
+    if (!this.options?.joins) return { joins: "", values };
+    let joins = this.options.joins.map(
+      ({ table, first, operator, second, type, where }) => {
+        table = `\`${table.replaceAll(/\`/gi, "").split(".").join("`.`")}\``;
+        if (where) values.push(where);
+        return `${type.toUpperCase()} JOIN \`${table}\` ON \`${first}\` ${operator} ${
+          where ? "?" : `\`${second}\``
+        }`;
       }
-    })
-  
+    );
+    if (joins.length > 0) joins = ` ${joins.join(" ")}`;
+    return { joins, values };
+  }
+
+  processGroupBy() {
+    let { groupBy } = this.options;
+    if (!groupBy || groupBy.length === 0) return "";
+    groupBy = groupBy.map((group) => {
+      return `${/\`/.test(group) ? group : `\`${group}\``}`;
+    });
+    return ` GROUP BY ${groupBy.join(", ")}`;
+  }
+
+  processOrderBy() {
+    let { orderBy } = this.options;
+    if (!orderBy || orderBy.length === 0) return "";
+    orderBy = orderBy.map((order) => {
+      return `${/\`/.test(order[0]) ? order[0] : `\`${order[0]}\``} ${
+        order[1]
+      }`;
+    });
+    return ` ORDER BY ${orderBy.join(", ")}`;
+  }
+
+  processNestTables(response) {
+    if (
+      response.constructor.name == "OkPacket" ||
+      (Array.isArray(response) && response.length === 0)
+    )
+      return response;
+    if (
+      response[0] &&
+      Object.keys(response[0]).findIndex((ele) =>
+        ["max", "min", "sum", "avg", "count"].includes(ele)
+      ) >= 0
+    )
+      return response;
+
+    let tableName = this.model.getTableName.replaceAll(/\`/gi, "").split(".");
+    tableName = tableName[tableName.length - 1];
+    const newResponse = [];
+    response.map((res) => {
+      Object.entries(res).map((obj) => {
+        const [key, val] = obj;
+        let idx;
+        if (key === tableName) {
+          idx = newResponse.findIndex((ele) =>
+            ele[this.model.model.primaryKey]
+              ? ele[this.model.model.primaryKey] ===
+                val[this.model.model.primaryKey]
+              : false
+          );
+          if (idx < 0) return newResponse.push(val);
+          else return;
+        }
+        const ind = idx >= 0 ? idx : newResponse.length - 1;
+        if (ind >= 0) {
+          if (!newResponse[ind][key]) newResponse[ind][key] = [];
+          if (Object.entries(val).filter((obj) => obj[1]).length === 0) return;
+          newResponse[ind][key].push(val);
+        }
+      });
+    });
     return newResponse;
   }
 
-  createTable ({ options, model, fields, alterTables, engine, charset, collation }) {
-    fields = this.processFields(fields).join(", ");
-    let sql = `create table \`${model.tableName}\` (${fields}) default character set ${charset} collate '${collation}' engine = ${engine}`;
-    sql = connection.async.format(sql);
-    return connection.sync.query(sql);
+  processCasts(response) {
+    const { casts } = this.model;
+    if (typeof response !== "object" || !Array.isArray(response) || !casts)
+      return response;
+    response.map((res) => {
+      Object.entries(casts).map((cast) => {
+        if (res[cast[0]])
+          res[cast[0]] = this.supportedCastTypes[cast[1]](res[cast[0]]);
+      });
+    });
+    return response;
   }
 
-  alterTable ({ options, model, fields, alterTables, engine, charset, collation, drop, column }) {
-    fields = this.processFields(fields).join(", ");
-    let modify = /modify column/.test(fields);
-    if(drop) fields = `\`${column}\``;
-    let sql = `alter table \`${model.tableName}\` ${modify ? '' : `${drop ? "drop" : "add"} column `}${fields}`;
-    sql = connection.async.format(sql);
-    return connection.sync.query(sql);
-  }
-
-  dropTable ({ options, model }) {
-    let sql = `drop table ${options.ifExists === true ? "if exists " : ""}\`${model.tableName}\``;
-    sql = connection.async.format(sql);
-    return connection.sync.query(sql);
-  }
-
-  dropColumn ({ model, column }) {
-    this.model = model;
-    let sql = `alter table ${model.tableName} drop column \`${column}\``;
-    return true;
-  }
-
-  truncateTable (model) {
-    let sql = `truncate table \`${model.tableName}\``;
-    sql = connection.async.format(sql);
-    return connection.sync.query(sql);
-  }
-
-
-  processFields(fields){
+  processFields(fields) {
     let uniques = [];
     let primaries = [];
-    fields = fields.map(field => {
-      if(field.primary) primaries.push(`\`${field.name}\``);
-      if(field.unique) uniques.push(`\`${field.name}\``);
+    if (!fields) return [];
+    fields = fields.map((field) => {
+      if (field.primary) primaries.push(`\`${field.name}\``);
+      if (field.unique) uniques.push(`\`${field.name}\``);
 
       let str = [];
-      str.push(`${field.modify ? "modify column " : ""}\`${field.name}\` ${field.type}`);
-      if(field.length && field.length > 0) str.push(`(${field.length})`);
-      if(field.unsigned) str.push("unsigned");
-      if(field.nullable) str.push("null");
-      else str.push("not null");
-      if(field.auto_increment) str.push("auto_increment");
-      if(field.default) str.push(`default ${["CURRENT_TIMESTAMP", "GETDATE()"].includes(field.default) ? field.default : `'${field.default}'`}`);
-      if(field.comment) str.push(`comment '${field.comment}'`);
-      if(field.after) str.push(`after \`${field.after}\``);
-      
-      return str.join(" ").trim();
-    })
+      str.push(
+        `${
+          field.modify ? `${field.rename ? "RENAME" : "MODIFY"} COLUMN ` : ""
+        }\`${field.name}\`${
+          field.type && !field.rename ? ` ${field.type}` : ""
+        }`
+      );
+      if (!field.rename) {
+        if (field.length && field.length > 0) str.push(`(${field.length})`);
+        if (field.unsigned) str.push("UNSIGNED");
+        if (field.nullable) str.push("NULL");
+        else str.push("NOT NULL");
+        if (field.auto_increment) str.push("AUTO_INCREMENT");
+        if (field.default)
+          str.push(
+            `DEFAULT ${
+              ["CURRENT_TIMESTAMP", "GETDATE()"].includes(field.default)
+                ? field.default
+                : `'${field.default}'`
+            }`
+          );
+        if (field.comment) str.push(`COMMENT '${field.comment}'`);
+        if (field.after) str.push(`AFTER \`${field.after}\``);
+      }
 
-    if(uniques.length > 0) fields.push(`unique (${uniques.join(", ")})`);
-    if(primaries.length > 0) fields.push(`primary key (${primaries.join(", ")})`);
+      if (field.rename) str.push(`TO \`${field.rename}\``);
+
+      return str.join(" ").trim();
+    });
+
+    if (uniques.length > 0) fields.push(`UNIQUE (${uniques.join(", ")})`);
+    if (primaries.length > 0)
+      fields.push(`PRIMARY KEY (${primaries.join(", ")})`);
     return fields;
   }
-
-
-  validateMigrations () {
-    return new Promise((resolve, reject) => {
-      connection.async.query(`SHOW TABLES`,  (error, results) => {
-        if(error) return reject(error)
-      })
-    })
-  }
-
-  attributeCasting ({model, results}) {
-    if(!results) return results;
-    let object = false;
-    let casts = {};
-    Object.entries(model.casts).filter(o=>this.supportedCastTypes.includes(o[1])).map(a=>casts[a[0]]=a[1])
-
-    if(casts.length == 0) return results;
-    if(Array.isArray(results) === false){
-      object = true;
-      results = [results];
-    }
-
-    results = results.map(result => {
-      let keys = Object.entries(result).map(o=>o[0]);
-      let castingKeys = keys.filter(k=>k in casts);  
-      castingKeys.map(k => {
-        let type = casts[k];
-        result[k] = this.casting(type, result[k]);
-      })
-      return result;
-    })
-
-    if(object) return results[0];
-    return results;
-  }
-
-  casting (type, data) {
-    if(data === undefined || data === null) return data;
-    switch(type){
-      case 'array':
-        return data.split(',');
-      case 'boolean':
-        return !!data;
-      case 'object':
-        return JSON.parse(data);
-      case 'date':
-      case 'datetime':
-      case 'timestamp':
-        return moment(data).format(type == 'date' ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH:mm:ss');
-      case 'decimal':
-      case 'double':
-      case 'float':
-        return parseFloat(data);
-      case 'integer':
-        return parseInt(data);
-      case 'string':
-        return String(data);
-      default:
-        return data;
-    }
-  }
-
-  getUniqueColumn (table) {
-    let unique = null;
-    connection.sync.query(`SHOW COLUMNS FROM ${table}`).map(column => {
-      if(/pri/i.test(column.Key || column.key || '')) unique = (column.Field || column.field);
-      if(/uni/i.test(column.Key || column.key || '')) unique = (column.Field || column.field);
-    })
-    return unique;
-  }
 }
 
-function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-export default new MysqlAdapter()
+export default new MysqlAdapter();

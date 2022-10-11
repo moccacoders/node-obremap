@@ -1,209 +1,605 @@
-import adapter from '../index'
+import adapter from "orm/adapters";
+import { getTableName } from "global/get-name";
+import _ from "lodash";
+import url from "url";
 
-export default class Builder {
-	constructor(options, model) {
-		this.options = options
-		this.model = model
-	}
+export default class QueryBuilder {
+  options = {};
+  operators = [
+    "=",
+    "<",
+    ">",
+    "<=",
+    ">=",
+    "<>",
+    "!=",
+    "<=>",
+    "like",
+    "like binary",
+    "not like",
+    "ilike",
+    "&",
+    "|",
+    "^",
+    "<<",
+    ">>",
+    "rlike",
+    "not rlike",
+    "regexp",
+    "not regexp",
+    "~",
+    "~*",
+    "!~",
+    "!~*",
+    "similar to",
+    "not similar to",
+    "not ilike",
+    "~~*",
+    "!~~*",
+    "in",
+    "not in",
+    "is null",
+    "is not null",
+    "between",
+    "not between",
+    "json_contains",
+    "not json_contains",
+    "json_length",
+    "not json_length",
+    null,
+  ];
 
-	table(table){
-		this.options.model.tableName = table;
-		return this;
-	}
+  constructor(model) {
+    this.setModel(model);
+    this.adapter = adapter(this);
+  }
 
-	timestamps (timestamps) {
-		this.options.timestamps = timestamps;
-		return this;
-	}
+  /**
+   * Execute a SQL query. In order to avoid SQL Injection attacks, you should always escape any user provided data before using it inside a SQL query.
+   * @param {string} sql - SQL query, use "?" instead of values to use escaping method.
+   * @param {array} values - These values will be used to be replaced in the escaping method.
+   * @returns
+   */
+  sql(sql, values = []) {
+    return this.adapter.sql({ sql, values, direct: true });
+  }
 
-	createdAt (createdAt) {
-		this.options.createdAt = createdAt;
-		return this;
-	}
+  /**
+   * The Obremap all() method will return all of the results in the model's table. Since each Obremap model serves as a query builder,
+   * you may also add constraints to queries, and then use the get method to retrieve the results.
+   * @returns Obremap Collection
+   */
+  all() {
+    return this.adapter.all();
+  }
 
-	updatedAt (updatedAt) {
-		this.options.updatedAt = updatedAt;
-		return this;
-	}
+  /**
+   * If you just need to retrieve a single row from the database table, you may use the first() method.
+   * This method will return a single Obremap object
+   * @returns Obremap object
+   */
+  first() {
+    return this.adapter.first();
+  }
 
-	join(includeTable, localField, operator, remoteField, type = "INNER"){
-		if(!["=", "<", ">", "!=", "<>", "<=", ">=", "<=>"].includes(operator)){
-			if(remoteField) type = remoteField;
-			remoteField = operator;
-			operator = "=";
-		}
-		let join = {
-			includeTable,
-			localField,
-			operator,
-			remoteField,
-			type : type.toUpperCase()
-		};
-		if(this.options.joins)
-			this.options.joins.push(join)
-		else this.options.joins = [join]
-		if(this.options.joins[0] !== true) this.options.joins.splice(0,0,true);
-		return this;
-	}
+  /**
+   * If you just need to retrieve a last row from the database table, you may use the last() method.
+   * This method will return a single Obremap object
+   * @returns Obremap object
+   */
+  last() {
+    return this.adapter.last();
+  }
 
-	orderBy(orderBy){
-		this.options.orderBy = orderBy
-		return this;
-	}
+  /**
+   * Get the count of seleced rows
+   * @returns Number
+   */
+  count() {
+    return this.adapter.count();
+  }
 
-	offset(offset){
-		this.options.offset = offset
-		return this;
-	}
+  max(column) {
+    return this.adapter.max(column);
+  }
 
-	limit(limit) {
-		this.options.limit = limit
-		return this
-	}
+  min(column) {
+    return this.adapter.min(column);
+  }
 
-	groupBy(groupBy) {
-		this.options.groupBy = groupBy
-		return this
-	}
+  sum(column) {
+    return this.adapter.sum(column);
+  }
 
-	select(...select) {
-		this.options.select = select
-		return this
-	}
+  avg(column) {
+    return this.adapter.avg(column);
+  }
 
-	where(where) {
-		if(typeof where == "object")
-			Object.entries(where).map(obj => {
-				let [key, val] = obj;
-				delete where[key];
-				where[`${key.search(/\./i) < 0 ? `${this.options.model.getTableName}.` : ""}${key}`] = val;
-			});
+  average(column) {
+    return this.avg(column);
+  }
 
-		if(this.options.where){
-			if(typeof this.options.where != "object" || !this.options.where[0])
-				this.options.where = [this.options.where];
-			this.options.where.push(where);
-		}else
-			this.options.where = where;
-		return this
-	}
+  get() {
+    return this.adapter.get();
+  }
 
-	orWhere(orWhere) {
-		if(typeof orWhere == "object")
-			Object.entries(orWhere).map(obj => {
-				let [key, val] = obj;
-				delete orWhere[key];
-				orWhere[`${key.search(/\./i) < 0 ? `${this.options.model.getTableName}.` : ""}${key}`] = val;
-			})
+  toSql(values = false, type = "select") {
+    return this.adapter.toSql(values, type);
+  }
 
-		if(this.options.orWhere){
-			if(typeof this.options.orWhere != "object" || !this.options.orWhere[0])
-				this.options.orWhere = [this.options.orWhere];
-			this.options.orWhere.push(orWhere);
-		}else
-			this.options.orWhere = orWhere;
-		return this
-	}
+  insertToSql(values = false) {
+    return this.toSql(values, "insert");
+  }
 
-	set(data) {
-		this.options.data = data
-		return this;
-	}
+  updateToSql(values = false) {
+    return this.toSql(values, "update");
+  }
 
-	first() {
-		this.options.limit = 1
-		return this.get()
-	}
+  deleteToSql(values = false) {
+    return this.toSql(values, "delete");
+  }
 
-	firstSync() {
-		this.options.sync = true;
-		this.options.limit = 1
-		this.options.first = true
-		return this.get()
-	}
+  truncateToSql(values = false) {
+    return this.toSql(values, "truncate");
+  }
 
-	all() {
-		return adapter.select(this.options, this.model)
-	}
+  find(id, ...columns) {
+    return this.where((this.options.model ?? this).primaryKey, id)
+      .select(...columns)
+      .first();
+  }
 
-	allSync() {
-		this.options.sync = true;
-		return adapter.select(this.options, this.model)
-	}
+  value(column) {
+    this.select(column);
+    return this.adapter.value(column);
+  }
 
-	get() {
-		return adapter.select(this.options, this.model)
-	}
+  paginate(perPage = 15, page = 1, pageName = "page") {
+    let from = (page - 1) * perPage;
+    from = from > 0 ? from : 1;
+    from = page > 1 ? from + 1 : from;
+    let to = page * perPage;
+    return this.select(...columns)
+      .forPage(page, perPage)
+      .get()
+      .then((res) => {
+        return this.limit(undefined)
+          .offset(undefined)
+          .count()
+          .then((count) => {
+            to = to > count ? count : to;
+            let lastPage = Math.ceil(count / perPage);
+            if (page > lastPage) {
+              from = null;
+              to = null;
+              count = null;
+            }
+            return {
+              currentPage: page,
+              data: res,
+              from,
+              to,
+              lastPage,
+              perPage,
+              total: count,
+            };
+          });
+      });
+  }
 
-	getSync() {
-		this.options.sync = true;
-		return adapter.select(this.options, this.model)
-	}
+  implode(column, glue = "") {
+    return this.select(column)
+      .get()
+      .then((res) => {
+        return res.map((e) => e[column]).join(glue);
+      });
+  }
 
-	toSql() {
-		this.options.toSql = true;
-		return this.get();
-	}
+  exists() {
+    return this.count().then((count) => count > 0);
+  }
 
-	update() {
-		return adapter.update(this.options, this.model)
-	}
+  doesntExist() {
+    return this.exists().then((res) => !res);
+  }
 
-	updateSync() {
-		return adapter.updateSync(this.options, this.model)
-	}
+  update(values) {
+    if (values) this.set(values, undefined, true);
+    return this.adapter.update();
+  }
 
-	delete(){
-		return adapter.delete(this.options, this.model)
-	}
+  insert(values) {
+    if (values) this.set(values, undefined, true);
+    return this.adapter.insert();
+  }
 
-	deleteSync(){
-		return adapter.deleteSync(this.options, this.model)
-	}
+  delete(id, user_id) {
+    if (id) this.where(this.options.model.primaryKey, id);
+    if (this.getLogicalDeleted) {
+      let set = {
+        [this.options.model.deleted]: true,
+        [this.options.model.deletedAt]: this.options.model.currentDate,
+      };
+      if (user_id) set[this.options.model.deletedBy] = user_id;
+      return this.set(set).setTimestamps(false).update();
+    }
+    return this.adapter.delete();
+  }
 
-	create(data=null){
-		if(this.options.sync == true) return this.createSync(data)
-		if(data) this.options.data = data;
-		return adapter.create(this.options, this.model)
-	}
+  truncate() {
+    return this.adapter.truncate();
+  }
 
-	createSync(data=null){
-		if(data) this.options.data = data;
-		return adapter.createSync(this.options, this.model)
-	}
+  // ### QUERYBUILDER ## //
+  table(tableName) {
+    if (!tableName) return this;
+    tableName = tableName.replaceAll(/\`/gi, "").split(".").join("`.`");
+    this.options.tableName = `\`${tableName}\``;
+    return this;
+  }
 
-	count() {
-		this.options.select = `COUNT(*) as count_obremap_rows`
-		let result = adapter.select(this.options, this.model);
-		return result;
-	}
+  setTimestamps(timestamps) {
+    this.options.timestamps = timestamps;
+    return this;
+  }
 
-	truncate() {
-		return adapter.truncateTable(this.options.model);
-	}
+  setCreatedAt(createdAt) {
+    this.options.createdAt = createdAt;
+    return this;
+  }
 
-	truncateSync() {
-		this.options.sync = true;
-		let result = adapter.truncateTable({options : this.options, model : this.options.model});
-		return result;	
-	}
+  setUpdatedAt(updatedAt) {
+    this.options.updatedAt = updatedAt;
+    return this;
+  }
 
-	countSync() {
-		this.options.sync = true;
-		this.options.select = `COUNT(*) as count_obremap_rows`
-		let result = adapter.select(this.options, this.model);
-		return result;
-	}
+  select(...select) {
+    this.options.select = select;
+    return this;
+  }
 
-	with(...relationships) {
-		let joins = {};
-		relationships.map(rel => {
-			let relationship = this.options.model;
-			relationship = new relationship();
-			return joins[rel] = relationship[rel](this);
-		})
+  where(
+    column,
+    operator = "=",
+    value,
+    separator = ", ",
+    parenthesis = true,
+    isFunction = false
+  ) {
+    let where = this.options.where ? this.options.where : [];
+    if (!this.operators.includes(operator)) {
+      value = operator;
+      operator = "=";
+    }
 
-		this.options.joins = joins;
-		return this;
-	}
+    if (column.constructor.name === "Array") {
+      where = [
+        ...where,
+        column.map((ele) => {
+          let [column, operator, value] = ele;
+          if (
+            typeof column == "object" ||
+            typeof operator == "object" ||
+            typeof value == "object"
+          )
+            throw new Error(
+              "Each element of the array should be an array containing the three arguments typically passed to the where method. [column, operator, value]"
+            );
+
+          if (!this.operators.includes(operator)) {
+            value = operator;
+            operator = "=";
+          }
+          return {
+            column,
+            operator,
+            value,
+            orWhere: false,
+            separator,
+            parenthesis,
+            isFunction,
+          };
+        }),
+      ];
+    }
+
+    if (column.constructor.name == "String") {
+      where.push({
+        column,
+        operator,
+        value,
+        orWhere: false,
+        separator,
+        parenthesis,
+        isFunction,
+      });
+    }
+
+    this.options.where = where;
+    return this;
+  }
+
+  orWhere(
+    column,
+    operator = "=",
+    value,
+    separator = ", ",
+    parenthesis = true,
+    isFunction = false
+  ) {
+    let orWhere = this.options.orWhere ? this.options.orWhere : [];
+    if (!this.operators.includes(operator)) {
+      value = operator;
+      operator = "=";
+    }
+
+    if (column.constructor.name === "Array") {
+      orWhere = [
+        ...orWhere,
+        column.map((ele) => {
+          let [column, operator, value] = ele;
+          if (
+            typeof column == "object" ||
+            typeof operator == "object" ||
+            typeof value == "object"
+          )
+            throw new Error(
+              "Each element of the array should be an array containing the three arguments typically passed to the orWhere method. [column, operator, value]"
+            );
+
+          if (!this.operators.includes(operator)) {
+            value = operator;
+            operator = "=";
+          }
+          return {
+            column,
+            operator,
+            value,
+            orWhere: true,
+            separator,
+            parenthesis,
+            isFunction,
+          };
+        }),
+      ];
+    }
+
+    if (column.constructor.name == "String") {
+      orWhere.push({
+        column,
+        operator,
+        value,
+        orWhere: true,
+        separator,
+        parenthesis,
+        isFunction,
+      });
+    }
+
+    this.options.where = [...this.options.where, ...orWhere];
+    return this;
+  }
+
+  whereIn(column, values) {
+    return this.where(column, "in", values);
+  }
+
+  orWhereIn(column, values) {
+    return this.orWhere(column, "in", values);
+  }
+
+  whereNotIn(column, values) {
+    return this.where(column, "not in", values);
+  }
+
+  orWhereNotIn(column, values) {
+    return this.orWhere(column, "not in", values);
+  }
+
+  whereNull(column) {
+    return this.where(column, "is null");
+  }
+
+  orWhereNull(column) {
+    return this.orWhere(column, "is null");
+  }
+
+  whereNotNull(column) {
+    return this.where(column, "is not null");
+  }
+
+  orWhereNotNull(column) {
+    return this.orWhere(column, "is not null");
+  }
+
+  whereBetween(column, values) {
+    return this.where(column, "between", values, " AND ", false);
+  }
+
+  orWhereBetween(column, values) {
+    return this.orWhere(column, "between", values, " AND ", false);
+  }
+
+  whereNotBetween(column, values) {
+    return this.where(column, "not between", values, " AND ", false);
+  }
+
+  orWhereNotBetween(column, values) {
+    return this.orWhere(column, "not between", values, " AND ", false);
+  }
+
+  whereJsonContains(column, value) {
+    return this.where(column, null, value, "", true, "json_contains");
+  }
+
+  orWhereJsonContains(column, value) {
+    return this.orWhere(column, null, value, "", true, "json_contains");
+  }
+
+  whereJsonDoesntContains(column, value) {
+    return this.where(column, null, value, "", true, "not json_contains");
+  }
+
+  orWhereJsonDoesntContains(column, value) {
+    return this.orWhere(column, null, value, "", true, "not json_contains");
+  }
+
+  whereJsonLength(column, operator = null, value) {
+    return this.where(column, operator, value, "", true, "json_length");
+  }
+
+  orWhereJsonLength(column, operator = null, value) {
+    return this.orWhere(column, operator, value, "", true, "json_length");
+  }
+
+  orderBy(column, direction = "ASC") {
+    if (!this.options.orderBy) this.options.orderBy = [];
+    this.options.orderBy = [...this.options.orderBy, [column, direction]];
+    return this;
+  }
+
+  latest(column) {
+    return this.orderBy(column ? column : this.options.model.createdAt, "desc");
+  }
+
+  oldest(column) {
+    return this.orderBy(column ?? this.options.model.createdAt, "asc");
+  }
+
+  reorder(column = null, direction = "ASC") {
+    if (column !== null) this.orderBy(column, direction);
+    this.options.orderBy = undefined;
+    return this;
+  }
+
+  groupBy(...columns) {
+    if (!this.options.groupBy) this.options.groupBy = [];
+    this.options.groupBy = [...this.options.groupBy, ...columns];
+    return this;
+  }
+
+  offset(offset) {
+    this.options.offset = offset;
+    return this;
+  }
+
+  skip(value) {
+    return this.offset(value);
+  }
+
+  limit(limit) {
+    this.options.limit = limit;
+    return this;
+  }
+
+  take(value) {
+    return this.limit(value);
+  }
+
+  forPage(page, perPage = 15) {
+    return this.offset((page - 1) * perPage).limit(perPage);
+  }
+
+  set(column, value, override = false) {
+    let set = override ? {} : { ...this.options.set };
+    if (typeof column === "string") {
+      set[column] = value;
+    } else if (typeof column === "object" && !Array.isArray(column)) {
+      set = { ...set, ...column };
+    } else if (typeof column === "object" && Array.isArray(column)) {
+      set = column;
+    }
+
+    this.options.set = set;
+    return this;
+  }
+
+  logicalDeleted(logicalDelete = true) {
+    this.options.logicalDelete = logicalDelete;
+    return this;
+  }
+
+  join(
+    table,
+    first,
+    operator = null,
+    second = null,
+    type = "inner",
+    where = false
+  ) {
+    if (!this.options.joins) this.options.joins = [];
+    let joins = [...this.options.joins];
+
+    if (!["inner", "left", "right", "cross"].includes(type)) {
+      where = type;
+    }
+
+    if (["inner", "left", "right", "cross"].includes(second)) {
+      type = second;
+    }
+
+    if (!this.operators.includes(operator)) {
+      second = operator;
+      operator = "=";
+    }
+
+    joins.push({ table, first, operator, second, type, where });
+    this.options.joins = joins;
+    return this;
+  }
+
+  leftJoin(table, first, operator = null, second = null) {
+    return this.join(table, first, operator, second, "left");
+  }
+
+  rightJoin(table, first, operator = null, second = null) {
+    return this.join(table, first, operator, second, "right");
+  }
+
+  crossJoin(table, first, operator = null, second = null) {
+    return this.join(table, first, operator, second, "cross");
+  }
+
+  queryBuilder() {
+    return true;
+  }
+
+  setModel(model) {
+    if (!model.builder) {
+      this.model = model;
+      this.init();
+      this.builder = true;
+    }
+  }
+
+  init() {
+    this.options = {};
+    QueryBuilder.options = {};
+    delete this.builder;
+  }
+
+  get getTableName() {
+    let tableName =
+      this.options.tableName ??
+      this.model.tableName ??
+      getTableName(this.model.name, this.model.snakeCase);
+    tableName = tableName.replaceAll(/\`/gi, "").split(".").join("`.`");
+    return `\`${tableName}\``;
+  }
+
+  get getTimestamps() {
+    return this.options.timestamps ?? this.model.timestamps;
+  }
+
+  get getCreatedAt() {
+    return this.options.createdAt ?? this.model.createdAt;
+  }
+
+  get getUpdatedAt() {
+    return this.options.updatedAt ?? this.model.updatedAt;
+  }
+
+  get getLogicalDeleted() {
+    return this.options.logicalDelete ?? this.model.logicalDelete;
+  }
 }

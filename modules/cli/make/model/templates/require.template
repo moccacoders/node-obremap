@@ -1,0 +1,11 @@
+// THIS MODEL FILE WAS CREATED BY OBREMAP CLI
+const { Model } = require("#__MODULE_NAME__#");
+class #__MODEL_NAME__# extends Model {
+    /*
+		overwrite table name, this action is optional
+		static tableName = "table_name";
+	*/
+	
+	#__CONFIGURATION__#
+}
+module.exports = new #__MODEL_NAME__#();
