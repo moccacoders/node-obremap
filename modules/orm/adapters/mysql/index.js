@@ -438,6 +438,8 @@ class MysqlAdapter {
         } else {
           table = `\`${table}\``;
         }
+        first = `${first.replaceAll(/\`/gi, "").split(".").join("`.`")}`;
+        second = `${second.replaceAll(/\`/gi, "").split(".").join("`.`")}`;
         if (where) values.push(where);
         return `${type.toUpperCase()} JOIN ${table} ON \`${first}\` ${operator} ${
           where ? "?" : `\`${second}\``
