@@ -1,5 +1,3 @@
-import { logPlugin } from "@babel/preset-env/lib/debug";
-import { resolve } from "app-root-path";
 import moment from "moment";
 import adapter from "./adapters";
 import SchemaBuilder from "./adapters/mysql/builders/schema.builder";
