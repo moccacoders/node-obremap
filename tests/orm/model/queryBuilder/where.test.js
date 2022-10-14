@@ -2,9 +2,8 @@ const User = require("tests/orm/setup/user.model");
 
 describe("Where() method", () => {
   test("Where method returns a query builder", () => {
-    const users = User.where("column", "value");
-    console.log("users", users);
-    //   expect(users.builder).toBeTruthy();
+    const users = User.where("column", "value").where("column2", "value2")
+      expect(users.options).toBeTruthy();
     //   expect(typeof users.options.where).toEqual("object");
     //   expect(users.options.where.length).toEqual(1);
     //   expect(users.options.where[0]).toEqual({

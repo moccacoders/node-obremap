@@ -29,12 +29,14 @@ export default class Model {
 
   static casts = {};
 
+  options = {}
+
   constructor() {
     this.model = this.constructor;
     return new Proxy(this, {
       get: function get(_class, method) {
         if (method in _class) return _class[method];
-        return new QueryBuilder(_class.model)[method];
+        return new QueryBuilder(_class.model)[method]
       },
     });
   }
