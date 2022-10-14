@@ -4,10 +4,9 @@ describe("Where() method", () => {
   test("Where method returns a query builder", () => {
     const users = User.where("column", "value")
       .where("column2", "value2")
-      .where("table.column2", "value2")
-      .toSql();
-    console.log(users);
-    // expect(users.options).toBeTruthy();
+      .where("table.column2", "value2");
+    expect(users.options).toBeTruthy();
+    expect(users.options.where).toBeTruthy();
     //   expect(typeof users.options.where).toEqual("object");
     //   expect(users.options.where.length).toEqual(1);
     //   expect(users.options.where[0]).toEqual({
