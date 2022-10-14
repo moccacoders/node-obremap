@@ -429,9 +429,17 @@ class MysqlAdapter {
     if (!this.options?.joins) return { joins: "", values };
     let joins = this.options.joins.map(
       ({ table, first, operator, second, type, where }) => {
-        table = `\`${table.replaceAll(/\`/gi, "").split(".").join("`.`")}\``;
+        table = `${table.replaceAll(/\`/gi, "").split(".").join("`.`")}`;
+        if (/ as /gi.test(table)) {
+          table = table.split(/ as /gi);
+          table = `${
+            /\(/gi.test(table[0]) ? `${table[0]}` : `\`${table[0]}\``
+          } AS \`${table[1]}\``;
+        } else {
+          table = `\`${table}\``;
+        }
         if (where) values.push(where);
-        return `${type.toUpperCase()} JOIN \`${table}\` ON \`${first}\` ${operator} ${
+        return `${type.toUpperCase()} JOIN ${table} ON \`${first}\` ${operator} ${
           where ? "?" : `\`${second}\``
         }`;
       }

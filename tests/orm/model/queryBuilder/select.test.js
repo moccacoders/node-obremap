@@ -35,7 +35,14 @@ describe("Select() method", () => {
   });
 
   test("Select method with AS", async () => {
-    const users = await User.select("id", "name AS nombre").toSql();
+    const users = await User.select("id", "name AS nombre")
+      .join(
+        "here.catalog_length_units as length_unit",
+        "length_unit_id",
+        "length_unit.id",
+        "left"
+      )
+      .toSql();
     expect(users).toEqual("SELECT `id`, `name` AS `nombre` FROM `users`");
   });
 });
