@@ -105,7 +105,11 @@ class MysqlAdapter {
     this.options.limit = 1;
     const { sql, values } = this.processSQL();
     return this.sql(
-      { sql, values, nestTables: false },
+      {
+        sql,
+        values,
+        nestTables: this.options.joins || this.options.joins.length > 0,
+      },
       formatResponse ?? ((res) => res[0])
     );
   }
