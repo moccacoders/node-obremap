@@ -108,7 +108,7 @@ class MysqlAdapter {
       {
         sql,
         values,
-        nestTables: this.options.joins || this.options.joins.length > 0,
+        nestTables: this.options.joins && this.options.joins.length > 0,
       },
       formatResponse ?? ((res) => res[0])
     );
