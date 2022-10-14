@@ -33,4 +33,9 @@ describe("Select() method", () => {
     expect(users[0]).toHaveProperty("id");
     expect(users[0]).toHaveProperty("name");
   });
+
+  test("Select method with AS", async () => {
+    const users = await User.select("id", "name AS nombre").toSql();
+    expect(users).toEqual("SELECT `id`, `name` AS `nombre` FROM `users`");
+  });
 });

@@ -29,7 +29,6 @@ class MysqlAdapter {
   };
 
   setModel(model) {
-    console.log("options", this.options, model.options);
     this.log.time.start = model.model.formatDate(new Date(), true);
     this.model = model;
     this.options = model.options;
@@ -329,7 +328,7 @@ class MysqlAdapter {
       : `${select
           .map((s) => {
             if (/ as /gi.test(s)) {
-              s = s.split(" as ");
+              s = s.split(/ as /gi);
               s = `${/\(/gi.test(s[0]) ? `${s[0]}` : `\`${s[0]}\``} AS \`${
                 s[1]
               }\``;
