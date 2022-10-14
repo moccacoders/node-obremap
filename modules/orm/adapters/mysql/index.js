@@ -379,10 +379,18 @@ class MysqlAdapter {
                 : value
                 ? "?"
                 : "";
+              column = `${column
+                .replaceAll(/\`/gi, "")
+                .split(".")
+                .join("`.`")}`;
               if (isFunction)
                 return `${idx !== 0 ? "AND " : ""}${isFunction}(\`${column}\`${
                   !operator ? `, ${value}` : ""
                 })${operator ? ` ${operator} ${value}` : ""}`;
+              column = `${column
+                .replaceAll(/\`/gi, "")
+                .split(".")
+                .join("`.`")}`;
               return `${
                 idx !== 0 ? "AND " : ""
               }\`${column}\` ${operator} ${value}`;
@@ -399,12 +407,14 @@ class MysqlAdapter {
             : value
             ? "?"
             : "";
+          column = `${column.replaceAll(/\`/gi, "").split(".").join("`.`")}`;
           if (isFunction)
             return `${
               ind !== 0 ? (or ? "OR " : "AND ") : ""
             }${isFunction}(\`${column}\`${!operator ? `, ${value}` : ""})${
               operator ? ` ${operator} ${value}` : ""
             }`;
+          column = `${column.replaceAll(/\`/gi, "").split(".").join("`.`")}`;
           return `${
             ind !== 0 ? (or ? "OR " : "AND ") : ""
           }\`${column}\` ${operator} ${
