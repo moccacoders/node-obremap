@@ -5,6 +5,7 @@ export default (model) => {
   try {
     global.dbConn = dbConfig(model.model.connection);
     const adapter = require(`./${global.dbConn.driver}`).default;
+    console.log("model", model);
     adapter.setModel(model);
     return adapter;
   } catch (e) {

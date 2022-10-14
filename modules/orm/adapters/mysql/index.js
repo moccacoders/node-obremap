@@ -29,6 +29,7 @@ class MysqlAdapter {
   };
 
   setModel(model) {
+    console.log("options", this.options, model.options);
     this.log.time.start = model.model.formatDate(new Date(), true);
     this.model = model;
     this.options = model.options;

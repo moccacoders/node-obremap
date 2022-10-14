@@ -51,7 +51,10 @@ export default class QueryBuilder {
 
   constructor(model) {
     this.setModel(model);
-    this.adapter = adapter(this);
+  }
+
+  adapter() {
+    return adapter(this);
   }
 
   /**
@@ -61,7 +64,7 @@ export default class QueryBuilder {
    * @returns
    */
   sql(sql, values = []) {
-    return this.adapter.sql({ sql, values, direct: true });
+    return this.adapter().sql({ sql, values, direct: true });
   }
 
   /**
@@ -70,7 +73,7 @@ export default class QueryBuilder {
    * @returns Obremap Collection
    */
   all() {
-    return this.adapter.all();
+    return this.adapter().all();
   }
 
   /**
@@ -79,7 +82,7 @@ export default class QueryBuilder {
    * @returns Obremap object
    */
   first() {
-    return this.adapter.first();
+    return this.adapter().first();
   }
 
   /**
@@ -88,7 +91,7 @@ export default class QueryBuilder {
    * @returns Obremap object
    */
   last() {
-    return this.adapter.last();
+    return this.adapter().last();
   }
 
   /**
@@ -96,23 +99,23 @@ export default class QueryBuilder {
    * @returns Number
    */
   count() {
-    return this.adapter.count();
+    return this.adapter().count();
   }
 
   max(column) {
-    return this.adapter.max(column);
+    return this.adapter().max(column);
   }
 
   min(column) {
-    return this.adapter.min(column);
+    return this.adapter().min(column);
   }
 
   sum(column) {
-    return this.adapter.sum(column);
+    return this.adapter().sum(column);
   }
 
   avg(column) {
-    return this.adapter.avg(column);
+    return this.adapter().avg(column);
   }
 
   average(column) {
@@ -120,11 +123,11 @@ export default class QueryBuilder {
   }
 
   get() {
-    return this.adapter.get();
+    return this.adapter().get();
   }
 
   toSql(values = false, type = "select") {
-    return this.adapter.toSql(values, type);
+    return this.adapter().toSql(values, type);
   }
 
   insertToSql(values = false) {
@@ -151,7 +154,7 @@ export default class QueryBuilder {
 
   value(column) {
     this.select(column);
-    return this.adapter.value(column);
+    return this.adapter().value(column);
   }
 
   paginate(perPage = 15, page = 1, pageName = "page") {
@@ -205,12 +208,12 @@ export default class QueryBuilder {
 
   update(values) {
     if (values) this.set(values, undefined, true);
-    return this.adapter.update();
+    return this.adapter().update();
   }
 
   insert(values) {
     if (values) this.set(values, undefined, true);
-    return this.adapter.insert();
+    return this.adapter().insert();
   }
 
   delete(id, user_id) {
@@ -223,11 +226,11 @@ export default class QueryBuilder {
       if (user_id) set[this.options.model.deletedBy] = user_id;
       return this.set(set).setTimestamps(false).update();
     }
-    return this.adapter.delete();
+    return this.adapter().delete();
   }
 
   truncate() {
-    return this.adapter.truncate();
+    return this.adapter().truncate();
   }
 
   // ### QUERYBUILDER ## //
