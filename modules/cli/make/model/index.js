@@ -60,9 +60,9 @@ module.exports = ({ args, cwd, obremapConfig }) => {
         path.join(__dirname, `/templates/${args["--how-import"]}.template`),
         "utf8"
       )
-      .replace("#__MODEL_NAME__#", modelName)
-      .replace("#__MODULE_NAME__#", moduleName)
-      .replace("#__CONFIGURATION__#", options);
+      .replaceAll("#__MODEL_NAME__#", modelName)
+      .replaceAll("#__MODULE_NAME__#", moduleName)
+      .replaceAll("#__CONFIGURATION__#", options);
 
     if (!args["--folder"])
       args["--folder"] =
