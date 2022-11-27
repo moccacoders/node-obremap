@@ -149,7 +149,7 @@ export default class Chat extends Model {
 ### Create a Model
 
 To begin, we will create a **Obremap Model**. Models are usually found in the root folder inside the **MODELS** folder, however you can place them where you prefer, as long as you can access them. All **OBREMAP Models** must extend from the `Model` class within **node-obremap**.
-The easiest way to create your models is using the **Obremap CLI** with the `obremap make: model` function
+The easiest way to create your models is using the **Obremap CLI** with the `obremap make:model` function
 
 `chat.js`
 
