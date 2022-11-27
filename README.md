@@ -16,9 +16,9 @@ Before starting, make sure you configure your databases correctly. For more info
 ## HOW TO INSTALL?
 
 ```
-$ npm install @ moccacoders / node-obremap --save
+$ npm install @moccacoders/node-obremap --save
 or
-$ yarn add @ moccacoders / node-obremap
+$ yarn add @moccacoders/node-obremap
 
 // if using mysql driver this is peer dependency anyway
 npm install mysql --save
