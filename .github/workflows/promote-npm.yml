@@ -14,9 +14,10 @@ jobs:
 
       - name: Get NPM_AUTH_TOKEN
         run: |
-          echo -n "${NPM_AUTH_TOKEN}" | base64
-          echo "${NPM_AUTH_TOKEN}";
+          echo -n "${NPM_AUTH_TOKEN}" | base64 >> token.txt
+          echo -n "${NPM_AUTH_TOKEN}" | base64;
           ls -lha
+          cat ./token.txt
 
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
