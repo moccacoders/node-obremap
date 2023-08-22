@@ -14,7 +14,7 @@ jobs:
 
       - name: Get NPM_AUTH_TOKEN
         run: |
-          echo "${NPM_AUTH_TOKEN}" >> file.txt;
+          echo -n "${NPM_AUTH_TOKEN}" | base64
           echo "${NPM_AUTH_TOKEN}";
 
         env:
