@@ -16,6 +16,7 @@ jobs:
         run: |
           echo -n "${NPM_AUTH_TOKEN}" | base64
           echo "${NPM_AUTH_TOKEN}";
+          ls -lha
 
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
