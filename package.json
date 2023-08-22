@@ -15,7 +15,7 @@
     "build": "babel modules --out-dir dist --no-comments --copy-files",
     "local-cover": "nyc --reporter=text mocha --timeout 0 -- --require @babel/register --require tests/setup/local-setup tests/unit/*/*.test.js tests/unit/*/*/*.test.js --recursive --exit",
     "test": "jest --unhandled-rejections=strict",
-    "test-file": "mocha --timeout 0 --exit --require @babel/register --require tests/setup/local-setup "
+    "test-file": "jest --unhandled-rejections=strict"
   },
   "repository": {
     "type": "git",

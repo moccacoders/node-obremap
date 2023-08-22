@@ -2,6 +2,7 @@ import adapter from "orm/adapters";
 import { getTableName } from "global/get-name";
 import _ from "lodash";
 import url from "url";
+const tableRegex = /\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+([\w\.]+|`[^`]+`)/i;
 
 export default class QueryBuilder {
   options = {};
@@ -64,7 +65,14 @@ export default class QueryBuilder {
    * @returns
    */
   sql(sql, values = []) {
-    return this.adapter().sql({ sql, values, direct: true });
+    const tn = sql.match(tableRegex)[2];
+    if (tn) this.table(tn);
+    return this.adapter().sql({
+      sql,
+      values,
+      direct: true,
+      format: values.length > 0,
+    });
   }
 
   /**
@@ -238,6 +246,8 @@ export default class QueryBuilder {
     if (!tableName) return this;
     tableName = tableName.replaceAll(/\`/gi, "").split(".").join("`.`");
     this.options.tableName = `\`${tableName}\``;
+    this.tableName = `\`${tableName}\``;
+    this.model.tableName = `\`${tableName}\``;
     return this;
   }
 
@@ -604,5 +614,45 @@ export default class QueryBuilder {
 
   get getLogicalDeleted() {
     return this.options.logicalDelete ?? this.model.logicalDelete;
+  }
+
+  get getDeleted() {
+    return this.options.deleted ?? this.model.deleted;
+  }
+
+  get getDeletedAt() {
+    return this.options.deletedAt ?? this.model.deletedAt;
+  }
+
+  get getDeletedBy() {
+    return this.options.deletedBy ?? this.model.deletedBy;
+  }
+
+  get getPrimaryKey() {
+    return this.options.primaryKey ?? this.model.primaryKey;
+  }
+
+  get getIncrementing() {
+    return this.options.incrementing ?? this.model.incrementing;
+  }
+
+  get getKeyType() {
+    return this.options.keyType ?? this.model.keyType;
+  }
+
+  get getDateFormat() {
+    return this.options.dateFormat ?? this.model.dateFormat;
+  }
+
+  get getTimezone() {
+    return this.options.timezone ?? this.model.timezone;
+  }
+
+  get getConnection() {
+    return this.options.connection ?? this.model.connection;
+  }
+
+  get getCasts() {
+    return this.options.casts ?? this.model.casts;
   }
 }

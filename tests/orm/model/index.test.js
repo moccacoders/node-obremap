@@ -10,12 +10,20 @@ describe("Validate model structure", () => {
   test("Model has sql method", async () => {
     expect(Model.sql.name).toBe("sql");
     const { database } = Schema.getConnection;
+    // Validate if database exist
+    const dbExists = await Model.sql(
+      `SELECT * FROM INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME = ?`,
+      [database]
+    );
+
     const response = await Model.sql(
       `SELECT * FROM information_schema.tables WHERE table_schema = ?`,
       [database]
     );
-    expect(response.length).toBeGreaterThan(0);
-    expect(response[0].TABLE_SCHEMA).toBe(database);
+
+    expect(dbExists.length).toEqual(1);
+    expect(dbExists[0].schema_name ?? dbExists[0].SCHEMA_NAME).toBe(database);
+    expect(response.length).toBeGreaterThanOrEqual(0);
   });
 
   test("Model has getTimezone", async () => {

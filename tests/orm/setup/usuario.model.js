@@ -1,6 +1,6 @@
 // THIS MODEL FILE WAS CREATED BY OBREMAP CLI
 const Model = require("orm/model").default;
-module.exports = class User extends Model {
+class User extends Model {
   /*
 		overwrite table name, this action is optional
 		static tableName = "table_name";
@@ -19,4 +19,6 @@ module.exports = class User extends Model {
   static deleted = "eliminado";
   static deletedAt = "fecha_eliminado";
   static deletedBy = "eliminado_por";
-};
+}
+
+module.exports = new User();

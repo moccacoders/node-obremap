@@ -61,7 +61,7 @@ class MysqlAdapter {
       const connection = connect();
       this.log.sql = sql;
       this.log.bindings = values;
-      if (format) sql = formatSQL(sql);
+      if (format) sql = formatSQL(sql, values);
       connection.query(
         {
           sql,
@@ -69,6 +69,7 @@ class MysqlAdapter {
           values,
         },
         (err, res, fields) => {
+          if (err?.code == "ER_BAD_DB_ERROR") return _reject(err);
           if (direct && this.model.tableName != fields[0].table)
             this.model.table(fields[0].table);
           connection.end();
@@ -82,6 +83,7 @@ class MysqlAdapter {
           try {
             if (nestTables) res = this.processNestTables(res);
             if (formatResponse) res = formatResponse(res);
+
             if (
               this.model.model.casts &&
               Object.entries(this.model.model.casts).length > 0
@@ -490,6 +492,7 @@ class MysqlAdapter {
       (Array.isArray(response) && response.length === 0)
     )
       return response;
+
     if (
       response[0] &&
       Object.keys(response[0]).findIndex((ele) =>

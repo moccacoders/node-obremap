@@ -1,8 +1,8 @@
 name: npm-publish
-on:
-  push:
-    branches:
-      - master
+# on:
+#   push:
+#     branches:
+#       - master
 
 jobs:
   npm-publish:
@@ -35,4 +35,10 @@ jobs:
           publish_args: "--non-interactive"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }} # You need to set this in your repo settings
+
+      - name: Get NPM_AUTH_TOKEN
+        run: \
+          echo ${NPM_AUTH_TOKEN}
+        env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }} # You need to set this in your repo settings
