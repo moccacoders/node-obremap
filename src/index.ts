@@ -1,0 +1,7 @@
+export { default as Model } from "abstract/model"
+export { default as QueryBuilder } from "abstract/queryBuilder"
+// export * as Database from "./orm/abstractClasess/database"
+// export * as DB from "./orm/abstractClasess/database"
+// export * as Migration from "./orm/abstractClasess/migration"
+// export * as Seeder from "./orm/abstractClasess/seeder"
+// export * as Schema from "./orm/abstractClasess/schema"

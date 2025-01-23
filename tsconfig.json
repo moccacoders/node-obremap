@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2019",
+		"declaration": true,
+		"outDir": "./dist",
+		"moduleResolution": "Node",
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"paths": {
+			"abstract/*": ["./src/orm/abstractClasess/*"],
+			"adapters": ["./src/orm/adapters"],
+			"utils": ["./src/utils"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules"]
+}
